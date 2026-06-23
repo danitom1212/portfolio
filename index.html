@@ -7,217 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg:       #0D1117;
-    --bg2:      #161B22;
-    --bg3:      #21262D;
-    --border:   #30363D;
-    --accent:   #00B4D8;
-    --accent2:  #0096C7;
-    --text:     #E6EDF3;
-    --muted:    #8B949E;
-    --mono:     'JetBrains Mono', monospace;
-    --sans:     'Inter', sans-serif;
-  }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 1rem 2rem;
-    background: rgba(13,17,23,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-logo { font-family: var(--mono); font-size: 0.9rem; color: var(--accent); text-decoration: none; }
-  .nav-links { display: flex; gap: 2rem; list-style: none; }
-  .nav-links a { font-size: 0.85rem; color: var(--muted); text-decoration: none; transition: color .2s; font-family: var(--mono); }
-  .nav-links a:hover { color: var(--accent); }
-
-  #hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 6rem 2rem 4rem; position: relative; overflow: hidden; }
-  .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,180,216,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,180,216,.03) 1px, transparent 1px); background-size: 40px 40px; }
-  .hero-glow { position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,216,.08) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
-  .hero-content { position: relative; max-width: 780px; }
-  .terminal { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; font-family: var(--mono); font-size: 0.85rem; }
-  .terminal-bar { display: flex; gap: 6px; margin-bottom: 1rem; }
-  .dot { width: 12px; height: 12px; border-radius: 50%; }
-  .dot-r { background: #FF5F57; } .dot-y { background: #FEBC2E; } .dot-g { background: #28C840; }
-  .terminal-line { color: var(--muted); margin-bottom: 4px; }
-  .terminal-line .prompt { color: var(--accent); } .terminal-line .cmd { color: var(--text); }
-  .terminal-output { color: #7EE787; }
-  .cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent); vertical-align: middle; animation: blink 1s step-end infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
-  h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem; }
-  h1 span { color: var(--accent); }
-  .hero-sub { font-size: 1.1rem; color: var(--muted); margin-bottom: 2.5rem; max-width: 520px; }
-  .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
-  .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 6px; font-size: 0.9rem; font-weight: 500; text-decoration: none; transition: all .2s; cursor: pointer; }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
-  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-  section { padding: 5rem 2rem; max-width: 900px; margin: 0 auto; }
-  .section-label { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.5rem; }
-  h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 600; margin-bottom: 2.5rem; letter-spacing: -0.01em; }
-  .divider { width: 40px; height: 2px; background: var(--accent); margin-bottom: 2.5rem; }
-  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
-  .about-text p { color: var(--muted); margin-bottom: 1rem; font-size: 0.95rem; }
-  .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; }
-  .stat-num { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; color: var(--accent); display: block; }
-  .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
-  #skills { background: var(--bg2); max-width: 100%; padding: 5rem 2rem; }
-  .skills-inner { max-width: 900px; margin: 0 auto; }
-  .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
-  .skill-group { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; }
-  .skill-group-title { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem; }
-  .skill-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .tag { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 0.3rem 0.7rem; font-size: 0.8rem; font-family: var(--mono); color: var(--text); transition: border-color .2s, color .2s; }
-  .tag:hover { border-color: var(--accent); color: var(--accent); }
-  .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem; }
-  .project-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 2rem; transition: border-color .2s, transform .2s; display: flex; flex-direction: column; }
-  .project-card:hover { border-color: var(--accent); transform: translateY(-3px); }
-  .project-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
-  .project-icon { font-size: 1.5rem; }
-  .project-links { display: flex; gap: 0.75rem; }
-  .project-link { color: var(--muted); text-decoration: none; font-size: 0.8rem; font-family: var(--mono); transition: color .2s; display: flex; align-items: center; gap: 0.3rem; }
-  .project-link:hover { color: var(--accent); }
-  .project-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
-  .project-desc { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.25rem; flex: 1; }
-  .project-stack { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .stack-tag { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); background: rgba(0,180,216,.08); border: 1px solid rgba(0,180,216,.2); border-radius: 3px; padding: 0.2rem 0.5rem; }
-  .exp-list { display: flex; flex-direction: column; gap: 0; }
-  .exp-item { display: grid; grid-template-columns: 120px 1fr; gap: 2rem; padding: 2rem 0; border-bottom: 1px solid var(--border); }
-  .exp-item:last-child { border-bottom: none; }
-  .exp-dates { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); padding-top: 0.2rem; line-height: 1.5; }
-  .exp-role { font-size: 1rem; font-weight: 600; margin-bottom: 0.2rem; }
-  .exp-company { font-size: 0.85rem; color: var(--accent); margin-bottom: 0.75rem; font-family: var(--mono); }
-  .exp-bullets { list-style: none; }
-  .exp-bullets li { font-size: 0.88rem; color: var(--muted); margin-bottom: 0.4rem; padding-left: 1rem; position: relative; }
-  .exp-bullets li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-size: 0.7rem; top: 0.15rem; }
-  #contact { background: var(--bg2); max-width: 100%; }
-  .contact-inner { max-width: 900px; margin: 0 auto; padding: 5rem 2rem; text-align: center; }
-  .contact-inner h2 { margin-bottom: 1rem; }
-  .contact-sub { color: var(--muted); margin-bottom: 2.5rem; font-size: 0.95rem; }
-  .contact-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-  footer { text-align: center; padding: 2rem; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; border-top: 1px solid var(--border); }
-  @media (max-width: 640px) {
-    .about-grid { grid-template-columns: 1fr; }
-    .exp-item { grid-template-columns: 1fr; gap: 0.5rem; }
-    .projects-grid { grid-template-columns: 1fr; }
-    nav { padding: 1rem; }
-    .nav-links { gap: 1rem; }
-  }
-</style>
-</head>
-<body>
-<nav>
-  <a href="#hero" class="nav-logo">~/danitom1212</a>
-  <ul class="nav-links">
-    <li><a href="#about">about</a></li>
-    <li><a href="#skills">skills</a></li>
-    <li><a href="#projects">projects</a></li>
-    <li><a href="#experience">experience</a></li>
-    <li><a href="#contact">contact</a></li>
-  </ul>
-</nav>
-<section id="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-glow"></div>
-  <div class="hero-content">
-    <div class="terminal">
-      <div class="terminal-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
-      <div class="terminal-line"><span class="prompt">➡ </span><span style="color:#7EE787">~</span> <span class="cmd">whoami</span></div>
-      <div class="terminal-line terminal-output" style="margin-bottom:0.75rem">Daniel Tomanian — Full Stack Developer</div>
-      <div class="terminal-line"><span class="prompt">➡ </span><span style="color:#7EE787">~</span> <span class="cmd">cat skills.txt</span></div>
-      <div class="terminal-line terminal-output" style="margin-bottom:0.75rem">React · Next.js · Node.js · PostgreSQL · TypeScript · Python</div>
-      <div class="terminal-line"><span class="prompt">➡ </span><span style="color:#7EE787">~</span> <span class="cmd" id="typed-cmd"></span><span class="cursor"></span></div>
-    </div>
-    <h1>Building <span>scalable</span> software,<br>end to end.</h1>
-    <p class="hero-sub">Full Stack Developer based in Israel. I build web applications, integrate APIs, and ship products that work.</p>
-    <div class="hero-btns">
-      <a href="#projects" class="btn btn-primary">View Projects</a>
-      <a href="https://github.com/danitom1212" target="_blank" class="btn btn-ghost"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>GitHub</a>
-      <a href="mailto:Danitom1212@gmail.com" class="btn btn-ghost">Contact Me</a>
-    </div>
-  </div>
-</section>
-<section id="about">
-  <div class="section-label">// about me</div>
-  <h2>Who I Am</h2>
-  <div class="divider"></div>
-  <div class="about-grid">
-    <div class="about-text">
-      <p>I'm a software engineering graduate with practical experience building full-stack applications, integrating enterprise systems, and working across the full development lifecycle.</p>
-      <p>My background spans web development, ERP integration, IT infrastructure, and broadcast technology — giving me a broad technical foundation that helps me understand problems at every layer of the stack.</p>
-      <p>Currently building personal projects, studying Data Analytics & ML, and looking for my next opportunity in a product or engineering team.</p>
-    </div>
-    <div class="about-stats">
-      <div class="stat-card"><span class="stat-num">3+</span><div class="stat-label">Years of technical work experience</div></div>
-      <div class="stat-card"><span class="stat-num">5+</span><div class="stat-label">Technologies in active use</div></div>
-      <div class="stat-card"><span class="stat-num">B.Sc.</span><div class="stat-label">Software Engineering, ORT Bialik</div></div>
-      <div class="stat-card"><span class="stat-num">3</span><div class="stat-label">Languages spoken fluently</div></div>
-    </div>
-  </div>
-</section>
-<section id="skills">
-  <div class="skills-inner">
-    <div class="section-label">// tech stack</div>
-    <h2>Skills</h2>
-    <div class="divider"></div>
-    <div class="skills-grid">
-      <div class="skill-group"><div class="skill-group-title">Frontend</div><div class="skill-tags"><span class="tag">React</span><span class="tag">Next.js</span><span class="tag">TypeScript</span><span class="tag">HTML5</span><span class="tag">CSS3</span><span class="tag">Tailwind</span></div></div>
-      <div class="skill-group"><div class="skill-group-title">Backend</div><div class="skill-tags"><span class="tag">Node.js</span><span class="tag">Express</span><span class="tag">REST APIs</span><span class="tag">Python</span><span class="tag">Bash</span></div></div>
-      <div class="skill-group"><div class="skill-group-title">Databases</div><div class="skill-tags"><span class="tag">PostgreSQL</span><span class="tag">Supabase</span><span class="tag">MongoDB</span><span class="tag">Firebase</span><span class="tag">SQL</span></div></div>
-      <div class="skill-group"><div class="skill-group-title">Tools & DevOps</div><div class="skill-tags"><span class="tag">Git</span><span class="tag">GitHub</span><span class="tag">Vercel</span><span class="tag">Postman</span><span class="tag">Linux CLI</span><span class="tag">VS Code</span></div></div>
-      <div class="skill-group"><div class="skill-group-title">Enterprise & Systems</div><div class="skill-tags"><span class="tag">SAP</span><span class="tag">Priority ERP</span><span class="tag">Active Directory</span><span class="tag">DOCSIS</span><span class="tag">RF Systems</span></div></div>
-      <div class="skill-group"><div class="skill-group-title">Currently Learning</div><div class="skill-tags"><span class="tag">Data Analytics</span><span class="tag">Machine Learning</span><span class="tag">Pandas</span><span class="tag">NumPy</span></div></div>
-    </div>
-  </div>
-</section>
-<section id="projects">
-  <div class="section-label">// what i've built</div>
-  <h2>Projects</h2>
-  <div class="divider"></div>
-  <div class="projects-grid">
-    <div class="project-card">
-      <div class="project-header"><div class="project-icon">🛍️</div><div class="project-links"><a href="https://github.com/danitom1212/homemade-you" target="_blank" class="project-link"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>Code</a></div></div>
-      <div class="project-name">Homemade You</div>
-      <div class="project-desc">Full-stack e-commerce platform built with Next.js and Supabase. Integrates Printful API for print-on-demand fulfillment with automated order management, authentication, and product catalog.</div>
-      <div class="project-stack"><span class="stack-tag">Next.js</span><span class="stack-tag">Supabase</span><span class="stack-tag">PostgreSQL</span><span class="stack-tag">Printful API</span><span class="stack-tag">Vercel</span></div>
-    </div>
-    <div class="project-card">
-      <div class="project-header"><div class="project-icon">🎮</div><div class="project-links"><a href="https://github.com/danitom1212" target="_blank" class="project-link"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>Code</a></div></div>
-      <div class="project-name">MindBattle</div>
-      <div class="project-desc">Real-time multiplayer mobile game built in React Native. Features memory, reflex, trivia, and math categories with three modes: Solo vs AI, Private rooms, and Quick Match.</div>
-      <div class="project-stack"><span class="stack-tag">React Native</span><span class="stack-tag">Photon PUN2</span><span class="stack-tag">Firebase</span><span class="stack-tag">JavaScript</span></div>
-    </div>
-    <div class="project-card">
-      <div class="project-header"><div class="project-icon">🏎️</div><div class="project-links"><a href="https://github.com/danitom1212" target="_blank" class="project-link"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>Code</a></div></div>
-      <div class="project-name">Apex Clash</div>
-      <div class="project-desc">Physics-based mobile racing game built in Unity (C#) for Android. Realistic vehicle dynamics using WheelCollider, AI opponents, career mode, and modular game architecture.</div>
-      <div class="project-stack"><span class="stack-tag">Unity</span><span class="stack-tag">C#</span><span class="stack-tag">Android</span><span class="stack-tag">Photon</span></div>
-    </div>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daniel Tomanian — Full Stack Developer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#0D1117;--bg2:#161B22;--bg3:#21262D;--border:#30363D;--accent:#00B4D8;--accent2:#0096C7;--text:#E6EDF3;--muted:#8B949E;--mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;overflow-x:hidden}
@@ -235,8 +25,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content
 .dot{width:12px;height:12px;border-radius:50%}
 .dot-r{background:#FF5F57}.dot-y{background:#FEBC2E}.dot-g{background:#28C840}
 .terminal-line{color:var(--muted);margin-bottom:4px}
-.terminal-line .prompt{color:var(--accent)}
-.terminal-line .cmd{color:var(--text)}
+.terminal-line .prompt{color:var(--accent)}.terminal-line .cmd{color:var(--text)}
 .terminal-output{color:#7EE787}
 .cursor{display:inline-block;width:8px;height:14px;background:var(--accent);vertical-align:middle;animation:blink 1s step-end infinite}
 @keyframes blink{50%{opacity:0}}
@@ -273,13 +62,13 @@ h2{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:600;margin-bottom:2.5rem;lette
 .project-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
 .project-icon{font-size:1.5rem}
 .project-links{display:flex;gap:.75rem}
-.project-link{color:var(--muted);text-decoration:none;font-size:.8rem;font-family:var(--mono);transition:color .2s;display:flex;align-items:center;gap:.3rem}
-.project-link:hover{color:var(--accent)}
+.project-link{color:var(--muted);text-decoration:none;font-size:.8rem;font-family:var(--mono);transition:color .2s;border:1px solid var(--border);padding:.25rem .6rem;border-radius:4px}
+.project-link:hover{color:var(--accent);border-color:var(--accent)}
 .project-name{font-size:1.1rem;font-weight:600;margin-bottom:.5rem}
 .project-desc{font-size:.88rem;color:var(--muted);margin-bottom:1.25rem;flex:1}
 .project-stack{display:flex;flex-wrap:wrap;gap:.4rem}
 .stack-tag{font-family:var(--mono);font-size:.72rem;color:var(--accent);background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);border-radius:3px;padding:.2rem .5rem}
-.exp-list{display:flex;flex-direction:column;gap:0}
+.exp-list{display:flex;flex-direction:column}
 .exp-item{display:grid;grid-template-columns:120px 1fr;gap:2rem;padding:2rem 0;border-bottom:1px solid var(--border)}
 .exp-item:last-child{border-bottom:none}
 .exp-dates{font-family:var(--mono);font-size:.75rem;color:var(--muted);padding-top:.2rem;line-height:1.5}
@@ -327,7 +116,7 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-family:var(--mono)
   <div class="about-grid">
     <div class="about-text">
       <p>Software engineering graduate with hands-on experience building full-stack applications, integrating enterprise systems, and working across the full development lifecycle.</p>
-      <p>Background spans web development, ERP integration, IT infrastructure, and broadcast technology — giving me a broad technical foundation that helps understand problems at every layer of the stack.</p>
+      <p>Background spans web development, ERP integration, IT infrastructure, and broadcast technology — giving me a broad technical foundation across every layer of the stack.</p>
       <p>Currently building personal projects, studying Data Analytics & ML, and looking for the next opportunity in a product or engineering team.</p>
     </div>
     <div class="about-stats">
@@ -346,7 +135,7 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-family:var(--mono)
       <div class="skill-group"><div class="skill-group-title">Backend</div><div class="skill-tags"><span class="tag">Node.js</span><span class="tag">Express</span><span class="tag">REST APIs</span><span class="tag">Python</span><span class="tag">Bash</span></div></div>
       <div class="skill-group"><div class="skill-group-title">Databases</div><div class="skill-tags"><span class="tag">PostgreSQL</span><span class="tag">Supabase</span><span class="tag">MongoDB</span><span class="tag">Firebase</span><span class="tag">SQL</span></div></div>
       <div class="skill-group"><div class="skill-group-title">Tools & DevOps</div><div class="skill-tags"><span class="tag">Git</span><span class="tag">GitHub</span><span class="tag">Vercel</span><span class="tag">Postman</span><span class="tag">Linux CLI</span><span class="tag">VS Code</span></div></div>
-      <div class="skill-group"><div class="skill-group-title">Enterprise</div><div class="skill-tags"><span class="tag">SAP</span><span class="tag">Priority ERP</span><span class="tag">Active Directory</span><span class="tag">DOCSIS</span></div></div>
+      <div class="skill-group"><div class="skill-group-title">Mobile & iOS</div><div class="skill-tags"><span class="tag">Swift</span><span class="tag">iOS</span><span class="tag">AVFoundation</span><span class="tag">OpenAI API</span></div></div>
       <div class="skill-group"><div class="skill-group-title">Learning</div><div class="skill-tags"><span class="tag">Data Analytics</span><span class="tag">ML</span><span class="tag">Pandas</span><span class="tag">NumPy</span></div></div>
     </div>
   </div>
@@ -354,18 +143,33 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-family:var(--mono)
 <section id="projects">
   <div class="section-label">// what i've built</div><h2>Projects</h2><div class="divider"></div>
   <div class="projects-grid">
-    <div class="project-card"><div class="project-header"><div class="project-icon">🛍️</div><div class="project-links"><a href="https://github.com/danitom1212/homemade-you" target="_blank" class="project-link">Code</a></div></div><div class="project-name">Homemade You</div><div class="project-desc">Full-stack e-commerce platform built with Next.js and Supabase. Integrates Printful API for print-on-demand fulfillment, authentication, and product catalog.</div><div class="project-stack"><span class="stack-tag">Next.js</span><span class="stack-tag">Supabase</span><span class="stack-tag">PostgreSQL</span><span class="stack-tag">Printful API</span><span class="stack-tag">Vercel</span></div></div>
-    <div class="project-card"><div class="project-header"><div class="project-icon">🎮</div><div class="project-links"><a href="https://github.com/danitom1212" target="_blank" class="project-link">Code</a></div></div><div class="project-name">MindBattle</div><div class="project-desc">Real-time multiplayer mobile game in React Native. Memory, reflex, trivia, and math categories with Solo, Private rooms, and Quick Match modes.</div><div class="project-stack"><span class="stack-tag">React Native</span><span class="stack-tag">Photon PUN2</span><span class="stack-tag">Firebase</span></div></div>
-    <div class="project-card"><div class="project-header"><div class="project-icon">🏎️</div><div class="project-links"><a href="https://github.com/danitom1212" target="_blank" class="project-link">Code</a></div></div><div class="project-name">Apex Clash</div><div class="project-desc">Physics-based mobile racing game in Unity (C#) for Android. Realistic vehicle dynamics, AI opponents, career mode, and modular architecture.</div><div class="project-stack"><span class="stack-tag">Unity</span><span class="stack-tag">C#</span><span class="stack-tag">Android</span></div></div>
+    <div class="project-card">
+      <div class="project-header"><div class="project-icon">🛍️</div><div class="project-links"><a href="https://github.com/danitom1212/homemade-you" target="_blank" class="project-link">Code</a></div></div>
+      <div class="project-name">Homemade You</div>
+      <div class="project-desc">Full-stack e-commerce platform built with Next.js and Supabase. Integrates Printful API for print-on-demand fulfillment, authentication, and product catalog management.</div>
+      <div class="project-stack"><span class="stack-tag">Next.js</span><span class="stack-tag">Supabase</span><span class="stack-tag">PostgreSQL</span><span class="stack-tag">Printful API</span><span class="stack-tag">Vercel</span></div>
+    </div>
+    <div class="project-card">
+      <div class="project-header"><div class="project-icon">🎬</div><div class="project-links"><a href="https://github.com/danitom1212/videoAiAppSub" target="_blank" class="project-link">Code</a></div></div>
+      <div class="project-name">VideoAI Subtitles</div>
+      <div class="project-desc">iOS app for AI-powered video translation with real-time subtitles in 60+ languages. Integrates OpenAI API for neural translation and iOS Speech Framework for transcription. Supports SRT export and self-learning from user corrections.</div>
+      <div class="project-stack"><span class="stack-tag">Swift</span><span class="stack-tag">iOS</span><span class="stack-tag">OpenAI API</span><span class="stack-tag">AVFoundation</span><span class="stack-tag">Speech Framework</span></div>
+    </div>
+    <div class="project-card">
+      <div class="project-header"><div class="project-icon">💼</div><div class="project-links"><a href="https://portfolio-three-cyan-74.vercel.app" target="_blank" class="project-link">Live</a><a href="https://github.com/danitom1212/portfolio" target="_blank" class="project-link">Code</a></div></div>
+      <div class="project-name">Developer Portfolio</div>
+      <div class="project-desc">Interactive personal portfolio with terminal typing animation, scroll-reveal effects, and responsive dark theme. Built with vanilla HTML, CSS, and JavaScript — no frameworks.</div>
+      <div class="project-stack"><span class="stack-tag">HTML5</span><span class="stack-tag">CSS3</span><span class="stack-tag">JavaScript</span><span class="stack-tag">Vercel</span></div>
+    </div>
   </div>
 </section>
 <section id="experience">
   <div class="section-label">// work history</div><h2>Experience</h2><div class="divider"></div>
   <div class="exp-list">
     <div class="exp-item"><div class="exp-dates">Dec 2025<br>Present</div><div><div class="exp-role">Digital Broadcast Technician – Head End</div><div class="exp-company">HOT Cable Network</div><ul class="exp-bullets"><li>Monitor live broadcast infrastructure across cable, fiber, and satellite</li><li>Configure set-top boxes, DOCSIS modems, and edge equipment</li><li>Diagnose and resolve RF signal chain issues in real-time</li></ul></div></div>
-    <div class="exp-item"><div class="exp-dates">May–Dec 2025</div><div><div class="exp-role">Help Desk & Service Desk</div><div class="exp-company">Rafael Advanced Defense Systems</div><ul class="exp-bullets"><li>Technical support in secure enterprise environment</li><li>User accounts, permissions, and access control</li></ul></div></div>
-    <div class="exp-item"><div class="exp-dates">2024–2025</div><div><div class="exp-role">ERP Implementation Specialist</div><div class="exp-company">SPS Solutions</div><ul class="exp-bullets"><li>Deployed Priority and SAP ERP for enterprise clients</li><li>Built REST API integrations between ERP and third-party software</li></ul></div></div>
-    <div class="exp-item"><div class="exp-dates">2014–2016</div><div><div class="exp-role">Computer & Mobile Technician</div><div class="exp-company">Printer Depo</div><ul class="exp-bullets"><li>Hardware and software troubleshooting</li></ul></div></div>
+    <div class="exp-item"><div class="exp-dates">May–Dec 2025</div><div><div class="exp-role">Help Desk & Service Desk</div><div class="exp-company">Rafael Advanced Defense Systems</div><ul class="exp-bullets"><li>Technical support in a secure enterprise environment</li><li>User accounts, permissions, and access control management</li></ul></div></div>
+    <div class="exp-item"><div class="exp-dates">2024–2025</div><div><div class="exp-role">ERP Implementation Specialist</div><div class="exp-company">SPS Solutions</div><ul class="exp-bullets"><li>Deployed Priority and SAP ERP for enterprise clients</li><li>Built REST API integrations between ERP and third-party software</li><li>Developed custom automation scripts tailored to client needs</li></ul></div></div>
+    <div class="exp-item"><div class="exp-dates">2014–2016</div><div><div class="exp-role">Computer & Mobile Technician</div><div class="exp-company">Printer Depo</div><ul class="exp-bullets"><li>Hardware and software troubleshooting for computers and smartphones</li></ul></div></div>
   </div>
 </section>
 <div id="contact"><div class="contact-inner">
@@ -379,8 +183,12 @@ footer{text-align:center;padding:2rem;color:var(--muted);font-family:var(--mono)
 </div></div>
 <footer><p>Built by Daniel Tomanian · <span style="color:var(--accent)">danitom1212</span></p></footer>
 <script>
-const commands=['git status','npm run dev','node server.js'];let ci=0,ci2=0;const el=document.getElementById('typed-cmd');function type(){if(ci2<commands[ci].length){el.textContent+=commands[ci][ci2++];setTimeout(type,80);}else{setTimeout(erase,1500);}}function erase(){if(el.textContent.length>0){el.textContent=el.textContent.slice(0,-1);setTimeout(erase,40);}else{ci=(ci+1)%commands.length;ci2=0;setTimeout(type,400);}}setTimeout(type,1000);
-const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.style.opacity='1';x.target.style.transform='translateY(0)';}});},{threshold:.1});document.querySelectorAll('.project-card,.exp-item,.skill-group,.stat-card').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity .5s ease,transform .5s ease';obs.observe(el);});
+const commands=['git status','npm run dev','node server.js'];let ci=0,ci2=0;const el=document.getElementById('typed-cmd');
+function type(){if(ci2<commands[ci].length){el.textContent+=commands[ci][ci2++];setTimeout(type,80);}else{setTimeout(erase,1500);}}
+function erase(){if(el.textContent.length>0){el.textContent=el.textContent.slice(0,-1);setTimeout(erase,40);}else{ci=(ci+1)%commands.length;ci2=0;setTimeout(type,400);}}
+setTimeout(type,1000);
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){x.target.style.opacity='1';x.target.style.transform='translateY(0)';}});},{threshold:.1});
+document.querySelectorAll('.project-card,.exp-item,.skill-group,.stat-card').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity .5s ease,transform .5s ease';obs.observe(el);});
 </script>
 </body>
 </html>
