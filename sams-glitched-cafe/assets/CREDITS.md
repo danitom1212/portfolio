@@ -32,3 +32,23 @@ licensed under CC BY 4.0.
 Rendered as an original abstract SVG (in `faces.js`), not third-party
 art — deliberately not illustrated as a human character, since it is not
 meant to read as one.
+
+## Music
+
+| File | Used for | Source |
+|---|---|---|
+| `audio-cafe.mp3` | "warm" mood (street, café scenes) | "Sunset Plains" by Yoiyami, via https://opengameart.org/content/sunset-plains — CC0 |
+| `audio-void.mp3` | "tense" mood (glitch café, void/climax) | "Starfield Romance – CC0 Ambient / Emotional Space Theme" by Yoiyami, via https://opengameart.org — CC0 |
+
+Both trimmed to a ~55s loop, faded, and re-encoded to MP3 for file size.
+
+## Sound effects
+
+| File | Used for | Source |
+|---|---|---|
+| `sfx/tick.wav` | typewriter blip | "5 Blip UI Sound Effects" by FunnyDude, via https://opengameart.org/content/5-blip-ui-sound-effects — CC0 |
+| `sfx/select.wav` | choice selection | "Menu Selection Click" by NenadSimic, via https://opengameart.org/content/menu-selection-click — CC BY 3.0 |
+| `sfx/glitch.wav` | glitch VFX stinger | "Frequency Static Sound Effects" by bretbernhoft, via https://opengameart.org/content/frequency-static-sound-effects — CC0 |
+
+Attribution for the choice-select sound: "Menu Selection Click" by
+NenadSimic, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).

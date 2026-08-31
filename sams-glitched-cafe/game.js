@@ -1,8 +1,17 @@
 import { STORY, CHARACTERS } from './story.js';
 import { buildFace } from './faces.js';
 import { buildDecor } from './decor.js';
+import { AudioManager } from './audio.js';
 
 const TYPE_SPEED_MS = 26;
+
+const MUSIC_MOOD_BY_BG = {
+  street: 'warm',
+  cafe: 'warm',
+  cafe_dim: 'warm',
+  cafe_glitch: 'tense',
+  void: 'tense',
+};
 
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
 
@@ -37,6 +46,10 @@ class Game {
     this.$endTitle = document.getElementById('end-title');
     this.$debugBtn = document.getElementById('debug-toggle');
     this.$debugPanel = document.getElementById('debug-panel');
+    this.$muteBtn = document.getElementById('mute-toggle');
+
+    this.audio = new AudioManager();
+    this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
 
     this.$box.addEventListener('click', () => this.handleTap());
     document.getElementById('start-btn').addEventListener('click', () => this.beginStory());
@@ -44,6 +57,10 @@ class Game {
     this.$debugBtn.addEventListener('click', () => {
       this.$debugPanel.hidden = !this.$debugPanel.hidden;
       this.renderDebug();
+    });
+    this.$muteBtn.addEventListener('click', () => {
+      const muted = this.audio.toggleMute();
+      this.$muteBtn.textContent = muted ? '🔇' : '🔊';
     });
   }
 
@@ -58,6 +75,7 @@ class Game {
   }
 
   beginStory() {
+    this.audio.unlock();
     this.$start.hidden = true;
     this.enterScene(this.sceneId);
   }
@@ -111,6 +129,7 @@ class Game {
     });
 
     this.$decor.innerHTML = buildDecor(bgKey);
+    this.audio.setMood(MUSIC_MOOD_BY_BG[bgKey]);
   }
 
   // ---------- Sprites ----------
@@ -175,6 +194,7 @@ class Game {
       this.$vfx.classList.remove('glitch');
       void this.$vfx.offsetWidth;
       this.$vfx.classList.add('glitch');
+      this.audio.playSfx('glitch', { volume: 0.5 });
       setTimeout(() => this.$vfx.classList.remove('glitch'), 900);
     } else if (kind === 'shake') {
       this.$stage.classList.remove('vfx-shake');
@@ -221,6 +241,10 @@ class Game {
 
     const step = () => {
       this.$text.textContent = full.slice(0, i + 1);
+      const ch = full[i];
+      if (i % 2 === 0 && ch && ch.trim()) {
+        this.audio.playSfx('tick', { rate: 0.9 + Math.random() * 0.3, volume: 0.35 });
+      }
       i++;
       if (i < full.length) {
         this.typeTimer = setTimeout(step, TYPE_SPEED_MS);
@@ -279,6 +303,7 @@ class Game {
   }
 
   selectChoice(choice) {
+    this.audio.playSfx('select');
     this.$choices.classList.remove('show');
     if (choice.effects) {
       for (const [k, v] of Object.entries(choice.effects)) {
