@@ -13,4 +13,14 @@ output, not the originals.
 | `bg-street.jpg` | rainy night street scene | https://www.rawpixel.com (CC0) |
 | `bg-void.jpg` | climax / liminal-space scene | https://www.rawpixel.com (CC0) |
 
-License: [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+Background license: [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)
+
+## Character sprite
+
+`sprites/sam-*.webp` (6 expressions) are cropped and re-encoded from
+**"Codel Visual Novel Sprite"** by **LisadiKaprio**, via
+https://opengameart.org/content/codel-visual-novel-sprite
+
+License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
+attribution required. Credit: "Codel Visual Novel Sprite" by LisadiKaprio,
+licensed under CC BY 4.0.

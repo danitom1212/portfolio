@@ -253,12 +253,48 @@ html, body {
   transform: translateY(24px) scale(.92);
   transition: opacity 420ms ease, transform 420ms cubic-bezier(.2,.9,.3,1.3);
 }
-.sprite.pos-left  { left: 6%; }
+.sprite.pos-left  { left: 2%; }
 .sprite.pos-center{ left: 50%; transform: translateX(-50%) translateY(24px) scale(.92); }
-.sprite.pos-right { right: 6%; }
+.sprite.pos-right { right: 2%; }
 .sprite.on { opacity: 1; transform: translateY(0) scale(1); }
 .sprite.pos-center.on { transform: translateX(-50%) translateY(0) scale(1); }
 
+/* -- Illustrated full-body sprite (Sam): stacked emotion PNGs, crossfaded -- */
+.sprite--photo {
+  bottom: -3%;
+  height: 76%;
+}
+.photo-stack {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 480 / 1504;
+}
+.face-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  filter: drop-shadow(0 18px 20px rgba(0,0,0,.45));
+}
+.emo-neutral .face-neutral,
+.emo-smile .face-smile,
+.emo-sad .face-sad,
+.emo-angry .face-angry,
+.emo-shock .face-shock,
+.emo-glitch .face-glitch {
+  opacity: 1;
+}
+.sprite--photo.emo-smile .photo-stack { transform: translateY(-2px) scale(1.015); }
+.sprite--photo.emo-sad .photo-stack { transform: translateY(5px); filter: saturate(.8) brightness(.92); }
+.sprite--photo.emo-angry .photo-stack { filter: saturate(1.25) brightness(1.02) drop-shadow(0 0 30px rgba(255,43,43,.4)); animation: angryPulse 900ms ease-in-out infinite; }
+.sprite--photo.emo-shock .photo-stack { animation: shockPop 380ms ease; }
+.sprite--photo.emo-glitch .face-glitch { animation: faceRgbSplit 340ms steps(2, jump-none) infinite; }
+
+/* -- Abstract vector sprite (the Static entity) -- */
 .portrait {
   width: 34vw; max-width: 160px; min-width: 108px;
   aspect-ratio: 1;
@@ -270,6 +306,11 @@ html, body {
   box-shadow: 0 0 0 2px rgba(255,255,255,.08), 0 8px 30px rgba(0,0,0,.5), 0 0 34px var(--pglow);
   transition: box-shadow 300ms ease, transform 300ms ease, filter 300ms ease;
 }
+.portrait--static {
+  width: 30vw; max-width: 150px; min-width: 96px;
+  aspect-ratio: 1 / 2.1;
+  border-radius: 18px;
+}
 .portrait svg.face {
   width: 92%;
   height: 92%;
@@ -278,14 +319,6 @@ html, body {
 .face-group {
   opacity: 0;
   transition: opacity 160ms ease;
-}
-.emo-neutral .face-neutral,
-.emo-smile .face-smile,
-.emo-sad .face-sad,
-.emo-angry .face-angry,
-.emo-shock .face-shock,
-.emo-glitch .face-glitch {
-  opacity: 1;
 }
 
 .sprite-name {
@@ -448,6 +481,7 @@ html, body {
   97% { filter: none; transform: translate(0,0); }
 }
 .subtitle { color: var(--muted); font-size: .9rem; max-width: 30ch; }
+.art-credit { position: absolute; bottom: 14px; left: 0; right: 0; color: var(--muted); font-size: .62rem; opacity: .55; }
 .ending-title {
   font-family: 'JetBrains Mono', monospace;
   font-size: 1rem;

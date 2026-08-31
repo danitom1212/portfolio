@@ -2,8 +2,8 @@
 // Pure data + tiny predicate functions. No engine logic lives here.
 
 export const CHARACTERS = {
-  sam: { name: 'סאם', color: '#ff3fb0', initial: 'ס' },
-  static: { name: '???', color: '#39ff88', initial: '?' },
+  sam: { name: 'סאם', color: '#ff3fb0' },
+  static: { name: '???', color: '#39ff88' },
 };
 
 export const STORY = {

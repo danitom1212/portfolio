@@ -4,10 +4,12 @@ import { buildDecor } from './decor.js';
 
 const TYPE_SPEED_MS = 26;
 
-const PORTRAIT_COLORS = {
-  sam:    { light: '#ffb3e0', dark: '#4a0630', glow: 'rgba(255,63,176,.5)' },
-  static: { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' },
-};
+const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
+
+// Sam uses real illustrated sprite art (assets/sprites/); the antagonist
+// stays an abstract SVG silhouette since it isn't meant to read as human.
+const SPRITE_KIND = { sam: 'photo', static: 'vector' };
+const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
 
 class Game {
   constructor() {
@@ -132,20 +134,30 @@ class Game {
         this.onstage.set(spec.id, el);
         requestAnimationFrame(() => el.classList.add('on'));
       } else {
-        el.className = `sprite pos-${spec.pos} on emo-${spec.emotion || 'neutral'}`;
+        const kind = SPRITE_KIND[spec.id] || 'vector';
+        el.className = `sprite sprite--${kind} pos-${spec.pos} on emo-${spec.emotion || 'neutral'}`;
       }
     }
   }
 
   createSprite(spec) {
     const char = CHARACTERS[spec.id];
-    const colors = PORTRAIT_COLORS[spec.id] || PORTRAIT_COLORS.sam;
+    const kind = SPRITE_KIND[spec.id] || 'vector';
     const el = document.createElement('div');
-    el.className = `sprite pos-${spec.pos} emo-${spec.emotion || 'neutral'}`;
-    el.innerHTML = `
-      <div class="portrait" style="--pcol-light:${colors.light};--pcol-dark:${colors.dark};--pglow:${colors.glow}">${buildFace(spec.id)}</div>
-      <div class="sprite-name">${char.name}</div>
-    `;
+    el.className = `sprite sprite--${kind} pos-${spec.pos} emo-${spec.emotion || 'neutral'}`;
+
+    if (kind === 'photo') {
+      const layers = PHOTO_EMOTIONS
+        .map((e) => `<img class="face-photo face-${e}" src="assets/sprites/${spec.id}-${e}.webp" alt="${char.name}">`)
+        .join('');
+      el.innerHTML = `<div class="photo-stack">${layers}</div>`;
+    } else {
+      const colors = VECTOR_PORTRAIT_COLORS;
+      el.innerHTML = `
+        <div class="portrait portrait--${spec.id}" style="--pcol-light:${colors.light};--pcol-dark:${colors.dark};--pglow:${colors.glow}">${buildFace()}</div>
+        <div class="sprite-name">${char.name}</div>
+      `;
+    }
     return el;
   }
 
