@@ -503,6 +503,13 @@ html, body {
   transition: transform 160ms ease;
 }
 .btn:active { transform: scale(.96); }
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: none;
+  border: 1px solid rgba(255,255,255,.25);
+}
+.start-btns { display: flex; flex-direction: column; gap: .7rem; align-items: center; }
 
 /* ---------- Debug stat panel ---------- */
 #debug-toggle {

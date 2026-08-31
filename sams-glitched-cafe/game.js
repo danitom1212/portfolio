@@ -14,6 +14,7 @@ const MUSIC_MOOD_BY_BG = {
 };
 
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
+const SAVE_KEY = 'sgc-save-v1';
 
 // Sam uses real illustrated sprite art (assets/sprites/); the antagonist
 // stays an abstract SVG silhouette since it isn't meant to read as human.
@@ -47,12 +48,15 @@ class Game {
     this.$debugBtn = document.getElementById('debug-toggle');
     this.$debugPanel = document.getElementById('debug-panel');
     this.$muteBtn = document.getElementById('mute-toggle');
+    this.$continueBtn = document.getElementById('continue-btn');
 
     this.audio = new AudioManager();
     this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
+    this.$continueBtn.hidden = !this.hasSave();
 
     this.$box.addEventListener('click', () => this.handleTap());
     document.getElementById('start-btn').addEventListener('click', () => this.beginStory());
+    this.$continueBtn.addEventListener('click', () => this.beginStory({ resume: true }));
     document.getElementById('restart-btn').addEventListener('click', () => this.restart());
     this.$debugBtn.addEventListener('click', () => {
       this.$debugPanel.hidden = !this.$debugPanel.hidden;
@@ -62,6 +66,32 @@ class Game {
       const muted = this.audio.toggleMute();
       this.$muteBtn.textContent = muted ? '🔇' : '🔊';
     });
+  }
+
+  // ---------- Save / continue ----------
+
+  hasSave() {
+    try {
+      return !!localStorage.getItem(SAVE_KEY);
+    } catch {
+      return false;
+    }
+  }
+
+  saveProgress() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ sceneId: this.sceneId, stats: this.stats }));
+    } catch {
+      // Private browsing / storage disabled: progress just won't persist.
+    }
+  }
+
+  clearProgress() {
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch {
+      // ignore
+    }
   }
 
   restart() {
@@ -74,9 +104,21 @@ class Game {
     this.beginStory();
   }
 
-  beginStory() {
+  beginStory({ resume = false } = {}) {
     this.audio.unlock();
     this.$start.hidden = true;
+
+    if (resume) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if (saved) {
+          this.stats = saved.stats;
+          this.sceneId = saved.sceneId;
+        }
+      } catch {
+        // fall through to a fresh start
+      }
+    }
     this.enterScene(this.sceneId);
   }
 
@@ -98,10 +140,13 @@ class Game {
     this.syncSprites(scene.sprites || []);
 
     if (scene.ending) {
+      this.clearProgress();
       this.playDialogue(scene, () => this.showEnding(scene));
     } else if (!scene.dialogue || scene.dialogue.length === 0) {
+      this.saveProgress();
       this.advanceFromScene(scene);
     } else {
+      this.saveProgress();
       this.playDialogue(scene, () => this.advanceFromScene(scene));
     }
   }
