@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sam's Glitched Cafe</title>
+<meta name="description" content="ויזואל נובל אינטראקטיבי — קפה גליץ' של סאם.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="frame">
+  <div id="stage" dir="rtl">
+    <div id="bg-a" class="bg-layer"></div>
+    <div id="bg-b" class="bg-layer"></div>
+    <div id="vfx-overlay"></div>
+    <div id="sprite-layer"></div>
+
+    <div id="choice-panel"></div>
+
+    <div id="dialogue-box">
+      <div id="name-tag"></div>
+      <div id="dialogue-text"></div>
+      <div id="continue-arrow">▼</div>
+    </div>
+
+    <button id="debug-toggle" title="Stats">🐞</button>
+    <div id="debug-panel" hidden></div>
+
+    <div id="start-screen" class="overlay-screen">
+      <div class="title-en">a glitched visual novel</div>
+      <div class="title-he">קפה הגליץ׳ של סאם</div>
+      <p class="subtitle">בית קפה שנפתח כל לילה מחדש. ברייסטית אחת. וגליצ׳ שלא הולך להיעלם לבד.</p>
+      <button id="start-btn" class="btn">להיכנס פנימה</button>
+    </div>
+
+    <div id="end-screen" class="overlay-screen" hidden>
+      <div class="title-en">the end</div>
+      <div id="end-title" class="ending-title"></div>
+      <button id="restart-btn" class="btn">לשחק שוב</button>
+    </div>
+  </div>
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
