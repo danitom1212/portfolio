@@ -69,47 +69,71 @@ html, body {
 }
 .bg-layer.visible { opacity: 1; }
 
+/* Photo bases: free-licensed stock (see assets/CREDITS.md), color-graded
+   and glitch-processed offline into assets/bg-*.jpg — no runtime filters. */
 .bg-street {
-  background:
+  background-image:
     repeating-linear-gradient(180deg, rgba(255,255,255,.03) 0 2px, transparent 2px 4px),
-    linear-gradient(180deg, #060613 0%, #0d0a24 40%, #170a2a 70%, #1c0d1f 100%);
+    linear-gradient(180deg, rgba(6,6,19,.3) 0%, rgba(23,10,42,.4) 60%, rgba(28,13,31,.6) 100%),
+    url('assets/bg-street.jpg');
+  background-size: auto, cover, cover;
+  background-position: center, center, center 40%;
+  background-repeat: repeat, no-repeat, no-repeat;
 }
 .bg-street::after, .bg-cafe::after, .bg-cafe_dim::after, .bg-cafe_glitch::after, .bg-void::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
 }
 .bg-street::after {
-  background: radial-gradient(circle at 20% 15%, rgba(255,63,176,.35), transparent 40%),
-              radial-gradient(circle at 80% 75%, rgba(57,255,136,.18), transparent 45%);
+  background: radial-gradient(circle at 20% 15%, rgba(255,63,176,.3), transparent 40%),
+              radial-gradient(circle at 80% 75%, rgba(57,255,136,.16), transparent 45%);
   animation: neonPulse 4s ease-in-out infinite;
 }
 .bg-cafe {
-  background: linear-gradient(180deg, #241226 0%, #3b1a2c 45%, #2a1220 100%);
+  background-image:
+    linear-gradient(180deg, rgba(36,18,38,.3) 0%, rgba(59,26,44,.32) 45%, rgba(42,18,32,.55) 100%),
+    url('assets/bg-cafe.jpg');
+  background-size: cover, cover;
+  background-position: center, center 68%;
+  background-repeat: no-repeat, no-repeat;
 }
 .bg-cafe::after {
-  background: radial-gradient(circle at 50% 0%, rgba(255,200,140,.18), transparent 55%),
-              radial-gradient(circle at 15% 85%, rgba(255,63,176,.15), transparent 50%);
+  background: radial-gradient(circle at 50% 0%, rgba(255,200,140,.16), transparent 55%),
+              radial-gradient(circle at 15% 85%, rgba(255,63,176,.13), transparent 50%);
 }
 .bg-cafe_dim {
-  background: linear-gradient(180deg, #1c0f22 0%, #2b1424 50%, #1a0c1a 100%);
+  background-image:
+    linear-gradient(180deg, rgba(28,15,34,.4) 0%, rgba(43,20,36,.42) 50%, rgba(26,12,26,.65) 100%),
+    url('assets/bg-cafe-dim.jpg');
+  background-size: cover, cover;
+  background-position: center, center 68%;
+  background-repeat: no-repeat, no-repeat;
 }
 .bg-cafe_dim::after {
-  background: radial-gradient(circle at 50% 10%, rgba(255,150,120,.10), transparent 55%);
+  background: radial-gradient(circle at 50% 10%, rgba(255,150,120,.08), transparent 55%);
 }
 .bg-cafe_glitch {
-  background:
+  background-image:
     repeating-linear-gradient(180deg, rgba(57,255,136,.05) 0 1px, transparent 1px 3px),
-    linear-gradient(180deg, #170a22 0%, #241127 50%, #0f1a18 100%);
+    linear-gradient(180deg, rgba(23,10,34,.32) 0%, rgba(36,17,39,.36) 50%, rgba(15,26,24,.55) 100%),
+    url('assets/bg-cafe-glitch.jpg');
+  background-size: auto, cover, cover;
+  background-position: center, center, center 68%;
+  background-repeat: repeat, no-repeat, no-repeat;
 }
 .bg-cafe_glitch::after {
-  background: radial-gradient(circle at 30% 20%, rgba(57,255,136,.22), transparent 50%),
-              radial-gradient(circle at 80% 80%, rgba(255,63,176,.18), transparent 50%);
+  background: radial-gradient(circle at 30% 20%, rgba(57,255,136,.2), transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(255,63,176,.16), transparent 50%);
   animation: neonPulse 1.6s steps(6) infinite;
 }
 .bg-void {
-  background:
+  background-image:
     repeating-linear-gradient(90deg, rgba(57,255,136,.06) 0 1px, transparent 1px 24px),
     repeating-linear-gradient(180deg, rgba(57,255,136,.06) 0 1px, transparent 1px 24px),
-    radial-gradient(circle at 50% 50%, #0c0614 0%, #020103 75%);
+    linear-gradient(180deg, rgba(12,6,20,.15) 0%, rgba(2,1,3,.6) 100%),
+    url('assets/bg-void.jpg');
+  background-size: auto, auto, cover, cover;
+  background-position: center, center, center, center 25%;
+  background-repeat: repeat, repeat, no-repeat, no-repeat;
 }
 @keyframes neonPulse { 0%,100%{opacity:.7} 50%{opacity:1} }
 
