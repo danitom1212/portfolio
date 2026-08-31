@@ -41,11 +41,29 @@ function stringLights(count = 9) {
   return `<div class="light-string">${bulbs}</div>`;
 }
 
+// A silent customer, frozen in the same loop every night: one slow bite,
+// forever. Present in every café scene as a background detail the player
+// can notice on their own, before the story ever explains why.
+function frozenDiner() {
+  return `
+    <div class="npc-diner">
+      <svg viewBox="0 0 60 90">
+        <ellipse class="npc-shadow" cx="30" cy="86" rx="20" ry="4"/>
+        <path class="npc-body" d="M14,88 L14,58 Q14,34 30,34 Q46,34 46,58 L46,88 Z"/>
+        <circle class="npc-head" cx="30" cy="22" r="12"/>
+        <g class="npc-arm">
+          <path class="npc-body" d="M38,44 Q50,46 50,34 Q50,26 44,24 Q40,23 38,28 Q36,36 38,44 Z"/>
+        </g>
+      </svg>
+    </div>`;
+}
+
 const DECOR = {
   street: () => `${rain(16)}${neonSign()}<div class="puddle-glow"></div>`,
-  cafe: () => `${stringLights(9)}${rain(6, 'rain-drop--faint')}`,
-  cafe_dim: () => `${stringLights(9)}${rain(5, 'rain-drop--faint')}`,
-  cafe_glitch: () => `${stringLights(9)}${staticSpecks(18)}`,
+  cafe: () => `${stringLights(9)}${rain(6, 'rain-drop--faint')}${frozenDiner()}`,
+  cafe_dim: () => `${stringLights(9)}${rain(5, 'rain-drop--faint')}${frozenDiner()}`,
+  cafe_glitch: () => `${stringLights(9)}${staticSpecks(18)}${frozenDiner()}`,
+  cafe_cracked: () => `${stringLights(9)}${staticSpecks(8)}${frozenDiner()}`,
   void: () => `${staticSpecks(26)}`,
 };
 

@@ -80,7 +80,7 @@ html, body {
   background-position: center, center, center 40%;
   background-repeat: repeat, no-repeat, no-repeat;
 }
-.bg-street::after, .bg-cafe::after, .bg-cafe_dim::after, .bg-cafe_glitch::after, .bg-void::after {
+.bg-street::after, .bg-cafe::after, .bg-cafe_dim::after, .bg-cafe_cracked::after, .bg-cafe_glitch::after, .bg-void::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
 }
 .bg-street::after {
@@ -110,6 +110,18 @@ html, body {
 }
 .bg-cafe_dim::after {
   background: radial-gradient(circle at 50% 10%, rgba(255,150,120,.08), transparent 55%);
+}
+.bg-cafe_cracked {
+  background-image:
+    linear-gradient(180deg, rgba(20,10,24,.4) 0%, rgba(40,18,34,.4) 50%, rgba(18,10,20,.6) 100%),
+    url('assets/bg-cafe-cracked.jpg');
+  background-size: cover, cover;
+  background-position: center, center 68%;
+  background-repeat: no-repeat, no-repeat;
+}
+.bg-cafe_cracked::after {
+  background: radial-gradient(circle at 62% 22%, rgba(57,255,136,.22), transparent 40%);
+  animation: neonPulse 2.4s ease-in-out infinite;
 }
 .bg-cafe_glitch {
   background-image:
@@ -198,6 +210,29 @@ html, body {
   animation: bulbTwinkle 2.4s ease-in-out infinite;
 }
 @keyframes bulbTwinkle { 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+
+.npc-diner {
+  position: absolute;
+  left: 1%;
+  bottom: 27%;
+  width: 15%;
+  min-width: 46px;
+  max-width: 70px;
+  opacity: .82;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.4));
+}
+.npc-diner svg { width: 100%; height: auto; display: block; }
+.npc-shadow { fill: rgba(0,0,0,.35); }
+.npc-body, .npc-head { fill: #150c14; }
+.npc-arm {
+  transform-origin: 40px 40px;
+  animation: npcLoopBite 4.4s cubic-bezier(.6,0,.4,1) infinite;
+}
+@keyframes npcLoopBite {
+  0%, 8% { transform: rotate(0deg); }
+  38%, 55% { transform: rotate(-52deg); }
+  85%, 100% { transform: rotate(0deg); }
+}
 
 .static-speck {
   position: absolute;

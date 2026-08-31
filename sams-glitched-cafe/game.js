@@ -9,6 +9,7 @@ const MUSIC_MOOD_BY_BG = {
   street: 'warm',
   cafe: 'warm',
   cafe_dim: 'warm',
+  cafe_cracked: 'tense',
   cafe_glitch: 'tense',
   void: 'tense',
 };
