@@ -1,10 +1,12 @@
 import { STORY, CHARACTERS } from './story.js';
+import { buildFace } from './faces.js';
+import { buildDecor } from './decor.js';
 
 const TYPE_SPEED_MS = 26;
 
 const PORTRAIT_COLORS = {
-  sam:    { light: '#ff8fd6', dark: '#7a0a4e', glow: 'rgba(255,63,176,.55)' },
-  static: { light: '#9dffc9', dark: '#0a3d24', glow: 'rgba(57,255,136,.55)' },
+  sam:    { light: '#ffb3e0', dark: '#4a0630', glow: 'rgba(255,63,176,.5)' },
+  static: { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' },
 };
 
 class Game {
@@ -20,6 +22,7 @@ class Game {
     this.$stage = document.getElementById('stage');
     this.$bgA = document.getElementById('bg-a');
     this.$bgB = document.getElementById('bg-b');
+    this.$decor = document.getElementById('bg-decor');
     this.$vfx = document.getElementById('vfx-overlay');
     this.$sprites = document.getElementById('sprite-layer');
     this.$box = document.getElementById('dialogue-box');
@@ -104,6 +107,8 @@ class Game {
       incoming.classList.add('visible');
       outgoing.classList.remove('visible');
     });
+
+    this.$decor.innerHTML = buildDecor(bgKey);
   }
 
   // ---------- Sprites ----------
@@ -138,7 +143,7 @@ class Game {
     const el = document.createElement('div');
     el.className = `sprite pos-${spec.pos} emo-${spec.emotion || 'neutral'}`;
     el.innerHTML = `
-      <div class="portrait" style="--pcol-light:${colors.light};--pcol-dark:${colors.dark};--pglow:${colors.glow}">${char.initial}</div>
+      <div class="portrait" style="--pcol-light:${colors.light};--pcol-dark:${colors.dark};--pglow:${colors.glow}">${buildFace(spec.id)}</div>
       <div class="sprite-name">${char.name}</div>
     `;
     return el;

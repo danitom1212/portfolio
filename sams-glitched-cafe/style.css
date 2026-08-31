@@ -113,6 +113,80 @@ html, body {
 }
 @keyframes neonPulse { 0%,100%{opacity:.7} 50%{opacity:1} }
 
+/* ---------- Scene decorations ---------- */
+#bg-decor {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden;
+}
+
+.rain-drop {
+  position: absolute;
+  top: -10%;
+  width: 1.5px;
+  height: 8%;
+  background: linear-gradient(180deg, transparent, rgba(180,220,255,.55));
+  animation: rainFall linear infinite;
+}
+.rain-drop--faint { opacity: .35; }
+@keyframes rainFall { to { transform: translateY(120vh); } }
+
+.puddle-glow {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 18%;
+  background: linear-gradient(0deg, rgba(255,63,176,.14), transparent),
+              linear-gradient(90deg, transparent, rgba(57,255,136,.08), transparent);
+  filter: blur(2px);
+}
+
+.neon-sign {
+  position: absolute;
+  top: 12%; left: 50%;
+  transform: translateX(-50%);
+  width: 74%;
+  max-width: 260px;
+  overflow: visible;
+  animation: neonBuzz 3.6s steps(1) infinite;
+}
+.neon-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  fill: #ff3fb0;
+  filter: drop-shadow(0 0 6px #ff3fb0) drop-shadow(0 0 14px #ff3fb0aa);
+}
+@keyframes neonBuzz {
+  0%, 89%, 100% { opacity: 1; }
+  90% { opacity: .3; }
+  91% { opacity: 1; }
+  93% { opacity: .5; }
+  94% { opacity: 1; }
+}
+
+.light-string {
+  position: absolute;
+  top: 4%; left: 0; right: 0; height: 10%;
+}
+.light-string .bulb {
+  position: absolute;
+  top: 50%;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #ffd48a;
+  box-shadow: 0 0 8px 2px #ffd48a99;
+  animation: bulbTwinkle 2.4s ease-in-out infinite;
+}
+@keyframes bulbTwinkle { 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+
+.static-speck {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: #39ff88;
+  opacity: .6;
+  animation: speckDrift 3s ease-in-out infinite;
+}
+@keyframes speckDrift {
+  0%,100% { transform: translate(0,0); opacity: .3; }
+  50% { transform: translate(4px,-10px); opacity: .9; }
+}
+
 /* ---------- VFX overlay ---------- */
 #vfx-overlay {
   position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
@@ -162,19 +236,34 @@ html, body {
 .sprite.pos-center.on { transform: translateX(-50%) translateY(0) scale(1); }
 
 .portrait {
-  width: 26vw; max-width: 128px; min-width: 84px;
+  width: 34vw; max-width: 160px; min-width: 108px;
   aspect-ratio: 1;
   border-radius: 28px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
-  font-size: 2.4rem;
-  color: #fff;
   position: relative;
-  background: radial-gradient(circle at 35% 30%, var(--pcol-light), var(--pcol-dark) 75%);
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 25%, var(--pcol-light), var(--pcol-dark) 78%);
   box-shadow: 0 0 0 2px rgba(255,255,255,.08), 0 8px 30px rgba(0,0,0,.5), 0 0 34px var(--pglow);
   transition: box-shadow 300ms ease, transform 300ms ease, filter 300ms ease;
 }
+.portrait svg.face {
+  width: 92%;
+  height: 92%;
+  overflow: visible;
+}
+.face-group {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.emo-neutral .face-neutral,
+.emo-smile .face-smile,
+.emo-sad .face-sad,
+.emo-angry .face-angry,
+.emo-shock .face-shock,
+.emo-glitch .face-glitch {
+  opacity: 1;
+}
+
 .sprite-name {
   font-family: 'JetBrains Mono', monospace;
   font-size: .68rem;
@@ -185,10 +274,11 @@ html, body {
 
 .emo-neutral .portrait { filter: saturate(1); }
 .emo-smile .portrait { transform: translateY(-2px) scale(1.03); filter: saturate(1.15) brightness(1.05); }
-.emo-sad .portrait { transform: translateY(6px); filter: saturate(.6) brightness(.85); }
-.emo-angry .portrait { filter: saturate(1.4) brightness(1.1); box-shadow: 0 0 0 2px rgba(255,255,255,.08), 0 8px 30px rgba(0,0,0,.5), 0 0 46px #ff2b2b88; animation: angryPulse 900ms ease-in-out infinite; }
-.emo-shock .portrait { filter: brightness(1.3) contrast(1.2); animation: shockPop 380ms ease; }
+.emo-sad .portrait { transform: translateY(6px); filter: saturate(.75) brightness(.9); }
+.emo-angry .portrait { filter: saturate(1.3) brightness(1.05); box-shadow: 0 0 0 2px rgba(255,255,255,.08), 0 8px 30px rgba(0,0,0,.5), 0 0 46px #ff2b2b88; animation: angryPulse 900ms ease-in-out infinite; }
+.emo-shock .portrait { filter: brightness(1.15) contrast(1.15); animation: shockPop 380ms ease; }
 .emo-glitch .portrait { animation: portraitGlitch 260ms steps(3, jump-none) infinite; }
+.emo-glitch .face-glitch { animation: faceRgbSplit 340ms steps(2, jump-none) infinite; }
 
 @keyframes angryPulse { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.05);} }
 @keyframes shockPop { 0%{ transform:scale(.85);} 60%{ transform:scale(1.1);} 100%{ transform:scale(1);} }
@@ -197,6 +287,11 @@ html, body {
   30% { clip-path: inset(10% 0 40% 0); transform: translate(-4px,0); filter: hue-rotate(40deg); }
   60% { clip-path: inset(50% 0 5% 0); transform: translate(3px,0); filter: hue-rotate(-30deg); }
   100% { clip-path: inset(0 0 0 0); transform: translate(0,0); }
+}
+@keyframes faceRgbSplit {
+  0% { filter: drop-shadow(2px 0 0 #ff3fb0) drop-shadow(-2px 0 0 #39ff88); transform: translate(0,0); }
+  50% { filter: drop-shadow(-2px 1px 0 #ff3fb0) drop-shadow(2px -1px 0 #39ff88); transform: translate(1px,0); }
+  100% { filter: drop-shadow(2px 0 0 #ff3fb0) drop-shadow(-2px 0 0 #39ff88); transform: translate(0,0); }
 }
 
 /* ---------- Dialogue box ---------- */
