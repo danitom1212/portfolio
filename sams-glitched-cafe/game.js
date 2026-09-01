@@ -23,7 +23,7 @@ const SAVE_KEY = 'sgc-save-v1';
 const SPRITE_KIND = { yasmin: 'photo', sam: 'photo', customer: 'photo', static: 'vector' };
 const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
 // Each illustrated sprite keeps its source art's own proportions.
-const SPRITE_ASPECT = { yasmin: '420 / 1345', sam: '480 / 1504', customer: '420 / 1046' };
+const SPRITE_ASPECT = { yasmin: '480 / 1504', sam: '420 / 1345', customer: '420 / 1046' };
 // Background characters render smaller/dimmer than the on-stage leads.
 const MINOR_CHARACTERS = new Set(['customer']);
 

@@ -17,9 +17,9 @@ processed output, not the originals.
 Attribution for the café background: "Spiral Atlas VN House Backgrounds"
 by Spiral Atlas, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
 
-## Character sprite
+## Player character sprite (Yasmin)
 
-`sprites/sam-*.webp` (6 expressions) are cropped and re-encoded from
+`sprites/yasmin-*.webp` (6 expressions) are cropped and re-encoded from
 **"Codel Visual Novel Sprite"** by **LisadiKaprio**, via
 https://opengameart.org/content/codel-visual-novel-sprite
 
@@ -27,9 +27,9 @@ License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
 attribution required. Credit: "Codel Visual Novel Sprite" by LisadiKaprio,
 licensed under CC BY 4.0.
 
-## Player character sprite
+## Sam's sprite
 
-`sprites/yasmin-*.webp` are cropped and re-encoded from 3 of the 7
+`sprites/sam-*.webp` are cropped and re-encoded from 3 of the 7
 head/expression options ("neutral", "smile", "pissed" → used for
 neutral/glitch, smile, and angry/shock/sad respectively) in the
 **"casual" outfit** of **"Kuudere Visual Novel Sprite"** by
@@ -40,6 +40,10 @@ not used anywhere in this project.
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
 attribution required. Credit: "Kuudere Visual Novel Sprite" by
 LisadiKaprio, licensed under CC BY 4.0.
+
+**Known issue:** this sprite's chibi-proportioned, simpler-shaded style
+doesn't match Codel's more detailed rendering — see the note sent
+alongside this update for what was tried and what's needed to fix it.
 
 ## Background character sprite
 
