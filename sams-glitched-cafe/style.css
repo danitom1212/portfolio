@@ -126,7 +126,7 @@ html, body {
   background-repeat: no-repeat, no-repeat;
 }
 .bg-cafe_cracked::after {
-  background: radial-gradient(circle at 62% 22%, rgba(57,255,136,.22), transparent 40%);
+  background: radial-gradient(circle at 62% 22%, rgba(209,71,126,.24), transparent 40%);
   animation: neonPulse 2.4s ease-in-out infinite;
 }
 .bg-cafe_glitch {

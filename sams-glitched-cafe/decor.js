@@ -41,9 +41,7 @@ function stringLights(count = 9) {
   return `<div class="light-string">${bulbs}</div>`;
 }
 
-// A silent customer, frozen in the same loop every night: one slow bite,
-// forever. Present in every café scene as a background detail the player
-// can notice on their own, before the story ever explains why.
+// A silent background patron, present in café scenes as ambient life.
 function frozenDiner() {
   return `
     <div class="npc-diner">
@@ -63,7 +61,7 @@ const DECOR = {
   cafe: () => `${stringLights(9)}${rain(6, 'rain-drop--faint')}${frozenDiner()}`,
   cafe_dim: () => `${stringLights(9)}${rain(5, 'rain-drop--faint')}${frozenDiner()}`,
   cafe_glitch: () => `${stringLights(9)}${staticSpecks(18)}${frozenDiner()}`,
-  cafe_cracked: () => `${stringLights(9)}${staticSpecks(8)}`,
+  cafe_cracked: () => `${stringLights(9)}`,
   void: () => `${staticSpecks(26)}`,
 };
 

@@ -8,28 +8,23 @@ const TYPE_SPEED_MS = 26;
 const MUSIC_MOOD_BY_BG = {
   street: 'warm',
   cafe: 'warm',
-  cafe_dim: 'warm',
-  cafe_cracked: 'tense',
-  cafe_glitch: 'tense',
-  void: 'tense',
+  cafe_dim: 'tense',
 };
 
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
 const SAVE_KEY = 'sgc-save-v1';
 
-// Yasmin, Sam and the customer use real illustrated sprite art
-// (assets/sprites/); the antagonist stays an abstract SVG silhouette
-// since it isn't meant to read as human.
-const SPRITE_KIND = { yasmin: 'photo', sam: 'photo', customer: 'photo', static: 'vector' };
+// Yasmin, Sam and Noa all use real illustrated sprite art (assets/sprites/).
+const SPRITE_KIND = { yasmin: 'photo', sam: 'photo', noa: 'photo' };
 const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
 // Each illustrated sprite keeps its source art's own proportions.
-const SPRITE_ASPECT = { yasmin: '480 / 1504', sam: '420 / 1345', customer: '420 / 1046' };
-// Background characters render smaller/dimmer than the on-stage leads.
-const MINOR_CHARACTERS = new Set(['customer']);
+const SPRITE_ASPECT = { yasmin: '480 / 1504', sam: '480 / 1190', noa: '420 / 1345' };
+// No background-scale minor characters in this cut of the story.
+const MINOR_CHARACTERS = new Set();
 
 class Game {
   constructor() {
-    this.stats = { affection: 0, rage: 0, glitch: 0 };
+    this.stats = { affection: 0, rage: 0, doubt: 0 };
     this.sceneId = STORY.start;
     this.lineIndex = 0;
     this.onstage = new Map(); // characterId -> sprite element
@@ -101,7 +96,7 @@ class Game {
   }
 
   restart() {
-    this.stats = { affection: 0, rage: 0, glitch: 0 };
+    this.stats = { affection: 0, rage: 0, doubt: 0 };
     this.sceneId = STORY.start;
     this.onstage.forEach((el) => el.remove());
     this.onstage.clear();
