@@ -3,12 +3,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --accent: #ff3fb0;
-  --accent2: #39ff88;
+  /* Warm wine/rose for romance & UI; deep teal for ambient mood. The
+     original hot-pink/neon-green pairing is kept ONLY for corruption —
+     the glitch VFX, the crack, Static's glow — so it reads as a rare
+     "something is wrong" jolt instead of the whole game's wallpaper. */
+  --accent: #d1477e;
+  --accent2: #2f9080;
+  --glitch: #39ff88;
+  --glitch-warm: #ff3fb0;
   --ink: #f2f2f7;
   --muted: #b8b8c8;
   --panel: rgba(14, 10, 22, 0.62);
-  --panel-border: rgba(255, 63, 176, 0.35);
+  --panel-border: rgba(209, 71, 126, 0.35);
 }
 
 html, body {
@@ -49,8 +55,8 @@ html, body {
     content: '';
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at 30% 20%, rgba(255,63,176,.15), transparent 55%),
-                radial-gradient(circle at 75% 80%, rgba(57,255,136,.12), transparent 55%),
+    background: radial-gradient(circle at 30% 20%, rgba(209,71,126,.15), transparent 55%),
+                radial-gradient(circle at 75% 80%, rgba(47,144,128,.12), transparent 55%),
                 #05030a;
     filter: blur(40px);
     z-index: -1;
@@ -84,8 +90,8 @@ html, body {
   content: ''; position: absolute; inset: 0; pointer-events: none;
 }
 .bg-street::after {
-  background: radial-gradient(circle at 20% 15%, rgba(255,63,176,.3), transparent 40%),
-              radial-gradient(circle at 80% 75%, rgba(57,255,136,.16), transparent 45%);
+  background: radial-gradient(circle at 20% 15%, rgba(209,71,126,.3), transparent 40%),
+              radial-gradient(circle at 80% 75%, rgba(47,144,128,.16), transparent 45%);
   animation: neonPulse 4s ease-in-out infinite;
 }
 .bg-cafe {
@@ -98,7 +104,7 @@ html, body {
 }
 .bg-cafe::after {
   background: radial-gradient(circle at 50% 0%, rgba(255,200,140,.16), transparent 55%),
-              radial-gradient(circle at 15% 85%, rgba(255,63,176,.13), transparent 50%);
+              radial-gradient(circle at 15% 85%, rgba(209,71,126,.13), transparent 50%);
 }
 .bg-cafe_dim {
   background-image:
@@ -167,8 +173,8 @@ html, body {
 
 .puddle-glow {
   position: absolute; left: 0; right: 0; bottom: 0; height: 18%;
-  background: linear-gradient(0deg, rgba(255,63,176,.14), transparent),
-              linear-gradient(90deg, transparent, rgba(57,255,136,.08), transparent);
+  background: linear-gradient(0deg, rgba(209,71,126,.14), transparent),
+              linear-gradient(90deg, transparent, rgba(47,144,128,.08), transparent);
   filter: blur(2px);
 }
 
@@ -185,8 +191,8 @@ html, body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 15px;
   font-weight: 700;
-  fill: #ff3fb0;
-  filter: drop-shadow(0 0 6px #ff3fb0) drop-shadow(0 0 14px #ff3fb0aa);
+  fill: #d1477e;
+  filter: drop-shadow(0 0 6px #d1477e) drop-shadow(0 0 14px #d1477eaa);
 }
 @keyframes neonBuzz {
   0%, 89%, 100% { opacity: 1; }
@@ -497,8 +503,8 @@ html, body {
 
 .choice-card:hover, .choice-card:active {
   border-color: var(--accent);
-  background: rgba(255, 63, 176, .14);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 22px rgba(255,63,176,.35);
+  background: rgba(209, 71, 126, .14);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 22px rgba(209,71,126,.35);
 }
 .choice-card:active { transform: scale(.97); }
 
@@ -507,7 +513,7 @@ html, body {
   position: absolute; inset: 0; z-index: 20;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 1.4rem; text-align: center; padding: 2rem;
-  background: radial-gradient(circle at 50% 30%, rgba(255,63,176,.16), transparent 60%),
+  background: radial-gradient(circle at 50% 30%, rgba(209,71,126,.16), transparent 60%),
               linear-gradient(180deg, #0a0510 0%, #05030a 100%);
 }
 .overlay-screen[hidden] { display: none; }
@@ -550,7 +556,7 @@ html, body {
   cursor: pointer;
   color: #0a0510;
   background: linear-gradient(90deg, var(--accent2), var(--accent));
-  box-shadow: 0 10px 30px rgba(255,63,176,.35);
+  box-shadow: 0 10px 30px rgba(209,71,126,.35);
   transition: transform 160ms ease;
 }
 .btn:active { transform: scale(.96); }
