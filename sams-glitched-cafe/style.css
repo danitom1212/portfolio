@@ -286,7 +286,7 @@ html, body {
   gap: .5rem;
   opacity: 0;
   transform: translateY(24px) scale(.92);
-  transition: opacity 420ms ease, transform 420ms cubic-bezier(.2,.9,.3,1.3);
+  transition: opacity 420ms ease, transform 420ms cubic-bezier(.2,.9,.3,1.3), filter 320ms ease;
 }
 .sprite.pos-left  { left: 2%; }
 .sprite.pos-center{ left: 50%; transform: translateX(-50%) translateY(24px) scale(.92); }
@@ -294,10 +294,20 @@ html, body {
 .sprite.on { opacity: 1; transform: translateY(0) scale(1); }
 .sprite.pos-center.on { transform: translateX(-50%) translateY(0) scale(1); }
 
+/* Cinematic focus: dim whoever isn't currently speaking. Filter-only (no
+   transform) so it never fights the position/entrance transforms above. */
+.sprite.is-listening { filter: brightness(.66) saturate(.7); }
+.sprite.is-speaking { filter: brightness(1.05) saturate(1.05); }
+
+/* Two leads on stage at once render smaller so they don't collide on a
+   narrow phone screen. */
+#sprite-layer.duo .sprite--photo:not(.sprite--minor) { height: 60%; }
+
 /* -- Illustrated full-body sprite (Sam): stacked emotion PNGs, crossfaded -- */
 .sprite--photo {
   bottom: -3%;
   height: 76%;
+  transition: height 320ms ease, opacity 420ms ease, transform 420ms cubic-bezier(.2,.9,.3,1.3), filter 320ms ease;
 }
 .sprite--photo.sprite--minor {
   height: 44%;

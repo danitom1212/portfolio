@@ -17,14 +17,14 @@ const MUSIC_MOOD_BY_BG = {
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
 const SAVE_KEY = 'sgc-save-v1';
 
-// Sam and the customer use real illustrated sprite art (assets/sprites/);
-// the antagonist stays an abstract SVG silhouette since it isn't meant to
-// read as human.
-const SPRITE_KIND = { sam: 'photo', customer: 'photo', static: 'vector' };
+// Yasmin, Sam and the customer use real illustrated sprite art
+// (assets/sprites/); the antagonist stays an abstract SVG silhouette
+// since it isn't meant to read as human.
+const SPRITE_KIND = { yasmin: 'photo', sam: 'photo', customer: 'photo', static: 'vector' };
 const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
 // Each illustrated sprite keeps its source art's own proportions.
-const SPRITE_ASPECT = { sam: '480 / 1504', customer: '420 / 1046' };
-// Background characters render smaller/dimmer than the on-stage lead.
+const SPRITE_ASPECT = { yasmin: '420 / 1345', sam: '480 / 1504', customer: '420 / 1046' };
+// Background characters render smaller/dimmer than the on-stage leads.
 const MINOR_CHARACTERS = new Set(['customer']);
 
 class Game {
@@ -207,6 +207,20 @@ class Game {
         el.className = `${this.spriteClassName(spec)} on`;
       }
     }
+
+    const majorCount = list.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
+    this.$sprites.classList.toggle('duo', majorCount >= 2);
+  }
+
+  // Whoever is speaking gets visual focus; everyone else on stage dims
+  // back, like a two-shot favoring whoever has the line. Narration (no
+  // speaker) frames everyone evenly.
+  updateFocus(speakerId) {
+    for (const [id, el] of this.onstage) {
+      el.classList.remove('is-speaking', 'is-listening');
+      if (!speakerId) continue;
+      el.classList.add(id === speakerId ? 'is-speaking' : 'is-listening');
+    }
   }
 
   spriteClassName(spec) {
@@ -282,6 +296,7 @@ class Game {
       this.$name.classList.remove('show');
       this.$text.classList.add('narration');
     }
+    this.updateFocus(line.speaker);
 
     if (line.vfx) this.triggerVfx(line.vfx);
 

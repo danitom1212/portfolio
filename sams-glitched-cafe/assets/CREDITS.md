@@ -27,6 +27,20 @@ License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
 attribution required. Credit: "Codel Visual Novel Sprite" by LisadiKaprio,
 licensed under CC BY 4.0.
 
+## Player character sprite
+
+`sprites/yasmin-*.webp` are cropped and re-encoded from 3 of the 7
+head/expression options ("neutral", "smile", "pissed" → used for
+neutral/glitch, smile, and angry/shock/sad respectively) in the
+**"casual" outfit** of **"Kuudere Visual Novel Sprite"** by
+**LisadiKaprio**, via https://opengameart.org/content/kuudere-visual-novel-sprite.
+The source pack's "pervert" and "super pervert" expression options are
+not used anywhere in this project.
+
+License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
+attribution required. Credit: "Kuudere Visual Novel Sprite" by
+LisadiKaprio, licensed under CC BY 4.0.
+
 ## Background character sprite
 
 `sprites/customer-*.webp` (all 6 emotion slots point at the same single
