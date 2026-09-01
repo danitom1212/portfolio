@@ -4,6 +4,7 @@
 export const CHARACTERS = {
   sam: { name: 'סאם', color: '#ff3fb0' },
   static: { name: '???', color: '#39ff88' },
+  customer: { name: 'הלקוח', color: '#a58bff' },
 };
 
 export const STORY = {
@@ -150,11 +151,15 @@ export const STORY = {
 
     wall_cracks: {
       bg: 'cafe_cracked',
-      sprites: [{ id: 'sam', pos: 'center', emotion: 'shock' }],
+      sprites: [
+        { id: 'sam', pos: 'center', emotion: 'shock' },
+        { id: 'customer', pos: 'left', emotion: 'neutral' },
+      ],
       dialogue: [
         { text: 'הפעם אין פעמון. הלקוח בפינה עדיין באותה תזוזה בדיוק, אבל משהו אחר השתנה.' },
         { text: 'התמונה שהייתה תלויה על הקיר איננה. במקומה נפער סדק דק, זוהר בירוק חיוור, כמו קרע קטן במציאות עצמה.' },
-        { speaker: 'sam', emotion: 'shock', vfx: 'glitch', text: 'אל תיגע/י בזה. זה לא היה שם אתמול. אני… אני חושבת שזה מתפשט.' },
+        { speaker: 'customer', text: '"שוב פעם," הוא לוחש, בלי להרים את המבט מהצלחת שלו.' },
+        { speaker: 'sam', emotion: 'shock', vfx: 'glitch', text: 'הוא… הוא מעולם לא דיבר. בשום לילה. מה קורה פה?' },
       ],
       next: 'return_scene',
     },

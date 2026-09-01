@@ -299,10 +299,16 @@ html, body {
   bottom: -3%;
   height: 76%;
 }
+.sprite--photo.sprite--minor {
+  height: 44%;
+  bottom: 0;
+  opacity: .82;
+  filter: saturate(.85) brightness(.9);
+}
 .photo-stack {
   position: relative;
   height: 100%;
-  aspect-ratio: 480 / 1504;
+  aspect-ratio: var(--sprite-ratio, 480 / 1504);
 }
 .face-photo {
   position: absolute;

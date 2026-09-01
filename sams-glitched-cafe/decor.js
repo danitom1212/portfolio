@@ -63,7 +63,7 @@ const DECOR = {
   cafe: () => `${stringLights(9)}${rain(6, 'rain-drop--faint')}${frozenDiner()}`,
   cafe_dim: () => `${stringLights(9)}${rain(5, 'rain-drop--faint')}${frozenDiner()}`,
   cafe_glitch: () => `${stringLights(9)}${staticSpecks(18)}${frozenDiner()}`,
-  cafe_cracked: () => `${stringLights(9)}${staticSpecks(8)}${frozenDiner()}`,
+  cafe_cracked: () => `${stringLights(9)}${staticSpecks(8)}`,
   void: () => `${staticSpecks(26)}`,
 };
 

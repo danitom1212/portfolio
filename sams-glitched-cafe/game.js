@@ -17,10 +17,15 @@ const MUSIC_MOOD_BY_BG = {
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
 const SAVE_KEY = 'sgc-save-v1';
 
-// Sam uses real illustrated sprite art (assets/sprites/); the antagonist
-// stays an abstract SVG silhouette since it isn't meant to read as human.
-const SPRITE_KIND = { sam: 'photo', static: 'vector' };
+// Sam and the customer use real illustrated sprite art (assets/sprites/);
+// the antagonist stays an abstract SVG silhouette since it isn't meant to
+// read as human.
+const SPRITE_KIND = { sam: 'photo', customer: 'photo', static: 'vector' };
 const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
+// Each illustrated sprite keeps its source art's own proportions.
+const SPRITE_ASPECT = { sam: '480 / 1504', customer: '420 / 1046' };
+// Background characters render smaller/dimmer than the on-stage lead.
+const MINOR_CHARACTERS = new Set(['customer']);
 
 class Game {
   constructor() {
@@ -199,23 +204,28 @@ class Game {
         this.onstage.set(spec.id, el);
         requestAnimationFrame(() => el.classList.add('on'));
       } else {
-        const kind = SPRITE_KIND[spec.id] || 'vector';
-        el.className = `sprite sprite--${kind} pos-${spec.pos} on emo-${spec.emotion || 'neutral'}`;
+        el.className = `${this.spriteClassName(spec)} on`;
       }
     }
+  }
+
+  spriteClassName(spec) {
+    const kind = SPRITE_KIND[spec.id] || 'vector';
+    const minor = MINOR_CHARACTERS.has(spec.id) ? ' sprite--minor' : '';
+    return `sprite sprite--${kind}${minor} pos-${spec.pos} emo-${spec.emotion || 'neutral'}`;
   }
 
   createSprite(spec) {
     const char = CHARACTERS[spec.id];
     const kind = SPRITE_KIND[spec.id] || 'vector';
     const el = document.createElement('div');
-    el.className = `sprite sprite--${kind} pos-${spec.pos} emo-${spec.emotion || 'neutral'}`;
+    el.className = this.spriteClassName(spec);
 
     if (kind === 'photo') {
       const layers = PHOTO_EMOTIONS
         .map((e) => `<img class="face-photo face-${e}" src="assets/sprites/${spec.id}-${e}.webp" alt="${char.name}">`)
         .join('');
-      el.innerHTML = `<div class="photo-stack">${layers}</div>`;
+      el.innerHTML = `<div class="photo-stack" style="--sprite-ratio:${SPRITE_ASPECT[spec.id] || '480 / 1504'}">${layers}</div>`;
     } else {
       const colors = VECTOR_PORTRAIT_COLORS;
       el.innerHTML = `

@@ -27,6 +27,19 @@ License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
 attribution required. Credit: "Codel Visual Novel Sprite" by LisadiKaprio,
 licensed under CC BY 4.0.
 
+## Background character sprite
+
+`sprites/customer-*.webp` (all 6 emotion slots point at the same single
+pose — he's a minor character) are cropped and re-encoded from the
+clothed variant of **"Male sprite for visual novels"** ("Mustafa") by
+**LisadiKaprio**, via https://opengameart.org/content/male-sprite-for-visual-novels.
+The source pack also includes an unclothed variant of the same pose,
+which is not used anywhere in this project.
+
+License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
+attribution required. Credit: "Male sprite for visual novels" by
+LisadiKaprio, licensed under CC BY 4.0.
+
 ## The antagonist ("Static")
 
 Rendered as an original abstract SVG (in `faces.js`), not third-party
