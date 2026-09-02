@@ -58,7 +58,20 @@ class Game {
     this.$muteBtn = document.getElementById('mute-toggle');
     this.$continueBtn = document.getElementById('continue-btn');
 
-    this.vrmStage = new VrmStage(document.getElementById('vrm-layer'));
+    // 3D setup can fail for reasons entirely outside our control — a
+    // blocked CDN script, no WebGL on the device, a driver that refuses
+    // context creation under memory pressure. This constructor runs
+    // before any event listener below is attached, so an uncaught throw
+    // here used to take the whole game down with it (the start button
+    // would silently do nothing forever). Never let that happen again:
+    // if 3D setup fails, Yasmin and Sam just don't render, and everything
+    // else — dialogue, choices, endings — keeps working.
+    try {
+      this.vrmStage = new VrmStage(document.getElementById('vrm-layer'));
+    } catch (err) {
+      console.warn('3D character rendering unavailable, continuing without it', err);
+      this.vrmStage = null;
+    }
 
     this.audio = new AudioManager();
     this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
@@ -109,7 +122,7 @@ class Game {
     this.sceneId = STORY.start;
     this.onstage.forEach((el) => el.remove());
     this.onstage.clear();
-    for (const id of this.onstageVrm) this.vrmStage.remove(id);
+    if (this.vrmStage) for (const id of this.onstageVrm) this.vrmStage.remove(id);
     this.onstageVrm.clear();
     this.$end.hidden = true;
     this.$box.classList.remove('show');
@@ -255,18 +268,23 @@ class Game {
       }
     }
 
-    for (const id of [...this.onstageVrm]) {
-      if (!wanted.has(id)) {
-        this.vrmStage.remove(id);
-        this.onstageVrm.delete(id);
+    if (this.vrmStage) {
+      for (const id of [...this.onstageVrm]) {
+        if (!wanted.has(id)) {
+          this.vrmStage.remove(id);
+          this.onstageVrm.delete(id);
+        }
       }
-    }
-    for (const spec of vrmSpecs) {
-      this.onstageVrm.add(spec.id);
-      this.vrmStage.load(spec.id, VRM_MODEL_URL[spec.id], spec.pos).then(() => {
-        this.vrmStage.setEmotion(spec.id, spec.emotion || 'neutral');
-      });
-      this.vrmStage.setPosition(spec.id, spec.pos); // no-op until loaded; keeps repositioning working once it is
+      for (const spec of vrmSpecs) {
+        this.onstageVrm.add(spec.id);
+        this.vrmStage.load(spec.id, VRM_MODEL_URL[spec.id], spec.pos).then(() => {
+          this.vrmStage.setEmotion(spec.id, spec.emotion || 'neutral');
+        }).catch((err) => {
+          console.warn('3D model failed to load, skipping', spec.id, err);
+          this.onstageVrm.delete(spec.id);
+        });
+        this.vrmStage.setPosition(spec.id, spec.pos); // no-op until loaded; keeps repositioning working once it is
+      }
     }
 
     const majorCount = domList.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
@@ -283,8 +301,10 @@ class Game {
       if (!speakerId) continue;
       el.classList.add(id === speakerId ? 'is-speaking' : 'is-listening');
     }
-    for (const id of this.onstageVrm) {
-      this.vrmStage.setFocus(id, !speakerId ? 'none' : id === speakerId ? 'speaking' : 'listening');
+    if (this.vrmStage) {
+      for (const id of this.onstageVrm) {
+        this.vrmStage.setFocus(id, !speakerId ? 'none' : id === speakerId ? 'speaking' : 'listening');
+      }
     }
   }
 
@@ -318,7 +338,7 @@ class Game {
   setSpriteEmotion(id, emotion) {
     if (!emotion) return;
     if (VRM_CHARACTERS.has(id)) {
-      this.vrmStage.setEmotion(id, emotion);
+      if (this.vrmStage) this.vrmStage.setEmotion(id, emotion);
       return;
     }
     const el = this.onstage.get(id);
@@ -370,16 +390,24 @@ class Game {
 
     if (line.vfx) this.triggerVfx(line.vfx);
     if (line.sfx) this.audio.playSfx(line.sfx, { volume: 0.6 });
+    if (line.gesture && this.vrmStage && VRM_CHARACTERS.has(line.speaker)) {
+      this.vrmStage.setGesture(line.speaker, line.gesture, line.gestureMs || 1600);
+    }
+    if (this.vrmStage) {
+      for (const id of this.onstageVrm) this.vrmStage.setBlush(id, false);
+      if (line.blush && VRM_CHARACTERS.has(line.speaker)) this.vrmStage.setBlush(line.speaker, true);
+    }
 
-    this.typeText(line.text);
+    this.typeText(line.text, line.speaker);
   }
 
-  typeText(full) {
+  typeText(full, speaker) {
     clearTimeout(this.typeTimer);
     this.isTyping = true;
     this.$arrow.classList.remove('show');
     this.$text.textContent = '';
     let i = 0;
+    this.setSpeakerTalking(speaker, true);
 
     const step = () => {
       this.$text.textContent = full.slice(0, i + 1);
@@ -397,11 +425,21 @@ class Game {
     this.typeTimer = setTimeout(step, TYPE_SPEED_MS);
   }
 
+  // Drives the 3D mouth-flap lip-sync purely off the typewriter's own
+  // on/off state (there's no voice track to analyze).
+  setSpeakerTalking(speaker, on) {
+    if (this.vrmStage && speaker && VRM_CHARACTERS.has(speaker)) {
+      this.vrmStage.setTalking(speaker, on);
+    }
+  }
+
   finishTyping() {
     clearTimeout(this.typeTimer);
     this.typeTimer = null;
     this.isTyping = false;
     this.$arrow.classList.add('show');
+    const line = this.currentScene.dialogue[this.lineIndex];
+    this.setSpeakerTalking(line.speaker, false);
   }
 
   handleTap() {
@@ -412,6 +450,7 @@ class Game {
       const line = this.currentScene.dialogue[this.lineIndex];
       this.$text.textContent = line.text;
       this.$arrow.classList.add('show');
+      this.setSpeakerTalking(line.speaker, false);
       return;
     }
 
