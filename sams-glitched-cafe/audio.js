@@ -8,6 +8,8 @@ const SFX_SOURCES = {
   tick: 'assets/sfx/tick.wav',
   select: 'assets/sfx/select.wav',
   glitch: 'assets/sfx/glitch.wav',
+  bell: 'assets/sfx/bell.wav',
+  clink: 'assets/sfx/clink.wav',
 };
 
 const MUSIC_SOURCES = {

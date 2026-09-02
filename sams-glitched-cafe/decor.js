@@ -41,6 +41,13 @@ function stringLights(count = 9) {
   return `<div class="light-string">${bulbs}</div>`;
 }
 
+function steam(left, delay = 0) {
+  return `
+    <svg class="steam-wisp" viewBox="0 0 20 60" style="left:${left}%;animation-delay:-${delay}s">
+      <path d="M10,58 C4,48 16,42 10,32 C4,22 16,16 10,4" />
+    </svg>`;
+}
+
 // A silent background patron, present in café scenes as ambient life.
 function frozenDiner() {
   return `
@@ -58,11 +65,9 @@ function frozenDiner() {
 
 const DECOR = {
   street: () => `${rain(16)}${neonSign()}<div class="puddle-glow"></div>`,
-  cafe: () => `${stringLights(9)}${rain(6, 'rain-drop--faint')}${frozenDiner()}`,
-  cafe_dim: () => `${stringLights(9)}${rain(5, 'rain-drop--faint')}${frozenDiner()}`,
-  cafe_glitch: () => `${stringLights(9)}${staticSpecks(18)}${frozenDiner()}`,
+  cafe: () => `${stringLights(9)}${rain(6, 'rain-drop--faint')}${frozenDiner()}${steam(43, 0)}${steam(57, 1.6)}`,
+  cafe_dim: () => `${stringLights(9)}${rain(5, 'rain-drop--faint')}${frozenDiner()}${steam(43, 0.8)}${steam(57, 2.2)}`,
   cafe_cracked: () => `${stringLights(9)}`,
-  void: () => `${staticSpecks(26)}`,
 };
 
 export function buildDecor(bgKey) {

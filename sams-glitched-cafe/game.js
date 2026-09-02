@@ -294,6 +294,7 @@ class Game {
     this.updateFocus(line.speaker);
 
     if (line.vfx) this.triggerVfx(line.vfx);
+    if (line.sfx) this.audio.playSfx(line.sfx, { volume: 0.6 });
 
     this.typeText(line.text);
   }

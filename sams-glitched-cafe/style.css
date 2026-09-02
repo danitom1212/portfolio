@@ -73,7 +73,8 @@ html, body {
   transition: opacity 900ms ease;
   z-index: 1;
 }
-.bg-layer.visible { opacity: 1; }
+.bg-layer.visible { opacity: 1; animation: kenBurns 26s ease-in-out infinite alternate; }
+@keyframes kenBurns { from { transform: scale(1); } to { transform: scale(1.055); } }
 
 /* Photo bases: free-licensed stock (see assets/CREDITS.md), color-graded
    and glitch-processed offline into assets/bg-*.jpg — no runtime filters. */
@@ -86,40 +87,40 @@ html, body {
   background-position: center, center, center 40%;
   background-repeat: repeat, no-repeat, no-repeat;
 }
-.bg-street::after, .bg-cafe::after, .bg-cafe_dim::after, .bg-cafe_cracked::after, .bg-cafe_glitch::after, .bg-void::after {
+.bg-street::after, .bg-cafe::after, .bg-cafe_dim::after, .bg-cafe_cracked::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
 }
 .bg-street::after {
-  background: radial-gradient(circle at 20% 15%, rgba(209,71,126,.3), transparent 40%),
-              radial-gradient(circle at 80% 75%, rgba(47,144,128,.16), transparent 45%);
+  background: radial-gradient(circle at 20% 15%, rgba(255,176,120,.16), transparent 40%),
+              radial-gradient(circle at 80% 75%, rgba(209,71,126,.12), transparent 45%);
   animation: neonPulse 4s ease-in-out infinite;
 }
 .bg-cafe {
   background-image:
-    linear-gradient(180deg, rgba(36,18,38,.3) 0%, rgba(59,26,44,.32) 45%, rgba(42,18,32,.55) 100%),
+    linear-gradient(180deg, rgba(60,30,26,.06) 0%, rgba(70,34,30,.08) 45%, rgba(50,24,22,.16) 100%),
     url('assets/bg-cafe.jpg');
   background-size: cover, cover;
   background-position: center, center 68%;
   background-repeat: no-repeat, no-repeat;
 }
 .bg-cafe::after {
-  background: radial-gradient(circle at 50% 0%, rgba(255,200,140,.16), transparent 55%),
-              radial-gradient(circle at 15% 85%, rgba(209,71,126,.13), transparent 50%);
+  background: radial-gradient(circle at 50% 0%, rgba(255,210,160,.14), transparent 55%),
+              radial-gradient(circle at 15% 85%, rgba(209,71,126,.08), transparent 50%);
 }
 .bg-cafe_dim {
   background-image:
-    linear-gradient(180deg, rgba(28,15,34,.4) 0%, rgba(43,20,36,.42) 50%, rgba(26,12,26,.65) 100%),
+    linear-gradient(180deg, rgba(30,14,18,.18) 0%, rgba(40,18,20,.22) 50%, rgba(26,12,14,.34) 100%),
     url('assets/bg-cafe-dim.jpg');
   background-size: cover, cover;
   background-position: center, center 68%;
   background-repeat: no-repeat, no-repeat;
 }
 .bg-cafe_dim::after {
-  background: radial-gradient(circle at 50% 10%, rgba(255,150,120,.08), transparent 55%);
+  background: radial-gradient(circle at 50% 10%, rgba(255,160,110,.1), transparent 55%);
 }
 .bg-cafe_cracked {
   background-image:
-    linear-gradient(180deg, rgba(20,10,24,.4) 0%, rgba(40,18,34,.4) 50%, rgba(18,10,20,.6) 100%),
+    linear-gradient(180deg, rgba(20,10,14,.24) 0%, rgba(30,14,18,.26) 50%, rgba(16,8,10,.4) 100%),
     url('assets/bg-cafe-cracked.jpg');
   background-size: cover, cover;
   background-position: center, center 68%;
@@ -128,30 +129,6 @@ html, body {
 .bg-cafe_cracked::after {
   background: radial-gradient(circle at 62% 22%, rgba(209,71,126,.24), transparent 40%);
   animation: neonPulse 2.4s ease-in-out infinite;
-}
-.bg-cafe_glitch {
-  background-image:
-    repeating-linear-gradient(180deg, rgba(57,255,136,.05) 0 1px, transparent 1px 3px),
-    linear-gradient(180deg, rgba(23,10,34,.32) 0%, rgba(36,17,39,.36) 50%, rgba(15,26,24,.55) 100%),
-    url('assets/bg-cafe-glitch.jpg');
-  background-size: auto, cover, cover;
-  background-position: center, center, center 68%;
-  background-repeat: repeat, no-repeat, no-repeat;
-}
-.bg-cafe_glitch::after {
-  background: radial-gradient(circle at 30% 20%, rgba(57,255,136,.2), transparent 50%),
-              radial-gradient(circle at 80% 80%, rgba(255,63,176,.16), transparent 50%);
-  animation: neonPulse 1.6s steps(6) infinite;
-}
-.bg-void {
-  background-image:
-    repeating-linear-gradient(90deg, rgba(57,255,136,.06) 0 1px, transparent 1px 24px),
-    repeating-linear-gradient(180deg, rgba(57,255,136,.06) 0 1px, transparent 1px 24px),
-    linear-gradient(180deg, rgba(12,6,20,.15) 0%, rgba(2,1,3,.6) 100%),
-    url('assets/bg-void.jpg');
-  background-size: auto, auto, cover, cover;
-  background-position: center, center, center, center 25%;
-  background-repeat: repeat, repeat, no-repeat, no-repeat;
 }
 @keyframes neonPulse { 0%,100%{opacity:.7} 50%{opacity:1} }
 
@@ -238,6 +215,31 @@ html, body {
   0%, 8% { transform: rotate(0deg); }
   38%, 55% { transform: rotate(-52deg); }
   85%, 100% { transform: rotate(0deg); }
+}
+
+.steam-wisp {
+  position: absolute;
+  bottom: 22%;
+  width: 3%;
+  min-width: 10px;
+  max-width: 18px;
+  opacity: 0;
+  pointer-events: none;
+}
+.steam-wisp path {
+  fill: none;
+  stroke: rgba(255,255,255,.55);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.steam-wisp {
+  animation: steamDrift 5.2s ease-in infinite;
+}
+@keyframes steamDrift {
+  0% { opacity: 0; transform: translateY(6px) scale(.9); }
+  15% { opacity: .5; }
+  70% { opacity: .28; }
+  100% { opacity: 0; transform: translateY(-30px) scale(1.08); }
 }
 
 .static-speck {
@@ -344,6 +346,16 @@ html, body {
 .emo-shock .face-shock,
 .emo-glitch .face-glitch {
   opacity: 1;
+}
+/* Subtle idle breathing so characters read as alive, not still frames.
+   Lives on the face image (not .photo-stack) so it never fights the
+   per-emotion transforms/animations set there. */
+.sprite--photo .face-photo { animation: idleBreathe 4400ms ease-in-out infinite; }
+.sprite.pos-left .face-photo { animation-delay: -1100ms; }
+.sprite.pos-right .face-photo { animation-delay: -2600ms; }
+@keyframes idleBreathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.008); }
 }
 .sprite--photo.emo-smile .photo-stack { transform: translateY(-2px) scale(1.015); }
 .sprite--photo.emo-sad .photo-stack { transform: translateY(5px); filter: saturate(.8) brightness(.92); }

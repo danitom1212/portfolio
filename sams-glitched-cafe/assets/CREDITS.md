@@ -2,23 +2,27 @@
 
 All backgrounds and character sprites are illustrated art (not
 photographs), chosen so the whole scene shares one visual language.
-Each was resized and heavily color-graded / glitch-processed offline to
-match the game's palette — the files in this folder are the processed
-output, not the originals.
+The café interiors are the same source painting, color-graded three
+different ways (bright day / warm evening / dramatic confrontation)
+rather than three different rooms, so the space stays recognizable
+across scenes. The files in this folder are the processed output, not
+the originals.
 
 ## Backgrounds
 
 | File | Used for | Source |
 |---|---|---|
-| `bg-cafe.jpg`, `bg-cafe-dim.jpg`, `bg-cafe-cracked.jpg` | café interior scenes | "Spiral Atlas VN House Backgrounds" (dining room) by Spiral Atlas, via https://opengameart.org/content/visual-novel-house-backgrounds — CC BY 3.0 |
-| `bg-street.jpg` | rainy night street scene | Original artwork, generated procedurally for this project (no third-party source) |
+| `bg-cafe.jpg` | bright/day café scenes | "Spiral Atlas VN House Backgrounds" (dining room) by Spiral Atlas, via https://opengameart.org/content/visual-novel-house-backgrounds — CC BY 3.0, lightly warm-graded |
+| `bg-cafe-dim.jpg` | evening/intimate café scenes | same source painting, graded for warm lamp-lit evening light |
+| `bg-cafe-cracked.jpg` | the confrontation/twist scene | same source painting, graded darker and more dramatic, with a procedurally-drawn wall crack (recursive branching lines, generated for this project) replacing the sci-fi green glow with a warm rose one |
+| `bg-street.jpg` | rainy night street scene | Original artwork, generated procedurally for this project (no third-party source) — rebuilt for this pass with a painted sky gradient, layered building silhouettes, lit windows, rain streaks and a reflective wet street |
 
 Attribution for the café background: "Spiral Atlas VN House Backgrounds"
 by Spiral Atlas, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
 
-`bg-cafe-glitch.jpg` and `bg-void.jpg` remain in this folder from an
-earlier sci-fi-flavored cut of the story but are no longer referenced by
-any scene.
+The earlier sci-fi-flavored `bg-cafe-glitch.jpg` and `bg-void.jpg` have
+been removed along with the CSS rules that referenced them, since no
+scene in the current story uses them.
 
 ## Player character sprite (Yasmin)
 
@@ -83,6 +87,8 @@ Both trimmed to a ~55s loop, faded, and re-encoded to MP3 for file size.
 | `sfx/tick.wav` | typewriter blip | "5 Blip UI Sound Effects" by FunnyDude, via https://opengameart.org/content/5-blip-ui-sound-effects — CC0 |
 | `sfx/select.wav` | choice selection | "Menu Selection Click" by NenadSimic, via https://opengameart.org/content/menu-selection-click — CC BY 3.0 |
 | `sfx/glitch.wav` | screen-shake / impact stinger | "Frequency Static Sound Effects" by bretbernhoft, via https://opengameart.org/content/frequency-static-sound-effects — CC0 |
+| `sfx/bell.wav` | door bell, played whenever a scene's narration mentions it | "Pleasing Bell Sound Effect" by Julie Damsgaard (Spring Spring), via https://opengameart.org/content/pleasing-bell-sound-effect — CC0 |
+| `sfx/clink.wav` | cup/glass set down on the counter | "glass_02" from "100 CC0 SFX" by rubberduck, via https://opengameart.org/content/100-cc0-sfx — CC0 |
 
 Attribution for the choice-select sound: "Menu Selection Click" by
 NenadSimic, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
