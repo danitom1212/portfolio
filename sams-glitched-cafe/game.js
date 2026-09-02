@@ -107,6 +107,7 @@ class Game {
 
   beginStory({ resume = false } = {}) {
     this.audio.unlock();
+    this.enableTiltParallax();
     this.$start.hidden = true;
 
     if (resume) {
@@ -121,6 +122,44 @@ class Game {
       }
     }
     this.enterScene(this.sceneId);
+  }
+
+  // Subtle device-tilt parallax: the sprite plane and the decor plane
+  // (rain/lights/steam) drift by different amounts as the phone tilts,
+  // reading as actual depth rather than a single flat image. Purely a
+  // progressive enhancement — silently does nothing without motion
+  // sensors, on desktop, or if the user declines the iOS permission
+  // prompt.
+  enableTiltParallax() {
+    if (this.tiltEnabled || typeof DeviceOrientationEvent === 'undefined') return;
+    this.tiltEnabled = true;
+
+    const apply = (gamma) => {
+      const tilt = Math.max(-18, Math.min(18, gamma || 0));
+      this.$sprites.style.transform = `rotateY(${tilt * 0.55}deg) translateX(${tilt * 0.5}px)`;
+      this.$decor.style.transform = `rotateY(${tilt * 0.25}deg) translateX(${tilt * 0.2}px)`;
+    };
+
+    let queued = false;
+    const onOrientation = (e) => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { apply(e.gamma); queued = false; });
+    };
+
+    const attach = () => window.addEventListener('deviceorientation', onOrientation);
+
+    try {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then((state) => {
+          if (state === 'granted') attach();
+        }).catch(() => {});
+      } else {
+        attach();
+      }
+    } catch {
+      // no motion sensors / not permitted — the scene just stays flat.
+    }
   }
 
   // ---------- Scene lifecycle ----------
@@ -204,7 +243,8 @@ class Game {
     }
 
     const majorCount = list.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
-    this.$sprites.classList.toggle('duo', majorCount >= 2);
+    this.$sprites.classList.toggle('duo', majorCount === 2);
+    this.$sprites.classList.toggle('trio', majorCount >= 3);
   }
 
   // Whoever is speaking gets visual focus; everyone else on stage dims

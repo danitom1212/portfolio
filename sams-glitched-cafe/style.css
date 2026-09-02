@@ -47,6 +47,7 @@ html, body {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
   user-select: none;
   isolation: isolate;
+  perspective: 900px;
 }
 
 @media (min-width: 640px) and (min-height: 640px) {
@@ -135,6 +136,8 @@ html, body {
 /* ---------- Scene decorations ---------- */
 #bg-decor {
   position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden;
+  transition: transform 140ms ease-out;
+  will-change: transform;
 }
 
 .rain-drop {
@@ -284,6 +287,8 @@ html, body {
 /* ---------- Sprites ---------- */
 #sprite-layer {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  transition: transform 140ms ease-out;
+  will-change: transform;
 }
 .sprite {
   position: absolute;
@@ -310,14 +315,15 @@ html, body {
    during narration beats (no is-speaking/is-listening class applied). */
 .sprite--photo { filter: sepia(.06); }
 
-/* Two leads on stage at once render smaller so they don't collide on a
-   narrow phone screen. */
-#sprite-layer.duo .sprite--photo:not(.sprite--minor) { height: 60%; }
+/* Two (or three) leads on stage at once render smaller so they don't
+   crowd or collide on a narrow phone screen. */
+#sprite-layer.duo .sprite--photo:not(.sprite--minor) { height: 52%; }
+#sprite-layer.trio .sprite--photo:not(.sprite--minor) { height: 40%; }
 
 /* -- Illustrated full-body sprite (Sam): stacked emotion PNGs, crossfaded -- */
 .sprite--photo {
   bottom: -3%;
-  height: 76%;
+  height: 68%;
   transition: height 320ms ease, opacity 420ms ease, transform 420ms cubic-bezier(.2,.9,.3,1.3), filter 320ms ease;
 }
 /* Contact shadow — grounds the cutout into the floor instead of reading
