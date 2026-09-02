@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -304,8 +304,11 @@ html, body {
 
 /* Cinematic focus: dim whoever isn't currently speaking. Filter-only (no
    transform) so it never fights the position/entrance transforms above. */
-.sprite.is-listening { filter: brightness(.66) saturate(.7); }
-.sprite.is-speaking { filter: brightness(1.05) saturate(1.05); }
+.sprite.is-listening { filter: brightness(.66) saturate(.7) sepia(.08); }
+.sprite.is-speaking { filter: brightness(1.05) saturate(1.05) sepia(.08); }
+/* Baseline warm tint so a sprite still reads as lit-by-the-same-room
+   during narration beats (no is-speaking/is-listening class applied). */
+.sprite--photo { filter: sepia(.06); }
 
 /* Two leads on stage at once render smaller so they don't collide on a
    narrow phone screen. */
@@ -316,6 +319,21 @@ html, body {
   bottom: -3%;
   height: 76%;
   transition: height 320ms ease, opacity 420ms ease, transform 420ms cubic-bezier(.2,.9,.3,1.3), filter 320ms ease;
+}
+/* Contact shadow — grounds the cutout into the floor instead of reading
+   as a sticker pasted on top of the background. ::before paints behind
+   the photo-stack content, so no z-index juggling is needed. */
+.sprite--photo::before {
+  content: '';
+  position: absolute;
+  bottom: 1%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58%;
+  height: 5%;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.5), transparent 72%);
+  filter: blur(3px);
+  pointer-events: none;
 }
 .sprite--photo.sprite--minor {
   height: 44%;
@@ -426,40 +444,49 @@ html, body {
   left: 4%; right: 4%; bottom: 4%;
   z-index: 10;
   min-height: 26%;
-  padding: 1.4rem 1.3rem 1.2rem;
+  max-height: 62%;
+  overflow-y: auto;
+  padding: 2.5rem 1.4rem 1.3rem;
   background: var(--panel);
   backdrop-filter: blur(18px) saturate(1.3);
   -webkit-backdrop-filter: blur(18px) saturate(1.3);
   border: 1px solid var(--panel-border);
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05);
   cursor: pointer;
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 300ms ease, transform 300ms ease;
 }
 #dialogue-box.show { opacity: 1; transform: translateY(0); }
+/* Corner brackets — the "this is a game panel" tell, not a chat bubble. */
+#dialogue-box::before, #dialogue-box::after {
+  content: ''; position: absolute; width: 16px; height: 16px; pointer-events: none;
+  border: 2px solid var(--accent2); opacity: .75;
+}
+#dialogue-box::before { top: 6px; inset-inline-start: 6px; border-inline-end: none; border-bottom: none; }
+#dialogue-box::after { bottom: 6px; inset-inline-end: 6px; border-inline-start: none; border-top: none; }
 
 #name-tag {
   position: absolute;
-  top: -16px;
-  inset-inline-end: 18px;
-  padding: .35rem .9rem;
-  border-radius: 999px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: .78rem;
+  top: 14px;
+  inset-inline-end: 20px;
+  padding: .4rem 1.2rem .5rem;
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: .95rem;
   font-weight: 700;
-  letter-spacing: .02em;
-  color: #0a0510;
+  letter-spacing: .01em;
+  color: #16090f;
   background: var(--name-col, var(--accent));
-  box-shadow: 0 6px 18px rgba(0,0,0,.4), 0 0 0 3px #0a0510;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
   display: none;
 }
 #name-tag.show { display: block; }
 
 #dialogue-text {
-  font-size: 1.02rem;
-  line-height: 1.65;
+  font-size: 1.04rem;
+  line-height: 1.7;
   color: var(--ink);
   min-height: 3.2em;
 }
@@ -491,12 +518,14 @@ html, body {
   transition: opacity 250ms ease;
 }
 #choice-panel.show { opacity: 1; pointer-events: auto; }
+#choice-panel { counter-reset: choice-num; }
 
 .choice-card {
+  position: relative;
   background: rgba(20, 12, 30, .78);
   border: 1px solid rgba(255,255,255,.14);
-  border-radius: 14px;
-  padding: .85rem 1.1rem;
+  border-radius: 6px;
+  padding: .85rem 1.1rem .85rem 2.7rem;
   font-size: .92rem;
   color: var(--ink);
   cursor: pointer;
@@ -506,11 +535,32 @@ html, body {
   opacity: 0;
   translate: 0 12px;
   animation: choiceIn 320ms ease forwards;
+  counter-increment: choice-num;
+}
+html[dir="rtl"] .choice-card { padding: .85rem 2.7rem .85rem 1.1rem; }
+.choice-card::before {
+  content: counter(choice-num);
+  position: absolute;
+  inset-inline-start: .75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--accent2);
+  color: #0a0510;
+  font-family: 'Frank Ruhl Libre', serif;
+  font-weight: 700;
+  font-size: .82rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .choice-card:nth-child(1){ animation-delay: 40ms; }
 .choice-card:nth-child(2){ animation-delay: 120ms; }
 .choice-card:nth-child(3){ animation-delay: 200ms; }
 .choice-card:nth-child(4){ animation-delay: 280ms; }
+.choice-card:nth-child(5){ animation-delay: 360ms; }
 @keyframes choiceIn { to { opacity: 1; translate: 0 0; } }
 
 .choice-card:hover, .choice-card:active {
@@ -530,45 +580,43 @@ html, body {
 }
 .overlay-screen[hidden] { display: none; }
 .title-en {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: .8rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: .78rem;
   letter-spacing: .3em;
   color: var(--accent2);
   text-transform: uppercase;
 }
 .title-he {
-  font-size: clamp(1.8rem, 8vw, 2.6rem);
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: clamp(2rem, 9vw, 2.9rem);
   font-weight: 900;
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: titleGlitch 3.2s steps(1) infinite;
+  animation: titleGlow 3.6s ease-in-out infinite;
 }
-@keyframes titleGlitch {
-  0%, 92%, 100% { filter: none; transform: translate(0,0); }
-  93% { filter: hue-rotate(60deg); transform: translate(-2px,1px); }
-  95% { filter: hue-rotate(-40deg); transform: translate(2px,-1px); }
-  97% { filter: none; transform: translate(0,0); }
+@keyframes titleGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(209,71,126,.25)); }
+  50% { filter: drop-shadow(0 0 16px rgba(209,71,126,.5)); }
 }
-.subtitle { color: var(--muted); font-size: .9rem; max-width: 30ch; }
+.subtitle { color: var(--muted); font-size: .9rem; max-width: 32ch; }
 .art-credit { position: absolute; bottom: 14px; left: 0; right: 0; color: var(--muted); font-size: .62rem; opacity: .55; }
 .ending-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 1rem;
-  letter-spacing: .1em;
-  color: var(--accent2);
-  text-transform: uppercase;
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink);
 }
 .btn {
-  font-family: 'Heebo', sans-serif;
+  font-family: 'Frank Ruhl Libre', serif;
   font-weight: 700;
-  font-size: .95rem;
-  padding: .8rem 2rem;
+  font-size: 1rem;
+  padding: .8rem 2.2rem;
   border-radius: 999px;
   border: none;
   cursor: pointer;
   color: #0a0510;
   background: linear-gradient(90deg, var(--accent2), var(--accent));
-  box-shadow: 0 10px 30px rgba(209,71,126,.35);
+  box-shadow: 0 10px 30px rgba(209,71,126,.35), inset 0 1px 0 rgba(255,255,255,.35);
   transition: transform 160ms ease;
 }
 .btn:active { transform: scale(.96); }

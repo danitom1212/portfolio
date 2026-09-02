@@ -92,3 +92,24 @@ Both trimmed to a ~55s loop, faded, and re-encoded to MP3 for file size.
 
 Attribution for the choice-select sound: "Menu Selection Click" by
 NenadSimic, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
+
+## Typography
+
+UI chrome (titles, name plate, buttons, ending title) uses **Frank Ruhl
+Libre**, a Hebrew-supporting literary serif from Google Fonts, licensed
+under the [SIL Open Font License 1.1](https://openfontlicense.org/).
+Body dialogue keeps **Heebo** (also OFL, via Google Fonts) for
+readability. Loaded via Google's CDN — no font files are bundled in
+this repo.
+
+## Story
+
+The plot (a guarded woman falls for a charismatic café owner who is
+hiding that he already has a wife, and that a fire once blamed on her
+was actually his fault) is an original adaptation of the central
+romantic premise of Charlotte Brontë's *Jane Eyre* (1847), which is in
+the public domain. No text from the novel is reproduced; only the
+"hidden spouse revealed" structure and the fire are reused, recontextualized
+into a present-day café setting with new characters, dialogue, and an
+added twist (who was actually at fault for the fire) not present in the
+original novel.
