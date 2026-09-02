@@ -99,7 +99,22 @@ class Game {
       this.showRenderNotice('תלת-המימד לא נטען במכשיר הזה — ממשיך עם התמונות הרגילות.');
     }
 
-    this.audio = new AudioManager();
+    // Same reasoning as the 3D guard above: AudioManager reads/writes
+    // localStorage, which can throw outright in some embedded contexts.
+    // Silence and mute state not persisting is a minor loss; the whole
+    // game refusing to boot over it is not — so a construction failure
+    // falls back to a no-op stub with the same method names, and every
+    // call site below keeps working without needing its own null check.
+    try {
+      this.audio = new AudioManager();
+    } catch (err) {
+      console.warn('Audio unavailable, continuing without sound', err);
+      this.audio = {
+        muted: true, musicVolume: 1, sfxVolume: 1,
+        unlock() {}, playSfx() {}, setMood() {}, toggleMute: () => true,
+        setMusicVolume() {}, setSfxVolume() {},
+      };
+    }
     this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
     this.$musicVol.value = Math.round(this.audio.musicVolume * 100);
     this.$sfxVol.value = Math.round(this.audio.sfxVolume * 100);

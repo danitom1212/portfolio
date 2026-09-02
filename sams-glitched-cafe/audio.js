@@ -23,12 +23,37 @@ const MUTE_KEY = 'sgc-muted';
 const MUSIC_VOL_KEY = 'sgc-music-vol';
 const SFX_VOL_KEY = 'sgc-sfx-vol';
 
+// The Artifact viewer renders this page inside a cross-origin iframe, and
+// Safari (and some other browsers) can block ALL storage access for a
+// cross-origin frame outright — every localStorage call throws, not just
+// the risky ones. This game previously called localStorage directly in
+// several places with no guard; on a device where it throws, that threw
+// out of the Game constructor before a single button got its click
+// listener attached, i.e. the entire page looked "completely broken" with
+// no error visible anywhere. Every call goes through these two helpers now
+// so a storage failure just means settings/saves don't persist, never a
+// dead page.
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage blocked or full: the setting just won't persist this session.
+  }
+}
+
 export class AudioManager {
   constructor() {
     this.ctx = null;
     this.buffers = {};
     this.unlocked = false;
-    this.muted = localStorage.getItem(MUTE_KEY) === '1';
+    this.muted = readStorage(MUTE_KEY) === '1';
     this.musicVolume = this._readVol(MUSIC_VOL_KEY, 1);
     this.sfxVolume = this._readVol(SFX_VOL_KEY, 1);
 
@@ -40,7 +65,7 @@ export class AudioManager {
   }
 
   _readVol(key, fallback) {
-    const v = parseFloat(localStorage.getItem(key));
+    const v = parseFloat(readStorage(key));
     return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : fallback;
   }
 
@@ -83,14 +108,14 @@ export class AudioManager {
 
   setMusicVolume(v) {
     this.musicVolume = Math.max(0, Math.min(1, v));
-    localStorage.setItem(MUSIC_VOL_KEY, String(this.musicVolume));
+    writeStorage(MUSIC_VOL_KEY, String(this.musicVolume));
     const el = this.currentMood ? this.musicEls[this.currentMood] : null;
     if (el && !el._fadeTimer) el.volume = this.muted ? 0 : MUSIC_VOLUME * this.musicVolume;
   }
 
   setSfxVolume(v) {
     this.sfxVolume = Math.max(0, Math.min(1, v));
-    localStorage.setItem(SFX_VOL_KEY, String(this.sfxVolume));
+    writeStorage(SFX_VOL_KEY, String(this.sfxVolume));
   }
 
   setMood(mood) {
@@ -126,7 +151,7 @@ export class AudioManager {
 
   toggleMute() {
     this.muted = !this.muted;
-    localStorage.setItem(MUTE_KEY, this.muted ? '1' : '0');
+    writeStorage(MUTE_KEY, this.muted ? '1' : '0');
     const el = this.currentMood ? this.musicEls[this.currentMood] : null;
     if (el) el.volume = this.muted ? 0 : MUSIC_VOLUME * this.musicVolume;
     return this.muted;
