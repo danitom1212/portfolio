@@ -2,6 +2,7 @@ import { STORY, CHARACTERS } from './story.js';
 import { buildFace } from './faces.js';
 import { buildDecor } from './decor.js';
 import { AudioManager } from './audio.js';
+import { VrmStage } from './character3d.js';
 
 const TYPE_SPEED_MS = 26;
 
@@ -22,12 +23,18 @@ const SPRITE_ASPECT = { yasmin: '480 / 1504', sam: '480 / 1190', noa: '420 / 134
 // No background-scale minor characters in this cut of the story.
 const MINOR_CHARACTERS = new Set();
 
+// Yasmin and Sam render as real 3D characters (VRM humanoids); Noa stays
+// on the illustrated 2D sprite path for now.
+const VRM_CHARACTERS = new Set(['yasmin', 'sam']);
+const VRM_MODEL_URL = { yasmin: 'assets/models/yasmin.vrm', sam: 'assets/models/sam.vrm' };
+
 class Game {
   constructor() {
     this.stats = { affection: 0, rage: 0, doubt: 0 };
     this.sceneId = STORY.start;
     this.lineIndex = 0;
-    this.onstage = new Map(); // characterId -> sprite element
+    this.onstage = new Map(); // characterId -> sprite element (2D only)
+    this.onstageVrm = new Set(); // characterId set for 3D characters
     this.typeTimer = null;
     this.isTyping = false;
     this.bgToggle = false;
@@ -50,6 +57,8 @@ class Game {
     this.$debugPanel = document.getElementById('debug-panel');
     this.$muteBtn = document.getElementById('mute-toggle');
     this.$continueBtn = document.getElementById('continue-btn');
+
+    this.vrmStage = new VrmStage(document.getElementById('vrm-layer'));
 
     this.audio = new AudioManager();
     this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
@@ -100,6 +109,8 @@ class Game {
     this.sceneId = STORY.start;
     this.onstage.forEach((el) => el.remove());
     this.onstage.clear();
+    for (const id of this.onstageVrm) this.vrmStage.remove(id);
+    this.onstageVrm.clear();
     this.$end.hidden = true;
     this.$box.classList.remove('show');
     this.beginStory();
@@ -221,6 +232,8 @@ class Game {
 
   syncSprites(list) {
     const wanted = new Map(list.map((s) => [s.id, s]));
+    const vrmSpecs = list.filter((s) => VRM_CHARACTERS.has(s.id));
+    const domList = list.filter((s) => !VRM_CHARACTERS.has(s.id));
 
     for (const [id, el] of this.onstage) {
       if (!wanted.has(id)) {
@@ -230,7 +243,7 @@ class Game {
       }
     }
 
-    for (const spec of list) {
+    for (const spec of domList) {
       let el = this.onstage.get(spec.id);
       if (!el) {
         el = this.createSprite(spec);
@@ -242,7 +255,21 @@ class Game {
       }
     }
 
-    const majorCount = list.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
+    for (const id of [...this.onstageVrm]) {
+      if (!wanted.has(id)) {
+        this.vrmStage.remove(id);
+        this.onstageVrm.delete(id);
+      }
+    }
+    for (const spec of vrmSpecs) {
+      this.onstageVrm.add(spec.id);
+      this.vrmStage.load(spec.id, VRM_MODEL_URL[spec.id], spec.pos).then(() => {
+        this.vrmStage.setEmotion(spec.id, spec.emotion || 'neutral');
+      });
+      this.vrmStage.setPosition(spec.id, spec.pos); // no-op until loaded; keeps repositioning working once it is
+    }
+
+    const majorCount = domList.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
     this.$sprites.classList.toggle('duo', majorCount === 2);
     this.$sprites.classList.toggle('trio', majorCount >= 3);
   }
@@ -255,6 +282,9 @@ class Game {
       el.classList.remove('is-speaking', 'is-listening');
       if (!speakerId) continue;
       el.classList.add(id === speakerId ? 'is-speaking' : 'is-listening');
+    }
+    for (const id of this.onstageVrm) {
+      this.vrmStage.setFocus(id, !speakerId ? 'none' : id === speakerId ? 'speaking' : 'listening');
     }
   }
 
@@ -286,8 +316,13 @@ class Game {
   }
 
   setSpriteEmotion(id, emotion) {
+    if (!emotion) return;
+    if (VRM_CHARACTERS.has(id)) {
+      this.vrmStage.setEmotion(id, emotion);
+      return;
+    }
     const el = this.onstage.get(id);
-    if (!el || !emotion) return;
+    if (!el) return;
     el.className = el.className.replace(/emo-\S+/, `emo-${emotion}`);
   }
 

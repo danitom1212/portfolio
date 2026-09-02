@@ -24,30 +24,29 @@ The earlier sci-fi-flavored `bg-cafe-glitch.jpg` and `bg-void.jpg` have
 been removed along with the CSS rules that referenced them, since no
 scene in the current story uses them.
 
-## Player character sprite (Yasmin)
+## Yasmin and Sam: 3D characters
 
-`sprites/yasmin-*.webp` (6 expressions) are cropped and re-encoded from
-**"Codel Visual Novel Sprite"** by **LisadiKaprio**, via
-https://opengameart.org/content/codel-visual-novel-sprite
+`assets/models/yasmin.vrm` and `assets/models/sam.vrm` are the
+**"Base Female"** and **"Base Male"** VRoid Studio sample avatars,
+released by VRoid (Pixiv) itself under **CC0** (public domain — no
+attribution required), via https://opengameart.org/content/vroid-studio-cc0-models.
+Rendered live in the browser with Three.js (loaded from a CDN, MIT
+licensed): a standing pose, idle breathing sway, blinking, and
+emotion-driven facial blend shapes are all done procedurally in
+`character3d.js` — no animation clips are bundled. The original files
+(~15-17MB each) were re-encoded for this project: unused normal-map and
+thumbnail images were stripped and the remaining textures downscaled,
+with no visible quality loss at in-game size, to fit the size budget of
+the single-file demo build.
 
-License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
-attribution required. Credit: "Codel Visual Novel Sprite" by LisadiKaprio,
-licensed under CC BY 4.0.
+Both models use their stock VRoid hair color/outfit rather than a
+custom recolor to match Yasmin/Sam's established look — a follow-up,
+not a blocker.
 
-## Sam's sprite
-
-`sprites/sam-*.webp` (6 expressions) are custom composites built from the
-mix-and-match face layers (eyebrows / eyes / mouth / emotes) in the
-clothed pose of the **"Male sprite for visual novels"** ("Mustafa") PSD by
-**LisadiKaprio**, via https://opengameart.org/content/male-sprite-for-visual-novels.
-Each expression was assembled by selecting a specific combination of the
-source PSD's layer options and compositing them; no third-party
-pre-rendered expression was used as-is. The source pack's unclothed
-variant of the pose is not used anywhere in this project.
-
-License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
-attribution required. Credit: "Male sprite for visual novels" by
-LisadiKaprio, licensed under CC BY 4.0.
+The illustrated 2D sprites that previously covered these two roles
+(Codel by LisadiKaprio for Yasmin, a custom composite from the Mustafa
+PSD by LisadiKaprio for Sam) have been retired now that both render in
+3D; Noa still uses the 2D path below.
 
 ## Noa's sprite
 
@@ -63,13 +62,11 @@ License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
 attribution required. Credit: "Kuudere Visual Novel Sprite" by
 LisadiKaprio, licensed under CC BY 4.0.
 
-**Known issue:** Noa's chibi-proportioned, simpler-shaded style doesn't
-match Yasmin's and Sam's more detailed rendering (both are LisadiKaprio
-pieces of a higher fidelity tier). Since Noa is a supporting character
-who appears in fewer scenes, this is a lower priority than the earlier
-Sam/Yasmin mismatch it replaces — but a matching replacement would need
-either a manually-downloaded itch.io pack or an AI-generated sprite from
-the user, the same limitation noted previously.
+**Known issue:** Noa is now the only 2D-illustrated character on stage
+next to two 3D-rendered ones (Yasmin, Sam) — a bigger mismatch than the
+earlier art-fidelity gap it replaces. Bringing her into 3D too would
+mean sourcing or generating a third VRM model and is a natural next
+step, not done here yet.
 
 ## Music
 
