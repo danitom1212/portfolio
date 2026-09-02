@@ -13,7 +13,8 @@ const MUSIC_MOOD_BY_BG = {
 };
 
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
-const SAVE_KEY = 'sgc-save-v1';
+const SAVE_KEY = (slot) => `sgc-save-v2-${slot}`;
+const SAVE_SLOTS = 3;
 
 // Yasmin, Sam and Noa all use real illustrated sprite art (assets/sprites/)
 // as the baseline — always rendered, always visible. Yasmin and Sam
@@ -43,10 +44,15 @@ class Game {
     this.stats = { affection: 0, rage: 0, doubt: 0 };
     this.sceneId = STORY.start;
     this.lineIndex = 0;
+    this.activeSlot = 1;
     this.onstage = new Map(); // characterId -> sprite element
     this.vrm3dLoaded = new Set(); // characterId set: 3D model finished loading, 2D fallback hidden
     this.typeTimer = null;
+    this.autoTimer = null;
     this.isTyping = false;
+    this.autoPlay = false;
+    this.skipMode = false;
+    this.history = []; // { speaker, text } for every line shown this session
     this.bgToggle = false;
 
     this.$stage = document.getElementById('stage');
@@ -66,8 +72,17 @@ class Game {
     this.$debugBtn = document.getElementById('debug-toggle');
     this.$debugPanel = document.getElementById('debug-panel');
     this.$muteBtn = document.getElementById('mute-toggle');
-    this.$continueBtn = document.getElementById('continue-btn');
     this.$notice = document.getElementById('render-notice');
+    this.$slotList = document.getElementById('slot-list');
+    this.$menuBtn = document.getElementById('menu-toggle');
+    this.$menuPanel = document.getElementById('menu-panel');
+    this.$autoBtn = document.getElementById('auto-toggle');
+    this.$skipBtn = document.getElementById('skip-toggle');
+    this.$musicVol = document.getElementById('music-vol');
+    this.$sfxVol = document.getElementById('sfx-vol');
+    this.$historyBtn = document.getElementById('history-open-btn');
+    this.$historyPanel = document.getElementById('history-panel');
+    this.$historyList = document.getElementById('history-list');
 
     // 3D setup can fail for reasons entirely outside our control — no
     // WebGL on the device, a driver that refuses context creation under
@@ -86,11 +101,11 @@ class Game {
 
     this.audio = new AudioManager();
     this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
-    this.$continueBtn.hidden = !this.hasSave();
+    this.$musicVol.value = Math.round(this.audio.musicVolume * 100);
+    this.$sfxVol.value = Math.round(this.audio.sfxVolume * 100);
+    this.renderSlotList();
 
     this.$box.addEventListener('click', () => this.handleTap());
-    document.getElementById('start-btn').addEventListener('click', () => this.beginStory());
-    this.$continueBtn.addEventListener('click', () => this.beginStory({ resume: true }));
     document.getElementById('restart-btn').addEventListener('click', () => this.restart());
     this.$debugBtn.addEventListener('click', () => {
       this.$debugPanel.hidden = !this.$debugPanel.hidden;
@@ -100,60 +115,159 @@ class Game {
       const muted = this.audio.toggleMute();
       this.$muteBtn.textContent = muted ? '🔇' : '🔊';
     });
+
+    this.$menuBtn.addEventListener('click', () => { this.$menuPanel.hidden = !this.$menuPanel.hidden; });
+    document.getElementById('menu-close-btn').addEventListener('click', () => { this.$menuPanel.hidden = true; });
+    this.$autoBtn.addEventListener('click', () => this.setAutoPlay(!this.autoPlay));
+    this.$skipBtn.addEventListener('click', () => this.setSkipMode(!this.skipMode));
+    this.$musicVol.addEventListener('input', () => this.audio.setMusicVolume(this.$musicVol.value / 100));
+    this.$sfxVol.addEventListener('input', () => this.audio.setSfxVolume(this.$sfxVol.value / 100));
+    this.$historyBtn.addEventListener('click', () => this.openHistory());
+    document.getElementById('history-close-btn').addEventListener('click', () => { this.$historyPanel.hidden = true; });
   }
 
-  // ---------- Save / continue ----------
+  // ---------- Menu: auto-play / skip / history ----------
 
-  hasSave() {
+  setAutoPlay(on) {
+    this.autoPlay = on;
+    this.$autoBtn.classList.toggle('active', on);
+    this.$autoBtn.querySelector('.menu-state').textContent = on ? 'פעיל' : 'כבוי';
+    if (on) this.setSkipMode(false);
+    this.maybeScheduleAdvance();
+  }
+
+  setSkipMode(on) {
+    this.skipMode = on;
+    this.$skipBtn.classList.toggle('active', on);
+    this.$skipBtn.querySelector('.menu-state').textContent = on ? 'פעיל' : 'כבוי';
+    if (on) this.setAutoPlay(false);
+    if (on && !this.isTyping) this.maybeScheduleAdvance();
+  }
+
+  // Auto-play and skip both advance without a tap once the current line
+  // has finished typing — skip just does it almost instantly, auto-play
+  // leaves enough time to actually read. Neither ever fires while choices
+  // are on screen; a decision always waits for the player.
+  maybeScheduleAdvance() {
+    clearTimeout(this.autoTimer);
+    if (this.isTyping || this.$choices.classList.contains('show')) return;
+    if (this.skipMode) {
+      this.autoTimer = setTimeout(() => this.handleTap(), 90);
+    } else if (this.autoPlay) {
+      this.autoTimer = setTimeout(() => this.handleTap(), 1400);
+    }
+  }
+
+  openHistory() {
+    this.$menuPanel.hidden = true;
+    this.$historyList.innerHTML = this.history.map((h) => {
+      if (!h.speaker) return `<div class="history-line narration">${h.text}</div>`;
+      const char = CHARACTERS[h.speaker];
+      return `<div class="history-line"><span class="history-speaker" style="color:${char.color}">${char.name}</span>${h.text}</div>`;
+    }).join('') || '<div class="history-line narration">עדיין אין היסטוריה בשיחה הזאת.</div>';
+    this.$historyPanel.hidden = false;
+    this.$historyList.scrollTop = this.$historyList.scrollHeight;
+  }
+
+  // ---------- Save slots ----------
+
+  readSlot(slot) {
     try {
-      return !!localStorage.getItem(SAVE_KEY);
+      const raw = localStorage.getItem(SAVE_KEY(slot));
+      return raw ? JSON.parse(raw) : null;
     } catch {
-      return false;
+      return null;
     }
   }
 
   saveProgress() {
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ sceneId: this.sceneId, stats: this.stats }));
+      localStorage.setItem(SAVE_KEY(this.activeSlot), JSON.stringify({
+        sceneId: this.sceneId, stats: this.stats, updatedAt: Date.now(),
+      }));
     } catch {
       // Private browsing / storage disabled: progress just won't persist.
     }
   }
 
-  clearProgress() {
+  clearSlot(slot) {
     try {
-      localStorage.removeItem(SAVE_KEY);
+      localStorage.removeItem(SAVE_KEY(slot));
     } catch {
       // ignore
     }
   }
 
+  // Three independent save slots, shown on the start screen: an empty
+  // slot starts a fresh game there, an occupied one shows roughly when
+  // you left off and can be continued or wiped without touching the
+  // other two — a real multi-save setup rather than one silent autosave.
+  renderSlotList() {
+    const fmtWhen = (ts) => {
+      const mins = Math.round((Date.now() - ts) / 60000);
+      if (mins < 1) return 'הרגע';
+      if (mins < 60) return `לפני ${mins} דק׳`;
+      const hours = Math.round(mins / 60);
+      if (hours < 24) return `לפני ${hours} שע׳`;
+      return `לפני ${Math.round(hours / 24)} ימים`;
+    };
+
+    this.$slotList.innerHTML = '';
+    for (let slot = 1; slot <= SAVE_SLOTS; slot++) {
+      const data = this.readSlot(slot);
+      const row = document.createElement('div');
+      row.className = 'slot-row';
+      const main = document.createElement('button');
+      main.className = 'btn';
+      if (data) {
+        main.innerHTML = `משבצת ${slot} — המשך<span class="slot-meta">${fmtWhen(data.updatedAt || Date.now())}</span>`;
+        main.addEventListener('click', () => this.beginStory({ slot, resume: true }));
+      } else {
+        main.innerHTML = `משבצת ${slot} — משחק חדש`;
+        main.addEventListener('click', () => this.beginStory({ slot, resume: false }));
+      }
+      row.appendChild(main);
+      if (data) {
+        const del = document.createElement('button');
+        del.className = 'btn btn-ghost';
+        del.textContent = '🗑';
+        del.title = 'מחק משבצת זו';
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.clearSlot(slot);
+          this.renderSlotList();
+        });
+        row.appendChild(del);
+      }
+      this.$slotList.appendChild(row);
+    }
+  }
+
   restart() {
+    clearTimeout(this.autoTimer);
     this.stats = { affection: 0, rage: 0, doubt: 0 };
     this.sceneId = STORY.start;
+    this.history = [];
     this.onstage.forEach((el) => el.remove());
     this.onstage.clear();
     if (this.vrmStage) for (const id of [...this.vrm3dLoaded || []]) this.vrmStage.remove(id);
     this.vrm3dLoaded = new Set();
     this.$end.hidden = true;
     this.$box.classList.remove('show');
-    this.beginStory();
+    this.beginStory({ slot: this.activeSlot, resume: false });
   }
 
-  beginStory({ resume = false } = {}) {
+  beginStory({ slot = 1, resume = false } = {}) {
+    this.activeSlot = slot;
     this.audio.unlock();
     this.enableTiltParallax();
     this.$start.hidden = true;
 
     if (resume) {
-      try {
-        const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (saved) {
-          this.stats = saved.stats;
-          this.sceneId = saved.sceneId;
-        }
-      } catch {
-        // fall through to a fresh start
+      const saved = this.readSlot(slot);
+      if (saved) {
+        this.stats = saved.stats;
+        this.sceneId = saved.sceneId;
       }
     }
     this.enterScene(this.sceneId);
@@ -215,7 +329,7 @@ class Game {
     this.syncSprites(scene.sprites || []);
 
     if (scene.ending) {
-      this.clearProgress();
+      this.clearSlot(this.activeSlot);
       this.playDialogue(scene, () => this.showEnding(scene));
     } else if (!scene.dialogue || scene.dialogue.length === 0) {
       this.saveProgress();
@@ -431,6 +545,7 @@ class Game {
 
   showLine() {
     const line = this.currentScene.dialogue[this.lineIndex];
+    this.history.push({ speaker: line.speaker, text: line.text });
     if (line.speaker) {
       const char = CHARACTERS[line.speaker];
       this.$name.textContent = char.name;
@@ -458,6 +573,13 @@ class Game {
     this.isTyping = true;
     this.$arrow.classList.remove('show');
     this.$text.textContent = '';
+
+    if (this.skipMode) {
+      this.$text.textContent = full;
+      this.finishTyping();
+      return;
+    }
+
     let i = 0;
     this.setSpeakerTalking(speaker, true);
 
@@ -493,9 +615,11 @@ class Game {
     this.$arrow.classList.add('show');
     const line = this.currentScene.dialogue[this.lineIndex];
     this.setSpeakerTalking(line.speaker, false);
+    this.maybeScheduleAdvance();
   }
 
   handleTap() {
+    clearTimeout(this.autoTimer);
     if (this.isTyping) {
       clearTimeout(this.typeTimer);
       this.typeTimer = null;
@@ -504,6 +628,7 @@ class Game {
       this.$text.textContent = line.text;
       this.$arrow.classList.add('show');
       this.setSpeakerTalking(line.speaker, false);
+      this.maybeScheduleAdvance();
       return;
     }
 

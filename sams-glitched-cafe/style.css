@@ -734,7 +734,15 @@ html[dir="rtl"] .choice-card { padding: .85rem 2.7rem .85rem 1.1rem; }
   font-size: .85rem;
   padding: .65rem 2rem;
 }
-.start-btns { display: flex; flex-direction: column; gap: .65rem; align-items: center; margin-top: .3rem; }
+.start-btns { display: flex; flex-direction: column; gap: .65rem; align-items: center; margin-top: .3rem; width: 100%; max-width: 320px; }
+
+/* Save slots on the start screen: each slot is either empty (starts a
+   fresh game there) or shows where you left off, with a small delete
+   action to free it up for a new game without touching the other two. */
+.slot-row { display: flex; gap: .5rem; width: 100%; }
+.slot-row .btn { flex: 1; font-size: .85rem; padding: .7rem 1rem; }
+.slot-row .btn-ghost { flex: 0 0 auto; padding: .7rem .9rem; font-size: .8rem; }
+.slot-meta { display: block; font-size: .65rem; opacity: .65; margin-top: .15rem; font-family: 'Heebo', sans-serif; font-weight: 400; }
 
 /* ---------- Debug stat panel ---------- */
 #debug-toggle {
@@ -755,13 +763,53 @@ html[dir="rtl"] .choice-card { padding: .85rem 2.7rem .85rem 1.1rem; }
 #debug-panel[hidden] { display: none; }
 #debug-panel div { display: flex; justify-content: space-between; gap: .6rem; }
 
-#mute-toggle {
+#top-tools {
   position: absolute; top: 10px; inset-inline-end: 10px; z-index: 30;
+  display: flex; gap: 6px;
+}
+#mute-toggle, #menu-toggle {
   width: 30px; height: 30px; border-radius: 50%;
   border: 1px solid rgba(255,255,255,.15);
   background: rgba(0,0,0,.35);
+  color: var(--ink);
   font-size: .85rem;
   cursor: pointer;
 }
+
+/* ---------- Menu panel (auto/skip/volume/history) ---------- */
+#menu-panel {
+  position: absolute; top: 46px; inset-inline-end: 10px; z-index: 31;
+  background: rgba(10,5,16,.92); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 12px; padding: .4rem; min-width: 210px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.5);
+}
+#menu-panel[hidden] { display: none; }
+.menu-row {
+  width: 100%; display: flex; align-items: center; gap: .5rem;
+  background: transparent; border: none; color: var(--ink);
+  font-family: 'Heebo', sans-serif; font-size: .82rem;
+  padding: .55rem .5rem; border-radius: 8px; cursor: pointer; text-align: start;
+}
+.menu-row:hover { background: rgba(255,255,255,.06); }
+.menu-row span:first-of-type { flex: 1; }
+.menu-state {
+  font-size: .68rem; color: var(--muted); background: rgba(255,255,255,.08);
+  padding: .15rem .5rem; border-radius: 999px;
+}
+.menu-row.active .menu-state { color: var(--accent2); background: rgba(47,144,128,.2); }
+.menu-slider input[type="range"] { width: 80px; accent-color: var(--accent); }
+.menu-close { justify-content: center; color: var(--muted); margin-top: .2rem; }
+
+/* ---------- History / backlog panel ---------- */
+#history-panel {
+  position: absolute; inset: 8%; z-index: 32;
+  background: rgba(8,5,13,.96); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px; padding: 1rem; display: flex; flex-direction: column; gap: .8rem;
+}
+#history-panel[hidden] { display: none; }
+#history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: .6rem; }
+.history-line { font-size: .82rem; line-height: 1.5; }
+.history-line .history-speaker { color: var(--accent); font-weight: 700; margin-inline-end: .4rem; }
+.history-line.narration { color: var(--muted); font-style: italic; }
 
 [dir="rtl"] { text-align: right; }

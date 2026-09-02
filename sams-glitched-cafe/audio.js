@@ -20,6 +20,8 @@ const MUSIC_SOURCES = {
 const MUSIC_VOLUME = 0.35;
 const CROSSFADE_MS = 1200;
 const MUTE_KEY = 'sgc-muted';
+const MUSIC_VOL_KEY = 'sgc-music-vol';
+const SFX_VOL_KEY = 'sgc-sfx-vol';
 
 export class AudioManager {
   constructor() {
@@ -27,12 +29,19 @@ export class AudioManager {
     this.buffers = {};
     this.unlocked = false;
     this.muted = localStorage.getItem(MUTE_KEY) === '1';
+    this.musicVolume = this._readVol(MUSIC_VOL_KEY, 1);
+    this.sfxVolume = this._readVol(SFX_VOL_KEY, 1);
 
     this.musicEls = {
       warm: this._makeAudio(MUSIC_SOURCES.warm),
       tense: this._makeAudio(MUSIC_SOURCES.tense),
     };
     this.currentMood = null;
+  }
+
+  _readVol(key, fallback) {
+    const v = parseFloat(localStorage.getItem(key));
+    return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : fallback;
   }
 
   _makeAudio(src) {
@@ -67,9 +76,21 @@ export class AudioManager {
     src.buffer = this.buffers[name];
     src.playbackRate.value = rate;
     const gain = this.ctx.createGain();
-    gain.gain.value = volume;
+    gain.gain.value = volume * this.sfxVolume;
     src.connect(gain).connect(this.ctx.destination);
     src.start();
+  }
+
+  setMusicVolume(v) {
+    this.musicVolume = Math.max(0, Math.min(1, v));
+    localStorage.setItem(MUSIC_VOL_KEY, String(this.musicVolume));
+    const el = this.currentMood ? this.musicEls[this.currentMood] : null;
+    if (el && !el._fadeTimer) el.volume = this.muted ? 0 : MUSIC_VOLUME * this.musicVolume;
+  }
+
+  setSfxVolume(v) {
+    this.sfxVolume = Math.max(0, Math.min(1, v));
+    localStorage.setItem(SFX_VOL_KEY, String(this.sfxVolume));
   }
 
   setMood(mood) {
@@ -79,7 +100,7 @@ export class AudioManager {
 
     const incoming = this.musicEls[mood];
     if (incoming.paused) incoming.play().catch(() => {});
-    this._fadeTo(incoming, this.muted ? 0 : MUSIC_VOLUME);
+    this._fadeTo(incoming, this.muted ? 0 : MUSIC_VOLUME * this.musicVolume);
 
     if (outgoingMood && outgoingMood !== mood) {
       const outgoing = this.musicEls[outgoingMood];
@@ -107,7 +128,7 @@ export class AudioManager {
     this.muted = !this.muted;
     localStorage.setItem(MUTE_KEY, this.muted ? '1' : '0');
     const el = this.currentMood ? this.musicEls[this.currentMood] : null;
-    if (el) el.volume = this.muted ? 0 : MUSIC_VOLUME;
+    if (el) el.volume = this.muted ? 0 : MUSIC_VOLUME * this.musicVolume;
     return this.muted;
   }
 }

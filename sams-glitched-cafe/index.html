@@ -28,16 +28,30 @@
 
     <button id="debug-toggle" title="Stats">🐞</button>
     <div id="debug-panel" hidden></div>
-    <button id="mute-toggle" title="Sound">🔊</button>
+    <div id="top-tools">
+      <button id="mute-toggle" title="Sound">🔊</button>
+      <button id="menu-toggle" title="Menu">☰</button>
+    </div>
+
+    <div id="menu-panel" hidden>
+      <button id="history-open-btn" class="menu-row">📜 <span>היסטוריית שיחה</span></button>
+      <button id="auto-toggle" class="menu-row">▶️ <span>המשך אוטומטי</span><span class="menu-state">כבוי</span></button>
+      <button id="skip-toggle" class="menu-row">⏩ <span>דילוג מהיר</span><span class="menu-state">כבוי</span></button>
+      <label class="menu-row menu-slider">🎵 <span>מוזיקה</span><input id="music-vol" type="range" min="0" max="100" value="100"></label>
+      <label class="menu-row menu-slider">🔔 <span>אפקטים</span><input id="sfx-vol" type="range" min="0" max="100" value="100"></label>
+      <button id="menu-close-btn" class="menu-row menu-close">✕ <span>סגור</span></button>
+    </div>
+
+    <div id="history-panel" hidden>
+      <div id="history-list"></div>
+      <button id="history-close-btn" class="btn">סגור</button>
+    </div>
 
     <div id="start-screen" class="overlay-screen">
       <div class="title-en">a romance with a secret</div>
       <div class="title-he">קפה הגליץ׳ של סאם</div>
       <p class="subtitle">לילה גשום, בית קפה זר, ובעל בית קפה שיודע לשמור סוד טוב מדי. חמישה סופים אפשריים — תלוי מה תבחרי לשמוע.</p>
-      <div class="start-btns">
-        <button id="start-btn" class="btn">להיכנס פנימה</button>
-        <button id="continue-btn" class="btn btn-ghost" hidden>המשך מהיכן שהפסקתי</button>
-      </div>
+      <div id="slot-list" class="start-btns"></div>
       <p class="art-credit">דמויות: LisadiKaprio · רקע: Spiral Atlas · צליל: NenadSimic ואחרים — קרדיטים מלאים ב-CREDITS.md</p>
     </div>
 
