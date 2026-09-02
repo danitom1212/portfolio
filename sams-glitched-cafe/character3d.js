@@ -101,14 +101,32 @@ export class VrmStage {
     this.clock = new THREE.Clock();
     this._loader = new THREE.GLTFLoader();
     this._resize();
-    window.addEventListener('resize', () => this._resize());
+    // This page runs inside the Claude Artifact viewer's iframe, which can
+    // resize itself *after* this script has already run — its own
+    // frame-runtime code calls that "promoted" sizing, and it is not
+    // guaranteed to fire a `resize` event on this iframe's own `window`
+    // the way an ordinary browser window resize would. A canvas sized off
+    // a one-time getBoundingClientRect() taken before that promotion can
+    // end up frozen at 0×0 or some transient early layout size — which
+    // renders nothing, forever, with no error anywhere. A ResizeObserver
+    // watches the element's actual box directly and fires on every layout
+    // change regardless of what caused it, which a plain `resize`
+    // listener cannot promise here.
+    if (typeof ResizeObserver !== 'undefined') {
+      this._resizeObserver = new ResizeObserver(() => { this._resize(); this._layout(); });
+      this._resizeObserver.observe(canvas.parentElement);
+    } else {
+      window.addEventListener('resize', () => { this._resize(); this._layout(); });
+    }
     this._raf = requestAnimationFrame(() => this._tick());
   }
 
   _resize() {
     const r = this.canvas.parentElement.getBoundingClientRect();
-    this.canvas.width = r.width * (window.devicePixelRatio || 1);
-    this.canvas.height = r.height * (window.devicePixelRatio || 1);
+    if (r.width < 1 || r.height < 1) return; // layout not settled yet; the observer will fire again once it is
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    this.canvas.width = r.width * dpr;
+    this.canvas.height = r.height * dpr;
     this.renderer.setSize(r.width, r.height, false);
     this.camera.aspect = r.width / r.height;
     this.camera.updateProjectionMatrix();

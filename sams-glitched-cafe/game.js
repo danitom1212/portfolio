@@ -364,7 +364,13 @@ class Game {
 
     this.$decor.innerHTML = buildDecor(bgKey);
     this.audio.setMood(MUSIC_MOOD_BY_BG[bgKey]);
-    if (this.vrmStage) this.vrmStage.setRoom(bgKey);
+    if (this.vrmStage) {
+      try {
+        this.vrmStage.setRoom(bgKey);
+      } catch (err) {
+        console.warn('3D room failed to build, staying on the photo backdrop', err);
+      }
+    }
   }
 
   showRenderNotice(text) {
