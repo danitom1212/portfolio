@@ -105,11 +105,12 @@ this repo.
 ## Story
 
 The plot (a guarded woman falls for a charismatic café owner who is
-hiding that he already has a wife, and that a fire once blamed on her
-was actually his fault) is an original adaptation of the central
-romantic premise of Charlotte Brontë's *Jane Eyre* (1847), which is in
-the public domain. No text from the novel is reproduced; only the
-"hidden spouse revealed" structure and the fire are reused, recontextualized
-into a present-day café setting with new characters, dialogue, and an
-added twist (who was actually at fault for the fire) not present in the
-original novel.
+secretly a disgraced musician hiding under a new name, and who let his
+former producer take the blame for a stage-fire that was actually his
+fault) is an original adaptation of the central premise of Gaston
+Leroux's *The Phantom of the Opera* (1910), which is in the public
+domain. No text from the novel is reproduced; only the "brilliant
+performer hiding behind a new identity, tied to a theater disaster"
+structure is reused, recontextualized into a present-day café setting
+with new characters, dialogue, and an added twist (who was actually at
+fault for the fire) not present in the original novel.
