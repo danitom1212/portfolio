@@ -49,16 +49,31 @@ License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
 attribution required. Credit: "Male sprite for visual novels" by
 LisadiKaprio, licensed under CC BY 4.0.
 
-A real-3D render of these two (VRM humanoid models animated with
-Three.js) was tried and rolled back: it depended on a CDN-loaded 3D
-runtime that isn't reachable in every context this game gets opened in
-(a downloaded file opened offline, for one), and a character silently
-failing to render is worse than an illustrated one that always shows up.
-The animation idea survived the rollback in a more reliable form —
-`game.js` plays short named CSS animations (`.gesture-wave`,
-`.gesture-lean`, `.gesture-shrug`, `.gesture-point`, `.gesture-dance` in
-`style.css`) over the illustrated art at story-cued moments, plus a
-blush tint and a talking-flap animation while a line types out.
+## Yasmin and Sam: 3D characters and room
+
+The illustrated sprites above are the guaranteed fallback: `game.js`
+always renders them. On top of that, `assets/models/yasmin.vrm` and
+`assets/models/sam.vrm` — the **"Base Female"** and **"Base Male"** VRoid
+Studio sample avatars, released by VRoid (Pixiv) under **CC0**, via
+https://opengameart.org/content/vroid-studio-cc0-models — are rendered
+live with Three.js (MIT licensed; the library itself is embedded directly
+in the single-file build rather than loaded from a CDN, so it has no
+network dependency of its own) into a flat-shaded 3D room built from
+plain colored boxes (`character3d.js`, no textures) standing in for the
+photo backdrop. Whichever loads for a given character — the 3D model, or
+just the 2D art — is what the player sees; a 2D character never gets
+hidden until its 3D counterpart has actually finished loading. Standing
+pose, breathing, blinking, named gestures (wave/lean/shrug/point/dance),
+emotion-driven blend shapes, a blush tint and a talking mouth-flap are
+all procedural, driven by the same story cues whether a character is
+currently 2D or 3D. The original VRM files (~15-17MB each) were
+re-encoded to fit the size budget: unused normal-map/thumbnail images
+stripped, remaining textures downscaled, with no visible quality loss at
+in-game size.
+
+Both models use their stock VRoid hair color/outfit rather than a custom
+recolor to match Yasmin/Sam's established look — a follow-up, not a
+blocker.
 
 ## Noa's sprite
 

@@ -2,6 +2,7 @@ import { STORY, CHARACTERS } from './story.js';
 import { buildFace } from './faces.js';
 import { buildDecor } from './decor.js';
 import { AudioManager } from './audio.js';
+import { VrmStage } from './character3d.js';
 
 const TYPE_SPEED_MS = 26;
 
@@ -14,19 +15,26 @@ const MUSIC_MOOD_BY_BG = {
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
 const SAVE_KEY = 'sgc-save-v1';
 
-// Yasmin, Sam and Noa all use real illustrated sprite art (assets/sprites/).
-// (A real-3D VRM render of Yasmin/Sam was tried and pulled: it depended on
-// a CDN-loaded Three.js runtime that isn't reachable from every context
-// this game gets opened in — e.g. a downloaded/offline file — and a
-// character silently failing to render is worse than a stylized 2D one
-// that always does. Gestures/blush/talking below are the same animation
-// idea, just driven by CSS on the illustrated art instead of a 3D rig.)
+// Yasmin, Sam and Noa all use real illustrated sprite art (assets/sprites/)
+// as the baseline — always rendered, always visible. Yasmin and Sam
+// additionally get a real 3D render (Three.js + VRM humanoids, plus a
+// simple flat-shaded 3D room standing in for the photo background) layered
+// on top once it successfully loads. This is deliberately a progressive
+// enhancement rather than a replacement: 3D rendering on a device we can't
+// test against directly has already failed silently more than once this
+// project, so the 2D art underneath is the guarantee that a character is
+// always visible even when 3D doesn't come up — the 3D layer only ever
+// hides the 2D fallback for a character once THAT character has actually
+// finished loading.
 const SPRITE_KIND = { yasmin: 'photo', sam: 'photo', noa: 'photo' };
 const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
 // Each illustrated sprite keeps its source art's own proportions.
 const SPRITE_ASPECT = { yasmin: '480 / 1504', sam: '480 / 1190', noa: '420 / 1345' };
 // No background-scale minor characters in this cut of the story.
 const MINOR_CHARACTERS = new Set();
+
+const VRM_CHARACTERS = new Set(['yasmin', 'sam']);
+const VRM_MODEL_URL = { yasmin: 'assets/models/yasmin.vrm', sam: 'assets/models/sam.vrm' };
 
 const GESTURE_MS = { wave: 900, lean: 1100, shrug: 700, point: 650, dance: 1400 };
 
@@ -36,6 +44,7 @@ class Game {
     this.sceneId = STORY.start;
     this.lineIndex = 0;
     this.onstage = new Map(); // characterId -> sprite element
+    this.vrm3dLoaded = new Set(); // characterId set: 3D model finished loading, 2D fallback hidden
     this.typeTimer = null;
     this.isTyping = false;
     this.bgToggle = false;
@@ -58,6 +67,22 @@ class Game {
     this.$debugPanel = document.getElementById('debug-panel');
     this.$muteBtn = document.getElementById('mute-toggle');
     this.$continueBtn = document.getElementById('continue-btn');
+    this.$notice = document.getElementById('render-notice');
+
+    // 3D setup can fail for reasons entirely outside our control — no
+    // WebGL on the device, a driver that refuses context creation under
+    // memory pressure. This constructor runs before any event listener
+    // below is attached, so an uncaught throw here used to take the whole
+    // game down with it. Never again: if 3D setup fails, this.vrmStage
+    // stays null, every call below is guarded, and the 2D sprites (always
+    // rendered regardless) are simply all the player sees.
+    try {
+      this.vrmStage = new VrmStage(document.getElementById('vrm-layer'));
+    } catch (err) {
+      console.warn('3D rendering unavailable, continuing with 2D only', err);
+      this.vrmStage = null;
+      this.showRenderNotice('תלת-המימד לא נטען במכשיר הזה — ממשיך עם התמונות הרגילות.');
+    }
 
     this.audio = new AudioManager();
     this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
@@ -108,6 +133,8 @@ class Game {
     this.sceneId = STORY.start;
     this.onstage.forEach((el) => el.remove());
     this.onstage.clear();
+    if (this.vrmStage) for (const id of [...this.vrm3dLoaded || []]) this.vrmStage.remove(id);
+    this.vrm3dLoaded = new Set();
     this.$end.hidden = true;
     this.$box.classList.remove('show');
     this.beginStory();
@@ -223,6 +250,14 @@ class Game {
 
     this.$decor.innerHTML = buildDecor(bgKey);
     this.audio.setMood(MUSIC_MOOD_BY_BG[bgKey]);
+    if (this.vrmStage) this.vrmStage.setRoom(bgKey);
+  }
+
+  showRenderNotice(text) {
+    this.$notice.textContent = text;
+    this.$notice.hidden = false;
+    clearTimeout(this._noticeTimer);
+    this._noticeTimer = setTimeout(() => { this.$notice.hidden = true; }, 6000);
   }
 
   // ---------- Sprites ----------
@@ -238,6 +273,9 @@ class Game {
       }
     }
 
+    // The 2D sprite is always created/kept in sync — it's the guaranteed
+    // baseline. A character whose 3D model has already loaded just has it
+    // visually hidden (see .mode-3d in style.css) rather than skipped.
     for (const spec of list) {
       let el = this.onstage.get(spec.id);
       if (!el) {
@@ -248,11 +286,45 @@ class Game {
       } else {
         el.className = `${this.spriteClassName(spec)} on`;
       }
+      el.classList.toggle('mode-3d', this.vrm3dLoaded.has(spec.id));
     }
 
     const majorCount = list.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
     this.$sprites.classList.toggle('duo', majorCount === 2);
     this.$sprites.classList.toggle('trio', majorCount >= 3);
+
+    if (this.vrmStage) this.syncVrm(list, wanted);
+  }
+
+  // Kicks off (once per character, ever) loading the 3D model for anyone
+  // in VRM_CHARACTERS who's on stage, hides/shows already-loaded 3D
+  // characters to match who's actually in this scene, and repositions
+  // anyone left/right/center. A model that fails to load just leaves that
+  // character on its 2D fallback — see the .catch() below — and shows a
+  // one-time on-screen notice so a real-device failure is reportable
+  // instead of silent.
+  syncVrm(list, wanted) {
+    for (const id of this.vrm3dLoaded) {
+      this.vrmStage.setVisible(id, wanted.has(id));
+    }
+    for (const spec of list) {
+      if (!VRM_CHARACTERS.has(spec.id)) continue;
+      if (this.vrm3dLoaded.has(spec.id)) {
+        this.vrmStage.setPosition(spec.id, spec.pos);
+        continue;
+      }
+      if (this.vrm3dAttempted?.has(spec.id)) continue;
+      (this.vrm3dAttempted ??= new Set()).add(spec.id);
+      this.vrmStage.load(spec.id, VRM_MODEL_URL[spec.id], spec.pos).then(() => {
+        this.vrmStage.setEmotion(spec.id, spec.emotion || 'neutral');
+        this.vrm3dLoaded.add(spec.id);
+        const el = this.onstage.get(spec.id);
+        if (el) el.classList.add('mode-3d');
+      }).catch((err) => {
+        console.warn('3D model failed to load, staying on 2D art for', spec.id, err);
+        this.showRenderNotice('דמות אחת לא עלתה בתלת-מימד — ממשיכה בתמונה הרגילה.');
+      });
+    }
   }
 
   // Whoever is speaking gets visual focus; everyone else on stage dims
@@ -263,6 +335,11 @@ class Game {
       el.classList.remove('is-speaking', 'is-listening');
       if (!speakerId) continue;
       el.classList.add(id === speakerId ? 'is-speaking' : 'is-listening');
+    }
+    if (this.vrmStage) {
+      for (const id of this.vrm3dLoaded) {
+        this.vrmStage.setFocus(id, !speakerId ? 'none' : id === speakerId ? 'speaking' : 'listening');
+      }
     }
   }
 
@@ -295,15 +372,21 @@ class Game {
 
   setSpriteEmotion(id, emotion) {
     if (!emotion) return;
+    if (this.vrmStage) this.vrmStage.setEmotion(id, emotion); // no-op if not loaded/not a VRM id
     const el = this.onstage.get(id);
     if (!el) return;
     el.className = el.className.replace(/emo-\S+/, `emo-${emotion}`);
   }
 
-  // Plays a short named CSS animation (see the .gesture-* rules in
-  // style.css) on top of whatever emotion is already showing, then clears
-  // the class once it's done so the same gesture can replay later.
+  // Plays a short named animation on top of whatever emotion is already
+  // showing — a real bone pose in 3D (see GESTURES in character3d.js), or
+  // the equivalent .gesture-* CSS keyframe on the 2D fallback — whichever
+  // is currently the visible representation of that character.
   playGesture(id, name) {
+    if (this.vrm3dLoaded.has(id)) {
+      this.vrmStage.setGesture(id, name, GESTURE_MS[name]);
+      return;
+    }
     const el = this.onstage.get(id);
     const duration = GESTURE_MS[name];
     if (!el || !duration) return;
@@ -314,6 +397,7 @@ class Game {
   }
 
   setBlush(id, on) {
+    if (this.vrmStage) this.vrmStage.setBlush(id, on); // no-op if not loaded/not a VRM id
     const el = this.onstage.get(id);
     if (el) el.classList.toggle('blush', on);
   }
@@ -396,7 +480,9 @@ class Game {
   // Drives the face's talking-flap animation purely off the typewriter's
   // own on/off state (there's no voice track to analyze).
   setSpeakerTalking(speaker, on) {
-    const el = speaker && this.onstage.get(speaker);
+    if (!speaker) return;
+    if (this.vrmStage) this.vrmStage.setTalking(speaker, on); // no-op if not loaded/not a VRM id
+    const el = this.onstage.get(speaker);
     if (el) el.classList.toggle('talking', on);
   }
 
@@ -471,9 +557,11 @@ class Game {
 
   renderDebug() {
     if (this.$debugPanel.hidden) return;
-    this.$debugPanel.innerHTML = Object.entries(this.stats)
+    const statRows = Object.entries(this.stats)
       .map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`)
       .join('');
+    const vrmRow = `<div><span>3d</span><span>${this.vrmStage ? [...VRM_CHARACTERS].map((id) => `${id}:${this.vrm3dLoaded.has(id) ? 'on' : 'off'}`).join(' ') : 'unavailable'}</span></div>`;
+    this.$debugPanel.innerHTML = statRows + vrmRow;
   }
 }
 
