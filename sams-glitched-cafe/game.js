@@ -465,9 +465,14 @@ class Game {
 
   renderDebug() {
     if (this.$debugPanel.hidden) return;
-    this.$debugPanel.innerHTML = Object.entries(this.stats)
+    const statRows = Object.entries(this.stats)
       .map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`)
       .join('');
+    const vrmDebug = window.__vrmDebug || {};
+    const vrmRows = Object.entries(vrmDebug)
+      .map(([id, missing]) => `<div><span>${id} bones</span><span>${missing.length ? 'missing: ' + missing.join(',') : 'ok'}</span></div>`)
+      .join('');
+    this.$debugPanel.innerHTML = statRows + vrmRows;
   }
 }
 

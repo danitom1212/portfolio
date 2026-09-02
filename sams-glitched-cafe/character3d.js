@@ -55,20 +55,40 @@ export class VrmStage {
 
   // Reads extensions.VRM.humanoid.humanBones (role name -> node index) from
   // the raw glTF JSON and resolves each role we care about to its actual
-  // loaded THREE.Object3D via the parser's node cache.
-  async _resolveHumanoidBones(gltf) {
+  // loaded THREE.Object3D via the parser's node cache. Falls back to
+  // matching VRoid's real bone names directly (e.g. "J_Bip_L_UpperArm")
+  // if the VRM extension lookup comes back empty for a role, so a pose
+  // still applies even if the primary path fails for some reason.
+  async _resolveHumanoidBones(gltf, root) {
     const bones = {};
-    const vrm = gltf.parser.json.extensions && gltf.parser.json.extensions.VRM;
-    const humanBones = vrm && vrm.humanoid && vrm.humanoid.humanBones;
-    if (!humanBones) return bones;
-    for (const role of POSED_BONES) {
-      const entry = humanBones.find((b) => b.bone === role);
-      if (!entry) continue;
-      try {
-        bones[role] = await gltf.parser.getDependency('node', entry.node);
-      } catch {
-        // role not present on this rig — skip it, poses degrade gracefully.
+    try {
+      const vrm = gltf.parser.json.extensions && gltf.parser.json.extensions.VRM;
+      const humanBones = vrm && vrm.humanoid && vrm.humanoid.humanBones;
+      if (humanBones) {
+        for (const role of POSED_BONES) {
+          const entry = humanBones.find((b) => b.bone === role);
+          if (!entry) continue;
+          try {
+            bones[role] = await gltf.parser.getDependency('node', entry.node);
+          } catch { /* falls through to name matching below */ }
+        }
       }
+    } catch { /* no VRM extension at all — name matching below covers it */ }
+
+    const NAME_PATTERNS = {
+      leftUpperArm: /(^|_)l(eft)?_?upperarm/i, rightUpperArm: /(^|_)r(ight)?_?upperarm/i,
+      leftLowerArm: /(^|_)l(eft)?_?(lowerarm|forearm)/i, rightLowerArm: /(^|_)r(ight)?_?(lowerarm|forearm)/i,
+      spine: /(^|_)spine$/i, chest: /(^|_)chest$/i, neck: /(^|_)neck$/i, head: /(^|_)head$/i,
+    };
+    const missing = POSED_BONES.filter((role) => !bones[role]);
+    if (missing.length) {
+      root.traverse((child) => {
+        for (const role of missing) {
+          if (!bones[role] && NAME_PATTERNS[role] && NAME_PATTERNS[role].test(child.name)) {
+            bones[role] = child;
+          }
+        }
+      });
     }
     return bones;
   }
@@ -86,7 +106,9 @@ export class VrmStage {
     root.position.y -= box.min.y;
     root.rotation.y = Math.PI; // VRM convention: model faces -Z
 
-    const bones = await this._resolveHumanoidBones(gltf);
+    const bones = await this._resolveHumanoidBones(gltf, root);
+    window.__vrmDebug = window.__vrmDebug || {};
+    window.__vrmDebug[id] = POSED_BONES.filter((r) => !bones[r]);
     const blendMeshes = [];
     root.traverse((child) => {
       if (child.isMesh && child.morphTargetDictionary) blendMeshes.push(child);
