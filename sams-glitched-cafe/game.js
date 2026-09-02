@@ -2,6 +2,7 @@ import { STORY, CHARACTERS } from './story.js';
 import { buildFace } from './faces.js';
 import { buildDecor } from './decor.js';
 import { AudioManager } from './audio.js';
+import { createBlockyCharacter } from './blocky.js';
 
 const TYPE_SPEED_MS = 26;
 
@@ -378,6 +379,17 @@ class Game {
 
     this.lineIndex = 0;
     this.setBackground(scene.bg);
+
+    if (scene.walkIn) {
+      this.$box.classList.remove('show');
+      this.syncSprites([]);
+      this.playWalkIn(scene.walkIn).then(() => this.continueScene(scene));
+    } else {
+      this.continueScene(scene);
+    }
+  }
+
+  continueScene(scene) {
     this.syncSprites(scene.sprites || []);
 
     if (scene.ending) {
@@ -389,6 +401,22 @@ class Game {
     } else {
       this.saveProgress();
       this.playDialogue(scene, () => this.advanceFromScene(scene));
+    }
+  }
+
+  // A short "establishing" beat before the dialogue for a scene begins: a
+  // low-poly CSS-3D figure (no WebGL — see blocky.js) walks into the room
+  // that's already on screen, then the real illustrated sprite takes over
+  // for the actual conversation. Purely additive: if it throws for any
+  // reason on a device we can't test against, the scene just continues
+  // straight to dialogue instead.
+  async playWalkIn(config) {
+    try {
+      const bc = createBlockyCharacter(config.look || {});
+      await bc.walkTo(this.$room3d, config);
+      bc.remove();
+    } catch (err) {
+      console.warn('walk-in intro skipped', err);
     }
   }
 
@@ -627,6 +655,11 @@ class Game {
   }
 
   handleTap() {
+    // The box stays in the DOM (and clickable) even while hidden — e.g.
+    // during a walk-in beat, before choices, or mid scene-transition — so a
+    // stray or impatient tap in that window must not touch lineIndex/
+    // currentScene: they belong to whatever dialogue hasn't started yet.
+    if (!this.$box.classList.contains('show')) return;
     clearTimeout(this.autoTimer);
     if (this.isTyping) {
       clearTimeout(this.typeTimer);

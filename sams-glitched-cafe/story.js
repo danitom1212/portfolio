@@ -20,6 +20,10 @@ export const STORY = {
 
     enter_cafe: {
       bg: 'cafe',
+      walkIn: {
+        fromX: -1.3, toX: -0.25, z: -40, durationMs: 1900,
+        look: { hair: '#c17a4a', skin: '#e8b98a', top: '#3a4a5f', legs: '#242430' },
+      },
       sprites: [
         { id: 'yasmin', pos: 'left', emotion: 'neutral' },
         { id: 'sam', pos: 'right', emotion: 'smile' },
