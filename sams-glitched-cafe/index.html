@@ -34,6 +34,7 @@
 
     <div id="menu-panel" hidden>
       <button id="history-open-btn" class="menu-row">📜 <span>היסטוריית שיחה</span></button>
+      <button id="gallery-open-btn" class="menu-row">🏆 <span>גלריית סיומים</span></button>
       <button id="auto-toggle" class="menu-row">▶️ <span>המשך אוטומטי</span><span class="menu-state">כבוי</span></button>
       <button id="skip-toggle" class="menu-row">⏩ <span>דילוג מהיר</span><span class="menu-state">כבוי</span></button>
       <label class="menu-row menu-slider">🎵 <span>מוזיקה</span><input id="music-vol" type="range" min="0" max="100" value="100"></label>
@@ -46,18 +47,28 @@
       <button id="history-close-btn" class="btn">סגור</button>
     </div>
 
+    <div id="gallery-panel" hidden>
+      <div class="gallery-count-row">סיומים שנצפו: <span id="gallery-count">0/5</span></div>
+      <div id="gallery-list"></div>
+      <button id="gallery-close-btn" class="btn">סגור</button>
+    </div>
+
     <div id="start-screen" class="overlay-screen">
       <div class="title-en">a romance with a secret</div>
       <div class="title-he">קפה הגליץ׳ של סאם</div>
       <p class="subtitle">לילה גשום, בית קפה זר, ובעל בית קפה שיודע לשמור סוד טוב מדי. חמישה סופים אפשריים — תלוי מה תבחרי לשמוע.</p>
       <div id="slot-list" class="start-btns"></div>
+      <button id="start-gallery-btn" class="btn btn-ghost">🏆 גלריית סיומים</button>
       <p class="art-credit">דמויות: LisadiKaprio · רקע: Spiral Atlas · צליל: NenadSimic ואחרים — קרדיטים מלאים ב-CREDITS.md</p>
     </div>
 
     <div id="end-screen" class="overlay-screen" hidden>
       <div class="title-en">the end</div>
       <div id="end-title" class="ending-title"></div>
-      <button id="restart-btn" class="btn">לשחק שוב</button>
+      <div class="start-btns">
+        <button id="restart-btn" class="btn">לשחק שוב</button>
+        <button id="end-gallery-btn" class="btn btn-ghost">🏆 גלריית סיומים</button>
+      </div>
     </div>
   </div>
 </div>

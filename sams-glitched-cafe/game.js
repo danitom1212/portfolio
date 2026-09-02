@@ -14,6 +14,13 @@ const MUSIC_MOOD_BY_BG = {
 const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(57,255,136,.5)' };
 const SAVE_KEY = (slot) => `sgc-save-v2-${slot}`;
 const SAVE_SLOTS = 3;
+const ENDINGS_SEEN_KEY = 'sgc-endings-seen';
+// Derived from the story data itself (every scene with `ending: true`)
+// rather than hand-maintained, so a new ending added to story.js shows up
+// in the gallery automatically.
+const ENDING_IDS = Object.entries(STORY.scenes)
+  .filter(([, scene]) => scene.ending)
+  .map(([id]) => id);
 
 // Yasmin, Sam and Noa all use illustrated 2D sprite art (assets/sprites/).
 // A real-time 3D (WebGL/Three.js) render of Yasmin and Sam was tried twice
@@ -77,6 +84,11 @@ class Game {
     this.$historyBtn = document.getElementById('history-open-btn');
     this.$historyPanel = document.getElementById('history-panel');
     this.$historyList = document.getElementById('history-list');
+    this.$galleryBtn = document.getElementById('gallery-open-btn');
+    this.$galleryPanel = document.getElementById('gallery-panel');
+    this.$galleryList = document.getElementById('gallery-list');
+    this.$galleryCount = document.getElementById('gallery-count');
+    this.$endGalleryBtn = document.getElementById('end-gallery-btn');
 
     // AudioManager reads/writes localStorage, which can throw outright in
     // some embedded contexts. Silence and mute state not persisting is a
@@ -118,6 +130,10 @@ class Game {
     this.$sfxVol.addEventListener('input', () => this.audio.setSfxVolume(this.$sfxVol.value / 100));
     this.$historyBtn.addEventListener('click', () => this.openHistory());
     document.getElementById('history-close-btn').addEventListener('click', () => { this.$historyPanel.hidden = true; });
+    this.$galleryBtn.addEventListener('click', () => this.openGallery());
+    this.$endGalleryBtn.addEventListener('click', () => this.openGallery());
+    document.getElementById('start-gallery-btn').addEventListener('click', () => this.openGallery());
+    document.getElementById('gallery-close-btn').addEventListener('click', () => { this.$galleryPanel.hidden = true; });
   }
 
   // ---------- Menu: auto-play / skip / history ----------
@@ -190,6 +206,46 @@ class Game {
     } catch {
       // ignore
     }
+  }
+
+  // ---------- Ending gallery ----------
+
+  readEndingsSeen() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(ENDINGS_SEEN_KEY));
+      return Array.isArray(raw) ? new Set(raw) : new Set();
+    } catch {
+      return new Set();
+    }
+  }
+
+  unlockEnding(id) {
+    const seen = this.readEndingsSeen();
+    if (seen.has(id)) return;
+    seen.add(id);
+    try {
+      localStorage.setItem(ENDINGS_SEEN_KEY, JSON.stringify([...seen]));
+    } catch {
+      // Not persisted, but the gallery for *this* session still reflects it.
+    }
+  }
+
+  // A locked ending shows only its position ("סיום מספר 3"), never its
+  // title or how to reach it — the point is to tempt a replay, not spoil
+  // one.
+  openGallery() {
+    this.$menuPanel.hidden = true;
+    const seen = this.readEndingsSeen();
+    this.$galleryCount.textContent = `${seen.size}/${ENDING_IDS.length}`;
+    this.$galleryList.innerHTML = ENDING_IDS.map((id, i) => {
+      const unlocked = seen.has(id);
+      const title = unlocked ? STORY.scenes[id].title : `סיום מספר ${i + 1}`;
+      return `<div class="gallery-row ${unlocked ? 'unlocked' : 'locked'}">
+        <span class="gallery-icon">${unlocked ? '🏆' : '🔒'}</span>
+        <span>${title}</span>
+      </div>`;
+    }).join('');
+    this.$galleryPanel.hidden = false;
   }
 
   // Three independent save slots, shown on the start screen: an empty
@@ -630,6 +686,7 @@ class Game {
   showEnding(scene) {
     this.$endTitle.textContent = scene.title;
     this.$end.hidden = false;
+    this.unlockEnding(this.sceneId);
   }
 
   renderDebug() {

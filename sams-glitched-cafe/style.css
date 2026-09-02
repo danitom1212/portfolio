@@ -839,4 +839,21 @@ html[dir="rtl"] .choice-card { padding: .85rem 2.7rem .85rem 1.1rem; }
 .history-line .history-speaker { color: var(--accent); font-weight: 700; margin-inline-end: .4rem; }
 .history-line.narration { color: var(--muted); font-style: italic; }
 
+/* ---------- Ending gallery ---------- */
+#gallery-panel {
+  position: absolute; inset: 8%; z-index: 32;
+  background: rgba(8,5,13,.96); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px; padding: 1rem; display: flex; flex-direction: column; gap: .8rem;
+}
+#gallery-panel[hidden] { display: none; }
+.gallery-count-row { font-size: .78rem; color: var(--muted); text-align: center; }
+#gallery-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: .5rem; }
+.gallery-row {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .6rem .8rem; border-radius: 10px; font-size: .85rem;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.gallery-row.unlocked { background: rgba(209,71,126,.12); color: var(--ink); }
+.gallery-row.locked { background: rgba(255,255,255,.03); color: var(--muted); }
+
 [dir="rtl"] { text-align: right; }
