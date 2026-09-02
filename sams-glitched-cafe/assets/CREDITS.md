@@ -49,31 +49,22 @@ License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) —
 attribution required. Credit: "Male sprite for visual novels" by
 LisadiKaprio, licensed under CC BY 4.0.
 
-## Yasmin and Sam: 3D characters and room
+A real-time 3D (WebGL/Three.js) render of Yasmin and Sam was tried twice
+this project and pulled both times: it worked in every automated test
+here but kept failing — silently, with no error surfacing anywhere — on
+the one real device it actually needed to run on, across several
+independently-verified fixes (crash guards, material fixes, canvas-size
+timing, storage access). Illustrated art that always renders correctly
+beats a fancier render that sometimes renders nothing.
 
-The illustrated sprites above are the guaranteed fallback: `game.js`
-always renders them. On top of that, `assets/models/yasmin.vrm` and
-`assets/models/sam.vrm` — the **"Base Female"** and **"Base Male"** VRoid
-Studio sample avatars, released by VRoid (Pixiv) under **CC0**, via
-https://opengameart.org/content/vroid-studio-cc0-models — are rendered
-live with Three.js (MIT licensed; the library itself is embedded directly
-in the single-file build rather than loaded from a CDN, so it has no
-network dependency of its own) into a flat-shaded 3D room built from
-plain colored boxes (`character3d.js`, no textures) standing in for the
-photo backdrop. Whichever loads for a given character — the 3D model, or
-just the 2D art — is what the player sees; a 2D character never gets
-hidden until its 3D counterpart has actually finished loading. Standing
-pose, breathing, blinking, named gestures (wave/lean/shrug/point/dance),
-emotion-driven blend shapes, a blush tint and a talking mouth-flap are
-all procedural, driven by the same story cues whether a character is
-currently 2D or 3D. The original VRM files (~15-17MB each) were
-re-encoded to fit the size budget: unused normal-map/thumbnail images
-stripped, remaining textures downscaled, with no visible quality loss at
-in-game size.
-
-Both models use their stock VRoid hair color/outfit rather than a custom
-recolor to match Yasmin/Sam's established look — a follow-up, not a
-blocker.
+The "3D room" survived as a plain CSS 3D box (`#room3d` in `style.css` /
+`index.html`, driven from `setBackground()` in `game.js`): a back wall
+using the same illustrated photo as before, plus a floor and two side
+walls in flat accent colors, all positioned with `transform-style:
+preserve-3d` inside `#stage`'s `perspective`. Tilting the device (or the
+small static tilt applied without one) swings the floor and side walls
+into view. No canvas, no GPU context, no external library, no model file
+— just CSS, which every browser renders the same way.
 
 ## Noa's sprite
 

@@ -284,15 +284,60 @@ html, body {
   80% { transform: translateX(4px); }
 }
 
-/* 3D layer: a flat-shaded room + VRM characters, replacing the flat photo
-   backdrop once it successfully renders. z-index ties it with .bg-layer
-   (painted after, so it sits on top) — if 3D never draws anything the
-   transparent canvas just shows the photo underneath, no fallback logic
-   needed here at all. */
-#vrm-layer {
+/* ---------- 3D room (pure CSS — no canvas, no WebGL) ---------- */
+/* A WebGL/Three.js version of this was tried and repeatedly failed
+   silently on the one real device that mattered, across several
+   independently-verified fixes (crash guards, material fixes, canvas
+   resize timing, storage access) — it kept working in every test here
+   and kept failing there, with no error ever visible to debug against.
+   CSS 3D transforms have no GPU context to fail to acquire, no external
+   library to load, no model file to parse: every browser (this one
+   included, whatever it turns out to be) renders `transform-style:
+   preserve-3d` the same way. #room3d is a literal box — a back wall
+   (the existing illustrated photo, unchanged), a floor and two side
+   walls in flat accent colors — sitting inside #stage's perspective.
+   game.js's enableTiltParallax() rotates the whole box a few degrees on
+   device tilt, but that alone turned out too subtle to matter (a wall's
+   CSS `width` becomes its Z-*depth* once rotated 90° into a side wall,
+   not its on-screen width, so at any realistic angle it read as a
+   hairline). Two changes fixed it: the walls/floor are now deep enough
+   (260px of Z-depth) to show as substantial colored surfaces once
+   visible at all, and #room3d carries a fixed, asymmetric baseline tilt
+   — not just the small always-flat rotateX before — so the left wall
+   and floor are unmistakably part of every single frame, with zero
+   dependency on a gyroscope, a JS transform update, or anything else
+   that could fail silently the way the WebGL room did. Device tilt still
+   nudges it further in enableTiltParallax(), purely as a bonus. */
+#room3d {
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  width: 100%; height: 100%; display: block;
+  transform-style: preserve-3d;
+  transform: rotateX(6deg) rotateY(-10deg);
+  transition: transform 160ms ease-out;
 }
+.room-wall-back {
+  position: absolute; inset: 0;
+  transform: translateZ(-130px) scale(1.28);
+  background-size: cover; background-position: center;
+}
+.room-floor, .room-wall-left, .room-wall-right {
+  position: absolute;
+  background: linear-gradient(180deg, var(--room-a, #3a2418), var(--room-b, #1c110b));
+}
+.room-floor {
+  left: -20%; right: -20%; bottom: 0; height: 260px;
+  transform-origin: bottom center;
+  transform: translateZ(-130px) rotateX(90deg);
+}
+.room-wall-left, .room-wall-right {
+  top: -10%; bottom: -10%; width: 260px;
+}
+.room-wall-left { left: -20%; transform-origin: left center; transform: translateZ(-130px) rotateY(90deg); }
+.room-wall-right { right: -20%; transform-origin: right center; transform: translateZ(-130px) rotateY(-90deg); }
+
+#room3d.room-cafe { --room-a: #7a4a2c; --room-b: #3d2415; }
+#room3d.room-cafe_dim { --room-a: #5a3620; --room-b: #241408; }
+#room3d.room-cafe_cracked { --room-a: #3a1420; --room-b: #170810; }
+#room3d.room-street { --room-a: #201c2c; --room-b: #0c0a14; }
 
 /* ---------- Sprites ---------- */
 #sprite-layer {
@@ -316,24 +361,6 @@ html, body {
 .sprite.pos-right { right: 2%; }
 .sprite.on { opacity: 1; transform: translateY(0) scale(1); }
 .sprite.pos-center.on { transform: translateX(-50%) translateY(0) scale(1); }
-/* Once a character's 3D model has actually finished loading, its 2D
-   fallback steps aside so the 3D render (drawn on #vrm-layer, behind this
-   layer) shows instead. Until then — or if 3D never loads at all — this
-   never gets added, so the 2D art is what's visible. */
-.sprite.mode-3d { opacity: 0; pointer-events: none; }
-
-/* A small, dismissable notice for when 3D genuinely fails on a device —
-   visible without needing to know about the hidden debug panel, so it can
-   actually be reported back instead of failing silently again. */
-#render-notice {
-  position: absolute; left: 10px; right: 10px; bottom: 30%;
-  z-index: 25; text-align: center; pointer-events: none;
-  font-size: .68rem; color: rgba(242,242,247,.65);
-  background: rgba(10,5,16,.55); border: 1px solid rgba(255,255,255,.1);
-  border-radius: 8px; padding: .4rem .6rem;
-}
-#render-notice[hidden] { display: none; }
-
 /* Cinematic focus: dim whoever isn't currently speaking. Filter-only (no
    transform) so it never fights the position/entrance transforms above. */
 .sprite.is-listening { filter: brightness(.66) saturate(.7) sepia(.08); }

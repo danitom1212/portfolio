@@ -2,7 +2,6 @@ import { STORY, CHARACTERS } from './story.js';
 import { buildFace } from './faces.js';
 import { buildDecor } from './decor.js';
 import { AudioManager } from './audio.js';
-import { VrmStage } from './character3d.js';
 
 const TYPE_SPEED_MS = 26;
 
@@ -16,26 +15,22 @@ const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(
 const SAVE_KEY = (slot) => `sgc-save-v2-${slot}`;
 const SAVE_SLOTS = 3;
 
-// Yasmin, Sam and Noa all use real illustrated sprite art (assets/sprites/)
-// as the baseline — always rendered, always visible. Yasmin and Sam
-// additionally get a real 3D render (Three.js + VRM humanoids, plus a
-// simple flat-shaded 3D room standing in for the photo background) layered
-// on top once it successfully loads. This is deliberately a progressive
-// enhancement rather than a replacement: 3D rendering on a device we can't
-// test against directly has already failed silently more than once this
-// project, so the 2D art underneath is the guarantee that a character is
-// always visible even when 3D doesn't come up — the 3D layer only ever
-// hides the 2D fallback for a character once THAT character has actually
-// finished loading.
+// Yasmin, Sam and Noa all use illustrated 2D sprite art (assets/sprites/).
+// A real-time 3D (WebGL/Three.js) render of Yasmin and Sam was tried twice
+// this project and pulled both times: it worked in every automated test
+// here but kept failing — silently, with no error surfacing anywhere — on
+// the one real device it actually needed to run on, across several
+// independently-verified fixes. Illustrated art that always renders
+// correctly beats a fancier render that sometimes renders nothing. The 3D
+// *room* survived as a plain CSS 3D box (#room3d in style.css / index.html)
+// driven from setBackground() below — no canvas, no GPU context, nothing
+// that can fail the way WebGL did.
 const SPRITE_KIND = { yasmin: 'photo', sam: 'photo', noa: 'photo' };
 const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
 // Each illustrated sprite keeps its source art's own proportions.
 const SPRITE_ASPECT = { yasmin: '480 / 1504', sam: '480 / 1190', noa: '420 / 1345' };
 // No background-scale minor characters in this cut of the story.
 const MINOR_CHARACTERS = new Set();
-
-const VRM_CHARACTERS = new Set(['yasmin', 'sam']);
-const VRM_MODEL_URL = { yasmin: 'assets/models/yasmin.vrm', sam: 'assets/models/sam.vrm' };
 
 const GESTURE_MS = { wave: 900, lean: 1100, shrug: 700, point: 650, dance: 1400 };
 
@@ -46,7 +41,6 @@ class Game {
     this.lineIndex = 0;
     this.activeSlot = 1;
     this.onstage = new Map(); // characterId -> sprite element
-    this.vrm3dLoaded = new Set(); // characterId set: 3D model finished loading, 2D fallback hidden
     this.typeTimer = null;
     this.autoTimer = null;
     this.isTyping = false;
@@ -72,7 +66,7 @@ class Game {
     this.$debugBtn = document.getElementById('debug-toggle');
     this.$debugPanel = document.getElementById('debug-panel');
     this.$muteBtn = document.getElementById('mute-toggle');
-    this.$notice = document.getElementById('render-notice');
+    this.$room3d = document.getElementById('room3d');
     this.$slotList = document.getElementById('slot-list');
     this.$menuBtn = document.getElementById('menu-toggle');
     this.$menuPanel = document.getElementById('menu-panel');
@@ -84,27 +78,12 @@ class Game {
     this.$historyPanel = document.getElementById('history-panel');
     this.$historyList = document.getElementById('history-list');
 
-    // 3D setup can fail for reasons entirely outside our control — no
-    // WebGL on the device, a driver that refuses context creation under
-    // memory pressure. This constructor runs before any event listener
-    // below is attached, so an uncaught throw here used to take the whole
-    // game down with it. Never again: if 3D setup fails, this.vrmStage
-    // stays null, every call below is guarded, and the 2D sprites (always
-    // rendered regardless) are simply all the player sees.
-    try {
-      this.vrmStage = new VrmStage(document.getElementById('vrm-layer'));
-    } catch (err) {
-      console.warn('3D rendering unavailable, continuing with 2D only', err);
-      this.vrmStage = null;
-      this.showRenderNotice('תלת-המימד לא נטען במכשיר הזה — ממשיך עם התמונות הרגילות.');
-    }
-
-    // Same reasoning as the 3D guard above: AudioManager reads/writes
-    // localStorage, which can throw outright in some embedded contexts.
-    // Silence and mute state not persisting is a minor loss; the whole
-    // game refusing to boot over it is not — so a construction failure
-    // falls back to a no-op stub with the same method names, and every
-    // call site below keeps working without needing its own null check.
+    // AudioManager reads/writes localStorage, which can throw outright in
+    // some embedded contexts. Silence and mute state not persisting is a
+    // minor loss; the whole game refusing to boot over it is not — so a
+    // construction failure falls back to a no-op stub with the same
+    // method names, and every call site below keeps working without
+    // needing its own null check.
     try {
       this.audio = new AudioManager();
     } catch (err) {
@@ -265,8 +244,6 @@ class Game {
     this.history = [];
     this.onstage.forEach((el) => el.remove());
     this.onstage.clear();
-    if (this.vrmStage) for (const id of [...this.vrm3dLoaded || []]) this.vrmStage.remove(id);
-    this.vrm3dLoaded = new Set();
     this.$end.hidden = true;
     this.$box.classList.remove('show');
     this.beginStory({ slot: this.activeSlot, resume: false });
@@ -290,10 +267,13 @@ class Game {
 
   // Subtle device-tilt parallax: the sprite plane and the decor plane
   // (rain/lights/steam) drift by different amounts as the phone tilts,
-  // reading as actual depth rather than a single flat image. Purely a
-  // progressive enhancement — silently does nothing without motion
-  // sensors, on desktop, or if the user declines the iOS permission
-  // prompt.
+  // reading as actual depth rather than a single flat image. The 3D room
+  // gets a stronger rotation than either — that's what actually reveals
+  // its floor and side walls, turning "a photo" into "a box you're
+  // standing inside." Purely a progressive enhancement — silently does
+  // nothing without motion sensors, on desktop, or if the user declines
+  // the iOS permission prompt (the room still keeps its small static
+  // tilt from style.css either way).
   enableTiltParallax() {
     if (this.tiltEnabled || typeof DeviceOrientationEvent === 'undefined') return;
     this.tiltEnabled = true;
@@ -302,6 +282,7 @@ class Game {
       const tilt = Math.max(-18, Math.min(18, gamma || 0));
       this.$sprites.style.transform = `rotateY(${tilt * 0.55}deg) translateX(${tilt * 0.5}px)`;
       this.$decor.style.transform = `rotateY(${tilt * 0.25}deg) translateX(${tilt * 0.2}px)`;
+      this.$room3d.style.transform = `rotateX(6deg) rotateY(${-10 + tilt * 0.9}deg)`;
     };
 
     let queued = false;
@@ -379,20 +360,20 @@ class Game {
 
     this.$decor.innerHTML = buildDecor(bgKey);
     this.audio.setMood(MUSIC_MOOD_BY_BG[bgKey]);
-    if (this.vrmStage) {
-      try {
-        this.vrmStage.setRoom(bgKey);
-      } catch (err) {
-        console.warn('3D room failed to build, staying on the photo backdrop', err);
-      }
-    }
-  }
 
-  showRenderNotice(text) {
-    this.$notice.textContent = text;
-    this.$notice.hidden = false;
-    clearTimeout(this._noticeTimer);
-    this._noticeTimer = setTimeout(() => { this.$notice.hidden = true; }, 6000);
+    // The 3D room: the back wall reuses the exact same illustrated photo
+    // class as the flat background (bg-${bgKey}), so switching from the
+    // 2D backdrop to this box loses nothing — it just wraps that same art
+    // in a floor and two side walls that swing into view as the device
+    // tilts (see enableTiltParallax below). Pure CSS: nothing here can
+    // fail to acquire a GPU context or fail to parse a model file.
+    this.$room3d.className = `room-${bgKey}`;
+    this.$room3d.innerHTML = `
+      <div class="room-wall-back bg-${bgKey}"></div>
+      <div class="room-wall-left"></div>
+      <div class="room-wall-right"></div>
+      <div class="room-floor"></div>
+    `;
   }
 
   // ---------- Sprites ----------
@@ -408,9 +389,6 @@ class Game {
       }
     }
 
-    // The 2D sprite is always created/kept in sync — it's the guaranteed
-    // baseline. A character whose 3D model has already loaded just has it
-    // visually hidden (see .mode-3d in style.css) rather than skipped.
     for (const spec of list) {
       let el = this.onstage.get(spec.id);
       if (!el) {
@@ -421,45 +399,11 @@ class Game {
       } else {
         el.className = `${this.spriteClassName(spec)} on`;
       }
-      el.classList.toggle('mode-3d', this.vrm3dLoaded.has(spec.id));
     }
 
     const majorCount = list.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
     this.$sprites.classList.toggle('duo', majorCount === 2);
     this.$sprites.classList.toggle('trio', majorCount >= 3);
-
-    if (this.vrmStage) this.syncVrm(list, wanted);
-  }
-
-  // Kicks off (once per character, ever) loading the 3D model for anyone
-  // in VRM_CHARACTERS who's on stage, hides/shows already-loaded 3D
-  // characters to match who's actually in this scene, and repositions
-  // anyone left/right/center. A model that fails to load just leaves that
-  // character on its 2D fallback — see the .catch() below — and shows a
-  // one-time on-screen notice so a real-device failure is reportable
-  // instead of silent.
-  syncVrm(list, wanted) {
-    for (const id of this.vrm3dLoaded) {
-      this.vrmStage.setVisible(id, wanted.has(id));
-    }
-    for (const spec of list) {
-      if (!VRM_CHARACTERS.has(spec.id)) continue;
-      if (this.vrm3dLoaded.has(spec.id)) {
-        this.vrmStage.setPosition(spec.id, spec.pos);
-        continue;
-      }
-      if (this.vrm3dAttempted?.has(spec.id)) continue;
-      (this.vrm3dAttempted ??= new Set()).add(spec.id);
-      this.vrmStage.load(spec.id, VRM_MODEL_URL[spec.id], spec.pos).then(() => {
-        this.vrmStage.setEmotion(spec.id, spec.emotion || 'neutral');
-        this.vrm3dLoaded.add(spec.id);
-        const el = this.onstage.get(spec.id);
-        if (el) el.classList.add('mode-3d');
-      }).catch((err) => {
-        console.warn('3D model failed to load, staying on 2D art for', spec.id, err);
-        this.showRenderNotice('דמות אחת לא עלתה בתלת-מימד — ממשיכה בתמונה הרגילה.');
-      });
-    }
   }
 
   // Whoever is speaking gets visual focus; everyone else on stage dims
@@ -470,11 +414,6 @@ class Game {
       el.classList.remove('is-speaking', 'is-listening');
       if (!speakerId) continue;
       el.classList.add(id === speakerId ? 'is-speaking' : 'is-listening');
-    }
-    if (this.vrmStage) {
-      for (const id of this.vrm3dLoaded) {
-        this.vrmStage.setFocus(id, !speakerId ? 'none' : id === speakerId ? 'speaking' : 'listening');
-      }
     }
   }
 
@@ -507,21 +446,15 @@ class Game {
 
   setSpriteEmotion(id, emotion) {
     if (!emotion) return;
-    if (this.vrmStage) this.vrmStage.setEmotion(id, emotion); // no-op if not loaded/not a VRM id
     const el = this.onstage.get(id);
     if (!el) return;
     el.className = el.className.replace(/emo-\S+/, `emo-${emotion}`);
   }
 
-  // Plays a short named animation on top of whatever emotion is already
-  // showing — a real bone pose in 3D (see GESTURES in character3d.js), or
-  // the equivalent .gesture-* CSS keyframe on the 2D fallback — whichever
-  // is currently the visible representation of that character.
+  // Plays a short named CSS animation (see the .gesture-* rules in
+  // style.css) on top of whatever emotion is already showing, then clears
+  // the class once it's done so the same gesture can replay later.
   playGesture(id, name) {
-    if (this.vrm3dLoaded.has(id)) {
-      this.vrmStage.setGesture(id, name, GESTURE_MS[name]);
-      return;
-    }
     const el = this.onstage.get(id);
     const duration = GESTURE_MS[name];
     if (!el || !duration) return;
@@ -532,7 +465,6 @@ class Game {
   }
 
   setBlush(id, on) {
-    if (this.vrmStage) this.vrmStage.setBlush(id, on); // no-op if not loaded/not a VRM id
     const el = this.onstage.get(id);
     if (el) el.classList.toggle('blush', on);
   }
@@ -624,7 +556,6 @@ class Game {
   // own on/off state (there's no voice track to analyze).
   setSpeakerTalking(speaker, on) {
     if (!speaker) return;
-    if (this.vrmStage) this.vrmStage.setTalking(speaker, on); // no-op if not loaded/not a VRM id
     const el = this.onstage.get(speaker);
     if (el) el.classList.toggle('talking', on);
   }
@@ -703,11 +634,9 @@ class Game {
 
   renderDebug() {
     if (this.$debugPanel.hidden) return;
-    const statRows = Object.entries(this.stats)
+    this.$debugPanel.innerHTML = Object.entries(this.stats)
       .map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`)
       .join('');
-    const vrmRow = `<div><span>3d</span><span>${this.vrmStage ? [...VRM_CHARACTERS].map((id) => `${id}:${this.vrm3dLoaded.has(id) ? 'on' : 'off'}`).join(' ') : 'unavailable'}</span></div>`;
-    this.$debugPanel.innerHTML = statRows + vrmRow;
   }
 }
 
