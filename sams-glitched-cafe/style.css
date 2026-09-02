@@ -285,10 +285,6 @@ html, body {
 }
 
 /* ---------- Sprites ---------- */
-#vrm-layer {
-  position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  width: 100%; height: 100%; display: block;
-}
 #sprite-layer {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
   transition: transform 140ms ease-out;
@@ -390,6 +386,61 @@ html, body {
 .sprite--photo.emo-angry .photo-stack { filter: saturate(1.25) brightness(1.02) drop-shadow(0 0 30px rgba(255,43,43,.4)); animation: angryPulse 900ms ease-in-out infinite; }
 .sprite--photo.emo-shock .photo-stack { animation: shockPop 380ms ease; }
 .sprite--photo.emo-glitch .face-glitch { animation: faceRgbSplit 340ms steps(2, jump-none) infinite; }
+
+/* Gesture beats: a short, named motion layered on top of whatever emotion
+   is already showing, then it clears itself (game.js removes the class on
+   a timer). Plays on .photo-stack so it composes with the idle breathing
+   animation on .face-photo underneath rather than fighting it. */
+.sprite--photo.gesture-wave .photo-stack { animation: gestureWave 900ms ease-in-out; }
+.sprite--photo.gesture-lean .photo-stack { animation: gestureLean 1100ms ease-out; }
+.sprite--photo.gesture-shrug .photo-stack { animation: gestureShrug 700ms ease-in-out; }
+.sprite--photo.gesture-point .photo-stack { animation: gesturePoint 650ms ease-out; }
+.sprite--photo.gesture-dance .photo-stack { animation: gestureDance 1400ms ease-in-out; }
+@keyframes gestureWave {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  25% { transform: rotate(-3deg) translateY(-4px); }
+  50% { transform: rotate(3deg) translateY(-6px); }
+  75% { transform: rotate(-2deg) translateY(-3px); }
+}
+@keyframes gestureLean {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(4px) scale(1.04) rotate(-1deg); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes gestureShrug {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  40% { transform: translateY(-6px) rotate(1.5deg); }
+  70% { transform: translateY(-6px) rotate(-1.5deg); }
+}
+@keyframes gesturePoint {
+  0% { transform: scale(1) rotate(0); }
+  40% { transform: scale(1.06) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes gestureDance {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  20% { transform: translateY(-8px) rotate(-4deg); }
+  40% { transform: translateY(0) rotate(4deg); }
+  60% { transform: translateY(-10px) rotate(-4deg); }
+  80% { transform: translateY(0) rotate(4deg); }
+}
+
+/* Blush: a warm tint over the face art while a line is flagged romantic. */
+.sprite--photo.blush .face-photo { filter: saturate(1.1) brightness(1.02); }
+.sprite--photo.blush .photo-stack::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 30% at 50% 58%, rgba(255,110,150,.22), transparent 70%);
+  pointer-events: none;
+}
+
+/* Talking: a faint rhythmic scale on the face while the typewriter is
+   running, so the character reads as speaking rather than a still photo. */
+.sprite--photo.talking .face-photo { animation: talkFlap 260ms ease-in-out infinite; }
+@keyframes talkFlap {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(.985); }
+}
 
 /* -- Abstract vector sprite (the Static entity) -- */
 .portrait {
@@ -581,35 +632,50 @@ html[dir="rtl"] .choice-card { padding: .85rem 2.7rem .85rem 1.1rem; }
 .choice-card:active { transform: scale(.97); }
 
 /* ---------- Start / End screens ---------- */
+/* A professional VN main menu reads as a poster, not a web form: full-bleed
+   key art behind the logo, a restrained title (no rainbow gradient text),
+   and one clear, quiet call-to-action rather than a loud pill button. */
 .overlay-screen {
   position: absolute; inset: 0; z-index: 20;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1.4rem; text-align: center; padding: 2rem;
-  background: radial-gradient(circle at 50% 30%, rgba(209,71,126,.16), transparent 60%),
-              linear-gradient(180deg, #0a0510 0%, #05030a 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  gap: 1.1rem; text-align: center; padding: 3rem 2rem 3.4rem;
+  background-image: linear-gradient(180deg, rgba(5,3,8,.35) 0%, rgba(5,3,8,.72) 62%, rgba(5,3,8,.94) 100%),
+                     url('assets/bg-cafe-dim.jpg');
+  background-size: cover;
+  background-position: center 30%;
+}
+.overlay-screen::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(209,71,126,.16), transparent 65%);
+  pointer-events: none;
 }
 .overlay-screen[hidden] { display: none; }
 .title-en {
   font-family: 'Heebo', sans-serif;
-  font-size: .78rem;
-  letter-spacing: .3em;
-  color: var(--accent2);
+  font-size: .72rem;
+  letter-spacing: .38em;
+  color: rgba(242,242,247,.55);
   text-transform: uppercase;
 }
 .title-he {
   font-family: 'Frank Ruhl Libre', serif;
-  font-size: clamp(2rem, 9vw, 2.9rem);
+  font-size: clamp(2.1rem, 9vw, 3rem);
   font-weight: 900;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  animation: titleGlow 3.6s ease-in-out infinite;
+  color: var(--ink);
+  text-shadow: 0 2px 24px rgba(0,0,0,.6), 0 0 42px rgba(209,71,126,.28);
+  position: relative;
 }
-@keyframes titleGlow {
-  0%, 100% { filter: drop-shadow(0 0 6px rgba(209,71,126,.25)); }
-  50% { filter: drop-shadow(0 0 16px rgba(209,71,126,.5)); }
+.title-he::after {
+  content: '';
+  display: block;
+  width: 3.2rem; height: 2px;
+  margin: .85rem auto 0;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: .8;
 }
-.subtitle { color: var(--muted); font-size: .9rem; max-width: 32ch; }
-.art-credit { position: absolute; bottom: 14px; left: 0; right: 0; color: var(--muted); font-size: .62rem; opacity: .55; }
+.subtitle { color: rgba(242,242,247,.72); font-size: .92rem; max-width: 32ch; line-height: 1.55; }
+.art-credit { position: absolute; bottom: 10px; left: 0; right: 0; color: rgba(242,242,247,.4); font-size: .6rem; }
 .ending-title {
   font-family: 'Frank Ruhl Libre', serif;
   font-size: 1.6rem;
@@ -620,23 +686,28 @@ html[dir="rtl"] .choice-card { padding: .85rem 2.7rem .85rem 1.1rem; }
   font-family: 'Frank Ruhl Libre', serif;
   font-weight: 700;
   font-size: 1rem;
-  padding: .8rem 2.2rem;
-  border-radius: 999px;
-  border: none;
+  padding: .85rem 2.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(242,242,247,.22);
   cursor: pointer;
-  color: #0a0510;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
-  box-shadow: 0 10px 30px rgba(209,71,126,.35), inset 0 1px 0 rgba(255,255,255,.35);
-  transition: transform 160ms ease;
+  color: var(--ink);
+  background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.02));
+  box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 12px 28px rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+  letter-spacing: .02em;
 }
+.btn:hover { border-color: var(--accent); background: linear-gradient(180deg, rgba(209,71,126,.22), rgba(209,71,126,.05)); }
 .btn:active { transform: scale(.96); }
 .btn-ghost {
   background: transparent;
-  color: var(--ink);
+  color: rgba(242,242,247,.75);
   box-shadow: none;
-  border: 1px solid rgba(255,255,255,.25);
+  border: 1px solid rgba(255,255,255,.16);
+  font-size: .85rem;
+  padding: .65rem 2rem;
 }
-.start-btns { display: flex; flex-direction: column; gap: .7rem; align-items: center; }
+.start-btns { display: flex; flex-direction: column; gap: .65rem; align-items: center; margin-top: .3rem; }
 
 /* ---------- Debug stat panel ---------- */
 #debug-toggle {

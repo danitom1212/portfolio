@@ -2,7 +2,6 @@ import { STORY, CHARACTERS } from './story.js';
 import { buildFace } from './faces.js';
 import { buildDecor } from './decor.js';
 import { AudioManager } from './audio.js';
-import { VrmStage } from './character3d.js';
 
 const TYPE_SPEED_MS = 26;
 
@@ -16,6 +15,12 @@ const VECTOR_PORTRAIT_COLORS = { light: '#173324', dark: '#020604', glow: 'rgba(
 const SAVE_KEY = 'sgc-save-v1';
 
 // Yasmin, Sam and Noa all use real illustrated sprite art (assets/sprites/).
+// (A real-3D VRM render of Yasmin/Sam was tried and pulled: it depended on
+// a CDN-loaded Three.js runtime that isn't reachable from every context
+// this game gets opened in — e.g. a downloaded/offline file — and a
+// character silently failing to render is worse than a stylized 2D one
+// that always does. Gestures/blush/talking below are the same animation
+// idea, just driven by CSS on the illustrated art instead of a 3D rig.)
 const SPRITE_KIND = { yasmin: 'photo', sam: 'photo', noa: 'photo' };
 const PHOTO_EMOTIONS = ['neutral', 'smile', 'sad', 'angry', 'shock', 'glitch'];
 // Each illustrated sprite keeps its source art's own proportions.
@@ -23,18 +28,14 @@ const SPRITE_ASPECT = { yasmin: '480 / 1504', sam: '480 / 1190', noa: '420 / 134
 // No background-scale minor characters in this cut of the story.
 const MINOR_CHARACTERS = new Set();
 
-// Yasmin and Sam render as real 3D characters (VRM humanoids); Noa stays
-// on the illustrated 2D sprite path for now.
-const VRM_CHARACTERS = new Set(['yasmin', 'sam']);
-const VRM_MODEL_URL = { yasmin: 'assets/models/yasmin.vrm', sam: 'assets/models/sam.vrm' };
+const GESTURE_MS = { wave: 900, lean: 1100, shrug: 700, point: 650, dance: 1400 };
 
 class Game {
   constructor() {
     this.stats = { affection: 0, rage: 0, doubt: 0 };
     this.sceneId = STORY.start;
     this.lineIndex = 0;
-    this.onstage = new Map(); // characterId -> sprite element (2D only)
-    this.onstageVrm = new Set(); // characterId set for 3D characters
+    this.onstage = new Map(); // characterId -> sprite element
     this.typeTimer = null;
     this.isTyping = false;
     this.bgToggle = false;
@@ -57,21 +58,6 @@ class Game {
     this.$debugPanel = document.getElementById('debug-panel');
     this.$muteBtn = document.getElementById('mute-toggle');
     this.$continueBtn = document.getElementById('continue-btn');
-
-    // 3D setup can fail for reasons entirely outside our control — a
-    // blocked CDN script, no WebGL on the device, a driver that refuses
-    // context creation under memory pressure. This constructor runs
-    // before any event listener below is attached, so an uncaught throw
-    // here used to take the whole game down with it (the start button
-    // would silently do nothing forever). Never let that happen again:
-    // if 3D setup fails, Yasmin and Sam just don't render, and everything
-    // else — dialogue, choices, endings — keeps working.
-    try {
-      this.vrmStage = new VrmStage(document.getElementById('vrm-layer'));
-    } catch (err) {
-      console.warn('3D character rendering unavailable, continuing without it', err);
-      this.vrmStage = null;
-    }
 
     this.audio = new AudioManager();
     this.$muteBtn.textContent = this.audio.muted ? '🔇' : '🔊';
@@ -122,8 +108,6 @@ class Game {
     this.sceneId = STORY.start;
     this.onstage.forEach((el) => el.remove());
     this.onstage.clear();
-    if (this.vrmStage) for (const id of this.onstageVrm) this.vrmStage.remove(id);
-    this.onstageVrm.clear();
     this.$end.hidden = true;
     this.$box.classList.remove('show');
     this.beginStory();
@@ -245,8 +229,6 @@ class Game {
 
   syncSprites(list) {
     const wanted = new Map(list.map((s) => [s.id, s]));
-    const vrmSpecs = list.filter((s) => VRM_CHARACTERS.has(s.id));
-    const domList = list.filter((s) => !VRM_CHARACTERS.has(s.id));
 
     for (const [id, el] of this.onstage) {
       if (!wanted.has(id)) {
@@ -256,7 +238,7 @@ class Game {
       }
     }
 
-    for (const spec of domList) {
+    for (const spec of list) {
       let el = this.onstage.get(spec.id);
       if (!el) {
         el = this.createSprite(spec);
@@ -268,26 +250,7 @@ class Game {
       }
     }
 
-    if (this.vrmStage) {
-      for (const id of [...this.onstageVrm]) {
-        if (!wanted.has(id)) {
-          this.vrmStage.remove(id);
-          this.onstageVrm.delete(id);
-        }
-      }
-      for (const spec of vrmSpecs) {
-        this.onstageVrm.add(spec.id);
-        this.vrmStage.load(spec.id, VRM_MODEL_URL[spec.id], spec.pos).then(() => {
-          this.vrmStage.setEmotion(spec.id, spec.emotion || 'neutral');
-        }).catch((err) => {
-          console.warn('3D model failed to load, skipping', spec.id, err);
-          this.onstageVrm.delete(spec.id);
-        });
-        this.vrmStage.setPosition(spec.id, spec.pos); // no-op until loaded; keeps repositioning working once it is
-      }
-    }
-
-    const majorCount = domList.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
+    const majorCount = list.filter((s) => SPRITE_KIND[s.id] === 'photo' && !MINOR_CHARACTERS.has(s.id)).length;
     this.$sprites.classList.toggle('duo', majorCount === 2);
     this.$sprites.classList.toggle('trio', majorCount >= 3);
   }
@@ -300,11 +263,6 @@ class Game {
       el.classList.remove('is-speaking', 'is-listening');
       if (!speakerId) continue;
       el.classList.add(id === speakerId ? 'is-speaking' : 'is-listening');
-    }
-    if (this.vrmStage) {
-      for (const id of this.onstageVrm) {
-        this.vrmStage.setFocus(id, !speakerId ? 'none' : id === speakerId ? 'speaking' : 'listening');
-      }
     }
   }
 
@@ -337,13 +295,27 @@ class Game {
 
   setSpriteEmotion(id, emotion) {
     if (!emotion) return;
-    if (VRM_CHARACTERS.has(id)) {
-      if (this.vrmStage) this.vrmStage.setEmotion(id, emotion);
-      return;
-    }
     const el = this.onstage.get(id);
     if (!el) return;
     el.className = el.className.replace(/emo-\S+/, `emo-${emotion}`);
+  }
+
+  // Plays a short named CSS animation (see the .gesture-* rules in
+  // style.css) on top of whatever emotion is already showing, then clears
+  // the class once it's done so the same gesture can replay later.
+  playGesture(id, name) {
+    const el = this.onstage.get(id);
+    const duration = GESTURE_MS[name];
+    if (!el || !duration) return;
+    el.classList.remove(`gesture-${name}`);
+    void el.offsetWidth;
+    el.classList.add(`gesture-${name}`);
+    setTimeout(() => el.classList.remove(`gesture-${name}`), duration);
+  }
+
+  setBlush(id, on) {
+    const el = this.onstage.get(id);
+    if (el) el.classList.toggle('blush', on);
   }
 
   // ---------- VFX ----------
@@ -390,13 +362,9 @@ class Game {
 
     if (line.vfx) this.triggerVfx(line.vfx);
     if (line.sfx) this.audio.playSfx(line.sfx, { volume: 0.6 });
-    if (line.gesture && this.vrmStage && VRM_CHARACTERS.has(line.speaker)) {
-      this.vrmStage.setGesture(line.speaker, line.gesture, line.gestureMs || 1600);
-    }
-    if (this.vrmStage) {
-      for (const id of this.onstageVrm) this.vrmStage.setBlush(id, false);
-      if (line.blush && VRM_CHARACTERS.has(line.speaker)) this.vrmStage.setBlush(line.speaker, true);
-    }
+    if (line.gesture && line.speaker) this.playGesture(line.speaker, line.gesture);
+    for (const id of this.onstage.keys()) this.setBlush(id, false);
+    if (line.blush && line.speaker) this.setBlush(line.speaker, true);
 
     this.typeText(line.text, line.speaker);
   }
@@ -425,12 +393,11 @@ class Game {
     this.typeTimer = setTimeout(step, TYPE_SPEED_MS);
   }
 
-  // Drives the 3D mouth-flap lip-sync purely off the typewriter's own
-  // on/off state (there's no voice track to analyze).
+  // Drives the face's talking-flap animation purely off the typewriter's
+  // own on/off state (there's no voice track to analyze).
   setSpeakerTalking(speaker, on) {
-    if (this.vrmStage && speaker && VRM_CHARACTERS.has(speaker)) {
-      this.vrmStage.setTalking(speaker, on);
-    }
+    const el = speaker && this.onstage.get(speaker);
+    if (el) el.classList.toggle('talking', on);
   }
 
   finishTyping() {
@@ -504,14 +471,9 @@ class Game {
 
   renderDebug() {
     if (this.$debugPanel.hidden) return;
-    const statRows = Object.entries(this.stats)
+    this.$debugPanel.innerHTML = Object.entries(this.stats)
       .map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`)
       .join('');
-    const vrmDebug = window.__vrmDebug || {};
-    const vrmRows = Object.entries(vrmDebug)
-      .map(([id, missing]) => `<div><span>${id} bones</span><span>${missing.length ? 'missing: ' + missing.join(',') : 'ok'}</span></div>`)
-      .join('');
-    this.$debugPanel.innerHTML = statRows + vrmRows;
   }
 }
 
