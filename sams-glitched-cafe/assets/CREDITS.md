@@ -66,6 +66,28 @@ small static tilt applied without one) swings the floor and side walls
 into view. No canvas, no GPU context, no external library, no model file
 — just CSS, which every browser renders the same way.
 
+## 3D walk-in frames (Yasmin)
+
+`walk3d/yasmin_walk_00..15.webp` are a 16-frame looping walk cycle,
+rendered offline for this project from **VRoid Studio's sample avatar
+model** (`AvatarSample_A.vrm`), obtained via
+https://github.com/madjin/vrm-samples (VRoid sample models, CC0 there).
+
+What was done to it: the model's hair material was hue-shifted to
+Yasmin's ginger and its cardigan/skirt materials tinted to her
+blue-grey and brown, so the 3D figure reads as the same character as
+the illustrated sprite; the walk cycle itself is hand-authored over the
+VRM humanoid bone map (no third-party animation data), and the frames
+were rendered with Three.js + `@pixiv/three-vrm` in a headless browser,
+then cropped and re-encoded to WebP.
+
+**Why pre-rendered rather than live 3D:** real-time WebGL was attempted
+repeatedly on the target device and failed silently every time (see the
+note under Sam's sprite). Baking the render offline gives genuine 3D
+visuals while the phone only swaps `<img>` frames — the same mechanism
+as the rest of the game's art — so the entrance looks identical on
+every device instead of depending on its GPU.
+
 ## Noa's sprite
 
 `sprites/noa-*.webp` are cropped and re-encoded from 3 of the 7

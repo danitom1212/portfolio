@@ -20,7 +20,7 @@ export const STORY = {
 
     enter_cafe: {
       bg: 'cafe',
-      walkIn: { id: 'yasmin', pos: 'left', emotion: 'neutral', durationMs: 2200 },
+      walkIn: { id: 'yasmin', pos: 'left', durationMs: 2200 },
       sprites: [
         { id: 'yasmin', pos: 'left', emotion: 'neutral' },
         { id: 'sam', pos: 'right', emotion: 'smile' },

@@ -41,6 +41,14 @@ const MINOR_CHARACTERS = new Set();
 
 const GESTURE_MS = { wave: 900, lean: 1100, shrug: 700, point: 650, dance: 1400 };
 
+// Pre-rendered 3D walk cycle (see playWalkIn). Frames were rendered offline
+// from a rigged anime VRM model, so nothing here needs a GPU at runtime.
+const WALK3D_FRAME_COUNT = 16;
+const WALK3D_FRAMES = Array.from(
+  { length: WALK3D_FRAME_COUNT },
+  (_, i) => `assets/walk3d/yasmin_walk_${String(i).padStart(2, '0')}.webp`,
+);
+
 class Game {
   constructor() {
     this.stats = { affection: 0, rage: 0, doubt: 0 };
@@ -404,32 +412,58 @@ class Game {
   }
 
   // A short "establishing" beat before a scene's dialogue starts: the
-  // character's own illustrated sprite slides in from off-screen, small
-  // and distant, growing to full size as she "approaches camera" — a
-  // cinematic entrance built from the exact same art as the rest of the
-  // game, not a separate lower-fidelity stand-in (an earlier low-poly
-  // CSS-3D figure did that and looked cheap next to the illustrated art;
-  // this replaced it). The element this creates becomes the real onstage
-  // sprite — continueScene()'s syncSprites() just settles it into its
-  // final pose, no handoff needed. Purely additive: if anything here
-  // throws, the scene continues straight to dialogue instead.
-  async playWalkIn({ id, pos = 'left', emotion = 'neutral', durationMs = 2200 }) {
+  // character walks into the room in real 3D, then the illustrated sprite
+  // takes over for the conversation itself.
+  //
+  // The 3D is a pre-rendered flipbook (assets/walk3d/): a rigged anime VRM
+  // model, posed through a walk cycle and rendered to frames offline. The
+  // phone only swaps <img> frames — it never touches WebGL. That is
+  // deliberate: live WebGL was tried repeatedly on the target device and
+  // failed silently every time, while image swapping is as reliable as the
+  // rest of the game's art. Rendering offline also means the walk looks
+  // identical on every device instead of depending on its GPU.
+  //
+  // Purely additive: if anything here throws, the scene continues straight
+  // to dialogue instead.
+  async playWalkIn({ id, pos = 'left', durationMs = 2200, frames = WALK3D_FRAMES, fps = 14 }) {
     try {
-      const spec = { id, pos, emotion };
-      const el = this.createSprite(spec);
-      el.className = `${this.spriteClassName(spec)} walk-in`;
+      if (!frames || !frames.length) return;
+      const el = document.createElement('div');
+      el.className = `walk3d pos-${pos} walk-in`;
+      const img = document.createElement('img');
+      img.src = frames[0];
+      img.alt = CHARACTERS[id] ? CHARACTERS[id].name : '';
+      el.appendChild(img);
       this.$sprites.appendChild(el);
-      this.onstage.set(id, el);
+
+      // Decode every frame before the walk starts, so a mid-walk frame swap
+      // never lands on an image the browser hasn't fetched yet (which would
+      // read as a flicker or a dropped step).
+      await Promise.all(frames.map((src) => new Promise((res) => {
+        const pre = new Image();
+        pre.onload = pre.onerror = () => res();
+        pre.src = src;
+      })));
+
+      let i = 0;
+      const ticker = setInterval(() => {
+        i = (i + 1) % frames.length;
+        img.src = frames[i];
+      }, 1000 / fps);
+
       await new Promise((resolve) => {
         requestAnimationFrame(() => {
           el.classList.remove('walk-in');
-          el.classList.add('on', 'walking');
-          setTimeout(() => {
-            el.classList.remove('walking');
-            resolve();
-          }, durationMs);
+          el.classList.add('walking');
+          setTimeout(resolve, durationMs);
         });
       });
+
+      clearInterval(ticker);
+      // Hand off to the illustrated sprite: it fades in over the 3D figure,
+      // then the 3D figure is removed once it is fully covered.
+      el.classList.add('walk-done');
+      setTimeout(() => el.remove(), 600);
     } catch (err) {
       console.warn('walk-in intro skipped', err);
     }

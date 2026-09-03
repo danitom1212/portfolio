@@ -362,18 +362,39 @@ html, body {
 .sprite.on { opacity: 1; transform: translateY(0) scale(1); }
 .sprite.pos-center.on { transform: translateX(-50%) translateY(0) scale(1); }
 
-/* Cinematic walk-in: starts small and off to the side (distant), no
-   transition yet so the starting pose never flashes on screen; the very
-   next frame swaps to .walking, which is what actually animates it into
-   its normal .on resting position/scale over a slow, camera-like duration. */
-.sprite.walk-in { opacity: 1; transform: translateX(-170%) scale(.32); transition: none; }
-.sprite.pos-right.walk-in { transform: translateX(170%) scale(.32); }
+/* ---------- 3D walk-in ----------
+   A pre-rendered 3D walk cycle (assets/walk3d/) played as a flipbook of
+   <img> frames — see playWalkIn() in game.js for why it is baked offline
+   rather than rendered live. The frames only animate the legs/arms in
+   place; crossing the room and growing closer to camera is this CSS
+   transform, so one small frame set covers any entrance. */
+.walk3d {
+  position: absolute;
+  bottom: -2%;
+  height: 74%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 1;
+  filter: sepia(.06) saturate(.98);
+  will-change: transform;
+}
+.walk3d img { height: 100%; width: auto; display: block; }
+.walk3d.pos-left { left: 2%; }
+.walk3d.pos-right { right: 2%; }
+.walk3d.pos-center { left: 50%; margin-inline-start: -8%; }
+
+/* Starting pose: far off to the side and small (distant). No transition
+   yet, so this pose never animates in — the next frame adds .walking,
+   which is what actually animates the approach. */
+.walk3d.walk-in { transform: translateX(-170%) scale(.32); transition: none; }
+.walk3d.pos-right.walk-in { transform: translateX(170%) scale(.32); }
 /* A near-linear ease so the approach reads evenly across the whole
    duration — a front-loaded ease-out made the figure look already-arrived
    within the first quarter-second, which just looked like a glitch. */
-.sprite.walking { transition: transform 2200ms cubic-bezier(.33,.06,.4,1); }
-.sprite.walking .photo-stack { animation: walkBob 460ms ease-in-out infinite; }
-@keyframes walkBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5%); } }
+.walk3d.walking { transform: translateX(0) scale(1); transition: transform 2200ms cubic-bezier(.33,.06,.4,1); }
+/* Held for the handoff: the illustrated sprite fades in on top, then this
+   fades out underneath it, so there is no bare frame between the two. */
+.walk3d.walk-done { opacity: 0; transition: opacity 550ms ease 120ms; }
 /* Cinematic focus: dim whoever isn't currently speaking. Filter-only (no
    transform) so it never fights the position/entrance transforms above. */
 .sprite.is-listening { filter: brightness(.66) saturate(.7) sepia(.08); }
