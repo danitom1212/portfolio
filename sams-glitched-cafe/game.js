@@ -2,7 +2,6 @@ import { STORY, CHARACTERS } from './story.js';
 import { buildFace } from './faces.js';
 import { buildDecor } from './decor.js';
 import { AudioManager } from './audio.js';
-import { createBlockyCharacter } from './blocky.js';
 
 const TYPE_SPEED_MS = 26;
 
@@ -404,17 +403,33 @@ class Game {
     }
   }
 
-  // A short "establishing" beat before the dialogue for a scene begins: a
-  // low-poly CSS-3D figure (no WebGL — see blocky.js) walks into the room
-  // that's already on screen, then the real illustrated sprite takes over
-  // for the actual conversation. Purely additive: if it throws for any
-  // reason on a device we can't test against, the scene just continues
-  // straight to dialogue instead.
-  async playWalkIn(config) {
+  // A short "establishing" beat before a scene's dialogue starts: the
+  // character's own illustrated sprite slides in from off-screen, small
+  // and distant, growing to full size as she "approaches camera" — a
+  // cinematic entrance built from the exact same art as the rest of the
+  // game, not a separate lower-fidelity stand-in (an earlier low-poly
+  // CSS-3D figure did that and looked cheap next to the illustrated art;
+  // this replaced it). The element this creates becomes the real onstage
+  // sprite — continueScene()'s syncSprites() just settles it into its
+  // final pose, no handoff needed. Purely additive: if anything here
+  // throws, the scene continues straight to dialogue instead.
+  async playWalkIn({ id, pos = 'left', emotion = 'neutral', durationMs = 2200 }) {
     try {
-      const bc = createBlockyCharacter(config.look || {});
-      await bc.walkTo(this.$room3d, config);
-      bc.remove();
+      const spec = { id, pos, emotion };
+      const el = this.createSprite(spec);
+      el.className = `${this.spriteClassName(spec)} walk-in`;
+      this.$sprites.appendChild(el);
+      this.onstage.set(id, el);
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          el.classList.remove('walk-in');
+          el.classList.add('on', 'walking');
+          setTimeout(() => {
+            el.classList.remove('walking');
+            resolve();
+          }, durationMs);
+        });
+      });
     } catch (err) {
       console.warn('walk-in intro skipped', err);
     }

@@ -361,6 +361,19 @@ html, body {
 .sprite.pos-right { right: 2%; }
 .sprite.on { opacity: 1; transform: translateY(0) scale(1); }
 .sprite.pos-center.on { transform: translateX(-50%) translateY(0) scale(1); }
+
+/* Cinematic walk-in: starts small and off to the side (distant), no
+   transition yet so the starting pose never flashes on screen; the very
+   next frame swaps to .walking, which is what actually animates it into
+   its normal .on resting position/scale over a slow, camera-like duration. */
+.sprite.walk-in { opacity: 1; transform: translateX(-170%) scale(.32); transition: none; }
+.sprite.pos-right.walk-in { transform: translateX(170%) scale(.32); }
+/* A near-linear ease so the approach reads evenly across the whole
+   duration — a front-loaded ease-out made the figure look already-arrived
+   within the first quarter-second, which just looked like a glitch. */
+.sprite.walking { transition: transform 2200ms cubic-bezier(.33,.06,.4,1); }
+.sprite.walking .photo-stack { animation: walkBob 460ms ease-in-out infinite; }
+@keyframes walkBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5%); } }
 /* Cinematic focus: dim whoever isn't currently speaking. Filter-only (no
    transform) so it never fights the position/entrance transforms above. */
 .sprite.is-listening { filter: brightness(.66) saturate(.7) sepia(.08); }
