@@ -307,9 +307,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
 #chars{position:absolute;inset:0;pointer-events:none;}
 .char{
   position:absolute;
-  /* PNG has ~21% transparent padding at bottom; shift element into panel so visible feet land at panel top */
   bottom:12%;
-  transition:opacity .45s ease,filter .4s ease;
+  transition:opacity .5s ease, scale .5s ease;
 }
 .char img{
   display:block;
@@ -318,10 +317,25 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
   max-width:none;
   object-fit:contain;
   filter:drop-shadow(0 12px 32px rgba(0,0,0,.65));
-  transition:filter .4s ease;
+  transition:filter .4s ease, translate .5s ease;
 }
-.char.hidden{opacity:0;pointer-events:none;}
-.char.visible{opacity:1;}
+.char.hidden{opacity:0;pointer-events:none;scale:0.97;}
+.char.visible{opacity:1;scale:1;}
+
+/* Speaker state — inactive dims, active glows at panel edge */
+.char.inactive{opacity:0.48;scale:0.98;}
+.char.inactive img{filter:drop-shadow(0 8px 20px rgba(0,0,0,.5)) brightness(0.7) saturate(0.5)!important;}
+.char.active{opacity:1;scale:1;}
+.char.active img{filter:drop-shadow(0 0 28px rgba(232,180,80,.35)) drop-shadow(0 12px 32px rgba(0,0,0,.55))!important;}
+
+/* Idle breathing — CSS translate property (separate from element transform) */
+@keyframes breathe{0%,100%{translate:0 0}50%{translate:0 -6px}}
+.char.visible img{animation:breathe 3.4s ease-in-out infinite;}
+.char.inactive img{animation:none;}
+
+/* Entrance slide-up on new char appearance */
+@keyframes charIn{from{opacity:0;translate:0 22px;scale:0.96}to{opacity:1;translate:0 0;scale:1}}
+.char.entering{animation:charIn .55s cubic-bezier(.22,.68,0,1.2) forwards;}
 
 /* expression filters */
 .char[data-expr="happy"]     img{filter:drop-shadow(0 12px 32px rgba(0,0,0,.55)) brightness(1.1) saturate(1.2);}
@@ -447,6 +461,152 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
 .hrt{position:absolute;animation:hrtUp var(--d,2s) ease-out forwards;opacity:0;font-size:var(--s,18px);}
 @keyframes hrtUp{0%{opacity:1;transform:translate(var(--tx,0),0) scale(.5);}60%{opacity:.8;}100%{opacity:0;transform:translate(var(--tx,0),var(--ty,-110px)) scale(1.1);}}
 
+/* ─── PROGRESS DOTS ────────────────────────────── */
+#progress-bar{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  z-index:190;display:flex;gap:6px;align-items:center;pointer-events:none;
+}
+.prog-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(232,146,58,0.18);
+  transition:background .5s ease,transform .35s ease;
+}
+.prog-dot.done{background:rgba(232,146,58,0.6);}
+.prog-dot.current{background:rgba(232,146,58,1);transform:scale(1.5);}
+
+/* ─── ORACLE TERMINAL ──────────────────────────── */
+#oracle-modal{
+  position:absolute;inset:0;z-index:220;
+  background:rgba(4,2,14,0.97);
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transition:opacity .5s ease;
+}
+#oracle-modal.open{opacity:1;pointer-events:auto;}
+#oracle-header{
+  padding:22px 24px 14px;
+  border-bottom:1px solid rgba(232,146,58,0.15);
+  position:relative;
+}
+#oracle-title{
+  font-family:'Courier New',monospace;
+  font-size:clamp(10px,2.8vw,13px);letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(232,146,58,0.78);margin-bottom:3px;
+}
+#oracle-subtitle{font-size:clamp(9px,2.4vw,11px);color:rgba(255,255,255,0.22);letter-spacing:.1em;}
+#oracle-close-btn{
+  position:absolute;top:18px;right:20px;
+  background:transparent;border:none;
+  color:rgba(255,255,255,0.28);font-size:18px;cursor:pointer;line-height:1;
+}
+#oracle-chat{
+  flex:1;overflow-y:auto;
+  padding:18px 24px;
+  display:flex;flex-direction:column;gap:14px;
+  scroll-behavior:smooth;
+}
+.oracle-msg{
+  max-width:88%;
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:clamp(13px,3.8vw,16px);line-height:1.65;
+  color:rgba(232,146,58,0.92);
+  text-shadow:0 0 16px rgba(232,146,58,0.22);
+}
+.user-msg{
+  align-self:flex-end;
+  font-family:'Nunito',sans-serif;font-style:normal;
+  font-size:clamp(12px,3.5vw,15px);
+  color:rgba(240,232,255,0.72);
+  background:rgba(255,255,255,0.06);
+  border-radius:16px 16px 4px 16px;
+  padding:10px 16px;max-width:82%;
+}
+#oracle-presets{
+  padding:0 16px 10px;
+  display:flex;flex-wrap:wrap;gap:7px;
+}
+.oracle-preset{
+  background:transparent;
+  border:1px solid rgba(232,146,58,0.2);border-radius:20px;
+  padding:6px 14px;
+  color:rgba(232,146,58,0.58);
+  font-family:'Nunito',sans-serif;
+  font-size:clamp(10px,2.8vw,13px);cursor:pointer;
+  transition:border-color .2s,color .2s;
+}
+.oracle-preset:active{border-color:rgba(232,146,58,.65);color:rgba(232,146,58,1);}
+#oracle-input-area{
+  padding:12px 16px;
+  border-top:1px solid rgba(232,146,58,0.1);
+  display:flex;gap:8px;align-items:center;
+}
+#oracle-input{
+  flex:1;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(232,146,58,0.18);border-radius:24px;
+  padding:10px 16px;
+  color:rgba(240,232,255,0.9);
+  font-family:'Nunito',sans-serif;font-size:clamp(13px,3.8vw,16px);
+  outline:none;
+}
+#oracle-input::placeholder{color:rgba(255,255,255,0.16);}
+#oracle-send-btn{
+  background:rgba(232,146,58,0.1);
+  border:1px solid rgba(232,146,58,0.26);border-radius:50%;
+  width:40px;height:40px;flex-shrink:0;
+  color:rgba(232,146,58,0.8);font-size:17px;cursor:pointer;
+  transition:background .18s;
+}
+#oracle-send-btn:active{background:rgba(232,146,58,0.28);}
+#oracle-send-btn:disabled{opacity:0.3;cursor:default;}
+
+/* ─── API KEY SETTINGS ─────────────────────────── */
+#api-key-btn{
+  position:absolute;top:12px;right:14px;z-index:310;
+  background:transparent;border:none;
+  color:rgba(255,255,255,0.15);font-size:15px;cursor:pointer;
+  transition:color .2s;
+}
+#api-key-btn:hover{color:rgba(232,146,58,0.5);}
+#api-modal{
+  position:absolute;inset:0;z-index:320;
+  background:rgba(4,2,14,0.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:36px 28px;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+}
+#api-modal.open{opacity:1;pointer-events:auto;}
+#api-modal .api-title{
+  font-family:'Courier New',monospace;
+  font-size:clamp(10px,2.8vw,13px);letter-spacing:.28em;text-transform:uppercase;
+  color:rgba(232,146,58,0.72);
+}
+#api-modal p{
+  font-size:clamp(11px,3vw,13px);color:rgba(255,255,255,0.28);
+  text-align:center;line-height:1.65;max-width:270px;
+}
+#api-key-input{
+  width:100%;max-width:300px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(232,146,58,0.18);border-radius:12px;
+  padding:12px 16px;
+  color:rgba(240,232,255,0.9);
+  font-family:'Nunito',sans-serif;font-size:14px;
+  outline:none;
+}
+#api-save-btn{
+  background:linear-gradient(135deg,#e8923a,#c97020);
+  color:#fff;border:none;border-radius:24px;
+  padding:11px 32px;font-family:'Nunito',sans-serif;
+  font-size:14px;font-weight:700;cursor:pointer;
+}
+#api-skip-btn{
+  background:transparent;border:none;
+  color:rgba(255,255,255,0.22);font-family:'Nunito',sans-serif;
+  font-size:13px;cursor:pointer;text-decoration:underline;
+}
+
 /* ─── FADE ─────────────────────────────────────── */
 #fade{
   position:absolute;inset:0;z-index:180;
@@ -511,6 +671,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
   <div id="heartfx"></div>
   <div id="scene-label"></div>
 
+  <div id="progress-bar">
+    <div class="prog-dot" data-step="0"></div>
+    <div class="prog-dot" data-step="1"></div>
+    <div class="prog-dot" data-step="2"></div>
+    <div class="prog-dot" data-step="3"></div>
+    <div class="prog-dot" data-step="4"></div>
+    <div class="prog-dot" data-step="5"></div>
+  </div>
+
   <div id="dlg-panel" class="hidden">
     <div id="name-plate">Yasmin</div>
     <div id="dlg-text"><span id="dlg-inner"></span></div>
@@ -527,11 +696,200 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
     <h2 id="ch-title">Lost &amp; Found</h2>
   </div>
 
+  <!-- Oracle AI Terminal -->
+  <div id="oracle-modal">
+    <button id="oracle-close-btn">✕</button>
+    <div id="oracle-header">
+      <div id="oracle-title">◈  CAFE ORACLE  ◈</div>
+      <div id="oracle-subtitle">entity v.∞ · ask what you dare</div>
+    </div>
+    <div id="oracle-chat"></div>
+    <div id="oracle-presets">
+      <button class="oracle-preset" data-q="What is this place?">What is this place?</button>
+      <button class="oracle-preset" data-q="Who is Sam, really?">Who is Sam?</button>
+      <button class="oracle-preset" data-q="Am I safe here?">Am I safe?</button>
+      <button class="oracle-preset" data-q="Why can I see the glitches when others can't?">Why me?</button>
+    </div>
+    <div id="oracle-input-area">
+      <input id="oracle-input" type="text" placeholder="Ask the oracle…" maxlength="140">
+      <button id="oracle-send-btn">→</button>
+    </div>
+  </div>
+
+  <!-- API Key Settings -->
+  <div id="api-modal">
+    <div class="api-title">◈ AI Oracle Settings</div>
+    <p>Add your Anthropic API key to power the Oracle with real AI responses. Without it, the Oracle uses pre-written cryptic responses.</p>
+    <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off">
+    <button id="api-save-btn">Save &amp; Activate Oracle</button>
+    <button id="api-skip-btn">Use story mode</button>
+  </div>
+
   <div id="fade"></div>
 </div>
+
+<!-- API key button on top of game -->
+<button id="api-key-btn" title="AI Oracle Settings">⚙</button>
+
 </div>
 
 <script>
+/* ─── ORACLE AI ─────────────────────────────────
+   Powered by Claude API when key is provided,
+   falls back to pre-written cryptic responses.
+─────────────────────────────────────────────── */
+const oracleModal   = document.getElementById('oracle-modal');
+const oracleChat    = document.getElementById('oracle-chat');
+const oracleInput   = document.getElementById('oracle-input');
+const oracleSendBtn = document.getElementById('oracle-send-btn');
+const apiModal      = document.getElementById('api-modal');
+const apiKeyInput   = document.getElementById('api-key-input');
+const apiKeyBtn     = document.getElementById('api-key-btn');
+
+const ORACLE_SYSTEM = `You are the Oracle of Sam's Glitched Cafe — a liminal space that exists at the edge of reality. You speak in short, poetic, cryptic fragments. Maximum 2–3 sentences. Warm but unsettling. The cafe exists where time gets thin. Sam is its timeless keeper. Yasmin is a rare visitor who can see what others cannot. Never break character. Never explain directly.`;
+
+const ORACLE_FALLBACK = [
+  "Some doors only open once. You found yours.",
+  "The glitches are not errors. They are windows.",
+  "Time is thinner here. That is not a warning.",
+  "Sam has been waiting since before you knew you were lost.",
+  "You see what others scroll past. That matters more than you know.",
+  "The cafe remembers everyone who truly noticed it. It remembers you.",
+  "Some questions have edges sharp enough to cut through walls.",
+  "Stay. Or go. Either way, you will carry this night with you.",
+  "The signal was always there. You simply learned to listen.",
+  "Not all thresholds have a door. Some are just a feeling.",
+];
+let oracleFbIdx = 0;
+let oracleApiKey = localStorage.getItem('oracle-key') || '';
+let oracleAsked  = 0;
+
+async function callOracle(question) {
+  if (oracleApiKey) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': oracleApiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 130,
+          system: ORACLE_SYSTEM,
+          messages: [{ role: 'user', content: question }]
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.content[0].text.trim();
+      }
+    } catch(e) {}
+  }
+  const r = ORACLE_FALLBACK[oracleFbIdx % ORACLE_FALLBACK.length];
+  oracleFbIdx++;
+  return r;
+}
+
+function addOracleMsg(text, isUser) {
+  const msg = document.createElement('div');
+  msg.className = isUser ? 'user-msg' : 'oracle-msg';
+  msg.textContent = text;
+  oracleChat.appendChild(msg);
+  oracleChat.scrollTop = oracleChat.scrollHeight;
+  return msg;
+}
+
+async function askOracle(q) {
+  q = q.trim();
+  if (!q || oracleAsked >= 3) return;
+  oracleAsked++;
+  oracleInput.value = '';
+  addOracleMsg(q, true);
+  document.getElementById('oracle-presets').style.display = 'none';
+
+  const thinking = addOracleMsg('· · ·', false);
+  thinking.style.opacity = '0.32';
+
+  const response = await callOracle(q);
+  thinking.remove();
+
+  const respEl = document.createElement('div');
+  respEl.className = 'oracle-msg';
+  oracleChat.appendChild(respEl);
+  for (let i = 0; i < response.length; i++) {
+    respEl.textContent += response[i];
+    await new Promise(r => setTimeout(r, 19));
+    oracleChat.scrollTop = oracleChat.scrollHeight;
+  }
+
+  if (oracleAsked >= 3) {
+    await new Promise(r => setTimeout(r, 400));
+    const cap = document.createElement('div');
+    cap.style.cssText = 'font-size:10px;color:rgba(255,255,255,0.16);text-align:center;font-family:monospace;letter-spacing:.24em;margin-top:8px;';
+    cap.textContent = '— SESSION CLOSED —';
+    oracleChat.appendChild(cap);
+    oracleInput.disabled = true;
+    oracleSendBtn.disabled = true;
+    setTimeout(() => closeOracle(), 2400);
+  }
+}
+
+function closeOracle() {
+  oracleModal.classList.remove('open');
+  blocked = false;
+  waitInput = false;
+  idx++;
+  const beats = STORY[path];
+  if (idx < beats.length) playBeat(beats[idx]);
+}
+
+function openOracle() {
+  oracleAsked = 0;
+  oracleChat.innerHTML = '';
+  oracleInput.value = '';
+  oracleInput.disabled = false;
+  oracleSendBtn.disabled = false;
+  document.getElementById('oracle-presets').style.display = '';
+  oracleModal.classList.add('open');
+  blocked = true;
+  waitInput = false;
+  setTimeout(() => {
+    addOracleMsg('You\'ve found the threshold.', false);
+    setTimeout(() => addOracleMsg('Ask what you dare. Three questions only.', false), 900);
+  }, 500);
+}
+
+document.getElementById('oracle-close-btn').addEventListener('click', closeOracle);
+oracleSendBtn.addEventListener('click', () => askOracle(oracleInput.value));
+oracleInput.addEventListener('keydown', e => { if (e.key === 'Enter') askOracle(oracleInput.value); });
+document.querySelectorAll('.oracle-preset').forEach(btn => {
+  btn.addEventListener('click', () => askOracle(btn.dataset.q));
+});
+
+/* API key settings */
+apiKeyBtn.addEventListener('click', () => {
+  apiKeyInput.value = oracleApiKey;
+  apiModal.classList.add('open');
+});
+document.getElementById('api-save-btn').addEventListener('click', () => {
+  oracleApiKey = apiKeyInput.value.trim();
+  if (oracleApiKey) localStorage.setItem('oracle-key', oracleApiKey);
+  else localStorage.removeItem('oracle-key');
+  apiModal.classList.remove('open');
+});
+document.getElementById('api-skip-btn').addEventListener('click', () => apiModal.classList.remove('open'));
+
+/* ─── PROGRESS DOTS ─────────────────────────────── */
+const progDots = document.querySelectorAll('.prog-dot');
+function updateProgress(step) {
+  progDots.forEach((d, i) => {
+    d.className = 'prog-dot' + (i < step ? ' done' : i === step ? ' current' : '');
+  });
+}
+
 /* ─── STORY ─────────────────────────────────────
    Each beat:
    scene, label, chapter: scene setup
@@ -621,6 +979,9 @@ const STORY = {
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Yasmin',col:'#e5758f',text:'The edge of things. Right. Completely normal information.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
+    {narration:'The walls hum. Something ancient and electric stirs in the walls — like the cafe itself is listening.',
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
+    {oracle:true},
     {scene:'cafe-int',label:'Inside the Cafe',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
     {narration:'He steps closer. The glitch fades. The room is warm again.',
@@ -729,15 +1090,22 @@ async function showChapter(data){
 function applyChars(list){
   if(list===undefined) return;
   const show=new Set(list.map(c=>c.id));
+
+  /* Track which chars were visible before this call */
+  const prevVisible=new Set();
   Object.keys(charEls).forEach(id=>{
-    if(!show.has(id)) charEls[id].className='char hidden';
+    if(charEls[id].classList.contains('visible')) prevVisible.add(id);
+    if(!show.has(id)){
+      charEls[id].classList.remove('visible','active','inactive','entering');
+      charEls[id].classList.add('hidden');
+    }
   });
+
   list.forEach(cfg=>{
     const el=charEls[cfg.id];
     el.dataset.expr=cfg.expr||'neutral';
     el.style.setProperty('--h',cfg.h||'64vh');
 
-    /* clear both sides first */
     el.style.left='';
     el.style.right='';
     el.style.transform='';
@@ -752,12 +1120,38 @@ function applyChars(list){
       el.style.right='-20%';
     }
 
-    /* flip */
     const img=el.querySelector('img');
     if(cfg.flip) img.style.transform='scaleX(-1)';
     else img.style.transform='';
 
-    requestAnimationFrame(()=>{ el.className='char visible'; });
+    const isNew=!prevVisible.has(cfg.id);
+    requestAnimationFrame(()=>{
+      el.classList.remove('hidden');
+      el.classList.add('visible');
+      if(isNew){
+        el.classList.add('entering');
+        setTimeout(()=>el.classList.remove('entering'),620);
+      }
+    });
+  });
+}
+
+function setSpeakerState(speakerName, chars){
+  if(!chars || chars.length<2){
+    /* Single char or no chars — clear active/inactive on all */
+    Object.keys(charEls).forEach(id=>{
+      charEls[id].classList.remove('active','inactive');
+    });
+    return;
+  }
+  const map={'Sam':'sam','Yasmin':'yasmin'};
+  const activeId=speakerName ? map[speakerName] : null;
+  requestAnimationFrame(()=>{
+    chars.forEach(cfg=>{
+      const el=charEls[cfg.id];
+      el.classList.remove('active','inactive');
+      if(activeId) el.classList.add(cfg.id===activeId ? 'active' : 'inactive');
+    });
   });
 }
 
@@ -826,14 +1220,37 @@ async function playBeat(beat){
     applyChars(beat.chars);
     if(beat.label) showLabel(beat.label);
     await fadeIn();
-    if(beat.chapter) await showChapter(beat.chapter);
+    if(beat.chapter){
+      /* update progress based on chapter */
+      const cn=beat.chapter.num;
+      if(cn==='Chapter 1') updateProgress(1);
+      else if(cn==='Chapter 2') updateProgress(2);
+      else if(cn==='Chapter 3') updateProgress(3);
+      else if(cn==='Ending A'||cn==='Ending B') updateProgress(5);
+      await showChapter(beat.chapter);
+    }
   } else {
     applyChars(beat.chars);
     if(beat.label) showLabel(beat.label);
-    if(beat.chapter){await fadeOut();await fadeIn();await showChapter(beat.chapter);}
+    if(beat.chapter){
+      const cn=beat.chapter.num;
+      if(cn==='Chapter 1') updateProgress(1);
+      else if(cn==='Chapter 2') updateProgress(2);
+      else if(cn==='Chapter 3') updateProgress(3);
+      else if(cn==='Ending A'||cn==='Ending B') updateProgress(5);
+      await fadeOut();await fadeIn();await showChapter(beat.chapter);
+    }
   }
 
   if(beat.sfx==='hearts') spawnHearts();
+
+  /* ORACLE — AI interactive moment */
+  if(beat.oracle){
+    dlgPanel.className='dlg-panel hidden';
+    updateProgress(3);
+    openOracle();
+    return;
+  }
 
   if(beat.end){
     dlgPanel.className='dlg-panel hidden';
@@ -854,6 +1271,7 @@ async function playBeat(beat){
     namePlate.className='narrator-mode';
     namePlate.style.background='';
     dlgText.className='italic-mode';
+    setSpeakerState(null, beat.chars);
     await typeText(beat.narration, 24);
     blocked=false;waitInput=true;return;
   }
@@ -865,6 +1283,7 @@ async function playBeat(beat){
     namePlate.className='';
     namePlate.style.background=beat.col||'var(--caramel)';
     dlgText.className='';
+    setSpeakerState(beat.speaker, beat.chars);
     await typeText(beat.text);
     blocked=false;waitInput=true;return;
   }
@@ -888,6 +1307,7 @@ function advance(){
 
 function choose(newPath){
   choices.className='hidden';
+  updateProgress(4);
   /* carry last chars into first beat of path if not set */
   const lastBeat=STORY[path][idx];
   path=newPath; idx=0;
@@ -905,6 +1325,7 @@ choices.querySelectorAll('.c-btn').forEach(btn=>{
 
 function startGame(){
   document.getElementById('title-screen').classList.add('gone');
+  updateProgress(0);
   setTimeout(()=>{
     document.getElementById('title-screen').style.display='none';
     path='main';idx=0;
