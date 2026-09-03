@@ -691,6 +691,45 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
   text-shadow:0 0 8px rgba(200,85,122,0.6);
 }
 
+/* ========= WALK CYCLE SPRITE ========= */
+/* Sheet: 960×508, 8 cols × 2 rows, 16 frames, each frame 120×254px           */
+/* CSS sprite: element sized to one frame, background-image = sheet,            */
+/* steps(8) moves through row 1 then row 2 via background-position-x.           */
+#walk-sprite{
+  position:absolute;
+  left:50%;
+  transform-origin:bottom center;
+  /* walk towards camera: scale grows, translateX(-50%) keeps it centered */
+  bottom:24%;
+  transform:translateX(-50%) scale(1);
+}
+.walk-cell{
+  /* sized to one frame; background-image set by JS */
+  width:120px;
+  height:254px;
+  background-repeat:no-repeat;
+  background-size:960px 508px; /* full sheet */
+  image-rendering:auto;
+}
+/* Row 1: frames 0-7, animates background-position-x in 8 steps */
+@keyframes walkRow1{
+  from{ background-position:0 0; }
+  to  { background-position:-960px 0; }
+}
+/* Row 2: frames 8-15 */
+@keyframes walkRow2{
+  from{ background-position:0 -254px; }
+  to  { background-position:-960px -254px; }
+}
+.walk-anim-r1{ animation:walkRow1 0.8s steps(8,end) infinite; }
+.walk-anim-r2{ animation:walkRow2 0.8s steps(8,end) infinite; }
+
+/* Approach: scale up from tiny to full while moving center */
+@keyframes approach{
+  from{ transform:translateX(-50%) scale(0.22); }
+  to  { transform:translateX(-50%) scale(1.0); }
+}
+
 /* Shake animation for dramatic moments */
 @keyframes shake{
   0%,100%{transform:translateX(0);}
@@ -722,6 +761,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
 
   <!-- Characters -->
   <div id="chars"></div>
+
+  <!-- Walk-in animated sprite (separate from static chars) -->
+  <div id="walk-sprite" hidden>
+    <div class="walk-cell"></div>
+  </div>
 
   <!-- Glitch overlay -->
   <div id="glitch-overlay"></div>
@@ -770,7 +814,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:no
 // ===================== ASSETS =====================
 // Sprites injected by build script
 const YASMIN_SRC = '{{YASMIN_SRC}}';
-const SAM_SRC = '{{SAM_SRC}}';
+const SAM_SRC    = '{{SAM_SRC}}';
+const WALK_SRC   = '{{WALK_SRC}}'; // 960×508 sprite sheet, 8 cols × 2 rows, 16 frames @ 120×254px each
 
 // ===================== STORY =====================
 const STORY = [
@@ -780,10 +825,14 @@ const STORY = [
   { type:'title', title:"Sam's Glitched Cafe", sub:'An Interactive Story' },
   { type:'dlg', speaker:null, text:"Tokyo, 2031. The neon bleeds into rain-slicked asphalt." },
   { type:'dlg', speaker:null, text:"Every city block has a ghost inside it. You just have to know how to look." },
-  { type:'scene', env:'street', cam:'establish', showChars:['yasmin-distant'], particles:'snow' },
+  // Yasmin walks toward camera from far distance
+  { type:'walkIn', durationMs:2800 },
+  { type:'scene', env:'street', cam:'establish', showChars:['yasmin-near'], particles:'snow' },
   { type:'dlg', speaker:'YASMIN', text:"I've been walking for forty minutes. Maybe longer." },
   { type:'dlg', speaker:'YASMIN', text:"My phone died somewhere between the last two train stations. I'm properly lost." },
   { type:'dlg', speaker:'YASMIN', text:"And then—" },
+  // Walk toward cafe
+  { type:'walkIn', durationMs:2000 },
   { type:'scene', env:'cafe-ext', cam:'establish', showChars:['yasmin-near'], particles:'leaves' },
   { type:'dlg', speaker:null, text:"A cafe. Warm light bleeding from its windows like a secret being whispered." },
   { type:'dlg', speaker:null, text:"The sign flickers. Half the letters refuse to cooperate." },
@@ -1388,6 +1437,43 @@ async function applyScene(beat) {
   }
 }
 
+// ===================== WALK-IN ANIMATION =====================
+// Plays a 16-frame walk cycle approaching from tiny-and-distant to full-size.
+// durationMs: total approach time (default 2600ms)
+// After it completes, hides the walk sprite and resolves.
+async function playWalkIn(durationMs = 2600) {
+  const $ws = document.getElementById('walk-sprite');
+  const $cell = $ws.querySelector('.walk-cell');
+
+  // Set the background image directly
+  $cell.style.backgroundImage = `url("${WALK_SRC}")`;
+
+  // Start small (distant), centered horizontally
+  $ws.style.position = 'absolute';
+  $ws.style.bottom = '24%';
+  $ws.style.left = '50%';
+  $ws.style.filter = 'drop-shadow(0 6px 20px rgba(0,0,0,0.8))';
+  $ws.style.transition = `transform ${durationMs}ms cubic-bezier(0.25,0.1,0.3,1)`;
+  $ws.style.transform = 'translateX(-50%) scale(0.22)';
+  $ws.style.zIndex = '25';
+
+  $cell.className = 'walk-cell walk-anim-r1';
+  $ws.hidden = false;
+
+  // Switch to row 2 at midpoint for full stride cycle
+  setTimeout(() => { $cell.className = 'walk-cell walk-anim-r2'; }, durationMs / 2);
+
+  // Wait two frames then trigger scale-up (approach toward camera)
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+  $ws.style.transform = 'translateX(-50%) scale(1.0)';
+
+  await wait(durationMs + 80);
+  $ws.hidden = true;
+  $cell.className = 'walk-cell';
+  $cell.style.backgroundImage = '';
+}
+
 // ===================== MAIN GAME LOOP =====================
 let relEndingTaken = false;
 
@@ -1431,6 +1517,12 @@ async function run() {
     if (beat.type === 'choice') {
       if (beat.prompt) await showLine(null, beat.prompt);
       await showChoices(beat.opts);
+      i++; continue;
+    }
+
+    if (beat.type === 'walkIn') {
+      $dlg.classList.add('hidden');
+      await playWalkIn(beat.durationMs || 2600);
       i++; continue;
     }
 
