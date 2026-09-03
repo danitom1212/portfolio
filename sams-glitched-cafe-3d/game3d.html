@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sam's Glitched Cafe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+:root {
+  --void: #08030f;
+  --midnight: #1c0e35;
+  --amber: #e8a030;
+  --amber-soft: rgba(232,160,48,0.18);
+  --rose: #c8557a;
+  --mist: #c8c0d8;
+  --mist-faint: rgba(200,192,216,0.55);
+  --glitch: #40d8f0;
+  --dlg-bg: rgba(12,6,24,0.88);
+  --dlg-border: rgba(232,160,48,0.25);
+  --dlg-text: #ede4f4;
+  --speaker-color: #e8a030;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:none;}
+
+/* ========= GAME CONTAINER ========= */
+#game{
+  position:fixed;inset:0;
+  background:var(--void);
+  font-family:'Lora',Georgia,'Times New Roman',serif;
+  overflow:hidden;
+  user-select:none;
+  cursor:pointer;
+}
+
+/* ========= CINEMATIC BARS ========= */
+#bar-top,#bar-bot{
+  position:absolute;left:0;right:0;
+  background:#000;z-index:80;
+  transition:height 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+#bar-top{top:0;height:0;}
+#bar-bot{bottom:0;height:0;}
+#game.cinema #bar-top{height:12%;}
+#game.cinema #bar-bot{height:12%;}
+
+/* ========= FADE OVERLAY ========= */
+#fade{
+  position:absolute;inset:0;z-index:70;
+  background:#000;opacity:1;
+  transition:opacity 0.8s ease;
+  pointer-events:none;
+}
+#fade.clear{opacity:0;}
+#fade.black{opacity:1;}
+#fade.white{background:#fff;opacity:1;}
+
+/* ========= SCENE VIEWPORT ========= */
+#scene{
+  position:absolute;inset:0;
+  overflow:hidden;
+}
+
+/* ========= SKY / BG ========= */
+#sky{
+  position:absolute;inset:0;
+  transition:background 1.5s ease,opacity 0.8s ease;
+}
+
+/* street night */
+.sky-street{background:linear-gradient(180deg,#0a0418 0%,#1a0a35 35%,#2d1a5c 60%,#1c0f2e 100%);}
+
+/* cafe exterior warm approach */
+.sky-cafe-ext{background:linear-gradient(180deg,#0e0820 0%,#1f1040 40%,#2a1c50 70%,#3d2060 100%);}
+
+/* cafe interior warm */
+.sky-cafe-int{background:linear-gradient(180deg,#e8c88a 0%,#d4a85a 30%,#c49040 60%,#b07830 100%);}
+
+/* void / glitch */
+.sky-void{background:linear-gradient(180deg,#000 0%,#020210 50%,#010108 100%);}
+
+/* ========= STAR FIELD ========= */
+#stars{
+  position:absolute;inset:0;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1s ease;
+}
+.star{
+  position:absolute;
+  border-radius:50%;
+  background:#fff;
+  animation:twinkle var(--d,3s) ease-in-out infinite var(--delay,0s);
+}
+@keyframes twinkle{
+  0%,100%{opacity:var(--a,0.8);}
+  50%{opacity:0.1;}
+}
+
+/* ========= CITY BUILDINGS ========= */
+#buildings{
+  position:absolute;bottom:0;left:0;right:0;
+  height:70%;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1s ease;
+}
+.building{
+  flex-shrink:0;
+  position:relative;
+  background:var(--bc,#0d0820);
+  border-top:2px solid var(--bl,#1a1040);
+}
+.building::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 18px,var(--wl,rgba(255,200,80,0.08)) 18px,var(--wl,rgba(255,200,80,0.08)) 20px),
+             repeating-linear-gradient(90deg,transparent,transparent 28px,var(--wl,rgba(255,200,80,0.08)) 28px,var(--wl,rgba(255,200,80,0.08)) 30px);
+}
+.win-lit{
+  position:absolute;
+  background:rgba(255,200,80,0.7);
+  box-shadow:0 0 8px rgba(255,200,80,0.5);
+  animation:winflicker var(--d,4s) ease-in-out infinite var(--delay,0s);
+}
+@keyframes winflicker{0%,100%{opacity:1;}50%{opacity:0.6;}85%{opacity:0.9;}}
+
+/* ========= STREET GROUND ========= */
+#ground{
+  position:absolute;bottom:0;left:0;right:0;
+  height:32%;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1s ease;
+}
+.ground-road{
+  position:absolute;bottom:0;left:0;right:0;height:100%;
+  background:linear-gradient(180deg,#1a1530 0%,#100e1e 100%);
+}
+.ground-road::after{
+  content:'';
+  position:absolute;
+  left:49.5%;top:0;bottom:0;width:1%;
+  background:repeating-linear-gradient(180deg,#c8b060 0,#c8b060 20px,transparent 20px,transparent 44px);
+  opacity:0.4;
+  transform:perspective(300px) rotateX(35deg);
+  transform-origin:bottom center;
+}
+.sidewalk{
+  position:absolute;
+  bottom:60%;left:0;right:0;height:10%;
+  background:linear-gradient(90deg,#1e1b30,#2a2540,#1e1b30);
+  border-top:1px solid #3a3560;
+}
+/* street reflection */
+.ground-road::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 40% at 50% 100%,rgba(180,130,255,0.08) 0%,transparent 70%);
+}
+
+/* ========= STREETLIGHTS ========= */
+#streetlights{
+  position:absolute;bottom:32%;left:0;right:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1.2s ease;
+}
+.lamp{
+  position:absolute;bottom:0;
+  display:flex;flex-direction:column;align-items:center;
+}
+.lamp-post{width:3px;background:linear-gradient(#3a3560,#2a2540);}
+.lamp-arm{width:20px;height:3px;background:#3a3560;transform-origin:left;transform:rotate(-15deg);margin-top:-2px;}
+.lamp-glow{
+  width:16px;height:8px;
+  background:radial-gradient(ellipse,#ffe48a 0%,#ffb020 60%,transparent 100%);
+  filter:blur(3px);
+  position:absolute;top:-6px;left:-7px;
+}
+.lamp-cone{
+  position:absolute;bottom:-60px;left:-30px;right:-30px;height:60px;
+  background:radial-gradient(ellipse at top,rgba(255,200,80,0.12) 0%,transparent 80%);
+}
+
+/* ========= CAFE FACADE ========= */
+#cafe-facade{
+  position:absolute;bottom:32%;left:15%;right:15%;
+  display:flex;flex-direction:column;align-items:center;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1s ease;
+}
+.cafe-building{
+  width:100%;height:180px;
+  background:linear-gradient(180deg,#3d2a20 0%,#2d1e16 100%);
+  border:2px solid #5a3d2a;
+  position:relative;
+  overflow:hidden;
+}
+/* brick pattern */
+.cafe-building::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 14px,rgba(0,0,0,0.2) 14px,rgba(0,0,0,0.2) 15px),
+             repeating-linear-gradient(90deg,transparent,transparent 22px,rgba(0,0,0,0.15) 22px,rgba(0,0,0,0.15) 23px);
+}
+.cafe-window{
+  position:absolute;
+  background:rgba(255,200,100,0.85);
+  box-shadow:0 0 20px rgba(255,180,60,0.6),inset 0 0 10px rgba(255,150,40,0.3);
+  border:2px solid #8a6030;
+}
+.cafe-door{
+  position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:50px;height:90px;
+  background:linear-gradient(180deg,#6b4020,#3d2210);
+  border:2px solid #8a5530;
+  border-bottom:none;
+}
+.cafe-door::after{
+  content:'';
+  position:absolute;top:30%;right:10%;width:6px;height:6px;
+  background:#c8a060;border-radius:50%;
+}
+.cafe-sign{
+  background:linear-gradient(135deg,#1a0e0a,#2d1a10);
+  border:2px solid #8a6030;
+  padding:6px 16px;
+  margin-bottom:4px;
+  position:relative;
+}
+.cafe-sign-text{
+  font-size:14px;
+  font-weight:bold;
+  color:#ffcc60;
+  letter-spacing:1px;
+  text-shadow:0 0 10px rgba(255,180,60,0.8),0 0 20px rgba(255,120,20,0.4);
+  white-space:nowrap;
+}
+.neon-flicker{animation:nflick 0.1s step-end infinite;}
+@keyframes nflick{
+  0%,94%{opacity:1;}
+  95%{opacity:0;}
+  96%{opacity:1;}
+  97%{opacity:0;}
+  100%{opacity:1;}
+}
+.cafe-awning{
+  width:120%;height:20px;
+  background:repeating-linear-gradient(90deg,#8b1020 0,#8b1020 15px,#c0182c 15px,#c0182c 30px);
+  clip-path:polygon(0 0,100% 0,96% 100%,4% 100%);
+  margin-bottom:2px;
+}
+
+/* ========= INTERIOR ROOM ========= */
+#interior{
+  position:absolute;inset:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1s ease;
+  perspective:700px;
+  perspective-origin:50% 35%;
+}
+.room-wrap{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+}
+/* floor */
+.room-floor{
+  position:absolute;
+  width:160%;height:80%;
+  left:-30%;top:45%;
+  transform:rotateX(65deg);
+  transform-origin:top center;
+  background:repeating-linear-gradient(90deg,#6b4020 0,#6b4020 38px,#5a3418 38px,#5a3418 40px),
+             repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(0,0,0,0.1) 38px,rgba(0,0,0,0.1) 40px);
+  background-color:#6b4020;
+}
+/* back wall */
+.room-wall-back{
+  position:absolute;
+  width:70%;height:55%;
+  left:15%;top:5%;
+  background:linear-gradient(180deg,#f0e0c0 0%,#e8d0a8 100%);
+  transform:translateZ(-2px);
+}
+/* left wall */
+.room-wall-left{
+  position:absolute;
+  width:20%;height:55%;
+  left:15%;top:5%;
+  background:linear-gradient(90deg,#c8a870,#e0c090);
+  transform:rotateY(90deg);
+  transform-origin:right center;
+}
+/* right wall */
+.room-wall-right{
+  position:absolute;
+  width:20%;height:55%;
+  right:15%;top:5%;
+  background:linear-gradient(90deg,#e0c090,#c8a870);
+  transform:rotateY(-90deg);
+  transform-origin:left center;
+}
+/* window on back wall */
+.window-interior{
+  position:absolute;
+  background:rgba(200,230,255,0.3);
+  border:4px solid #8a6030;
+  box-shadow:inset 0 0 20px rgba(255,180,80,0.3),0 0 30px rgba(255,180,80,0.1);
+}
+/* counter */
+.counter{
+  position:absolute;
+  background:linear-gradient(180deg,#8b5020,#5a3010);
+  border-top:4px solid #c07840;
+}
+/* tables */
+.table-top{
+  position:absolute;
+  background:radial-gradient(ellipse,#c07840,#8b5020);
+  border-radius:50%;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+}
+.table-leg{
+  position:absolute;
+  background:#6b3a18;
+  left:50%;transform:translateX(-50%);
+}
+/* cafe warmth glow */
+.room-glow{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,180,80,0.15) 0%,transparent 60%);
+  pointer-events:none;
+}
+/* pendant lights */
+.pendant{
+  position:absolute;
+  width:24px;height:12px;
+  background:radial-gradient(ellipse,#fffbe0,#ffcc60 40%,transparent 100%);
+  border-radius:50%;
+  filter:blur(2px);
+  box-shadow:0 0 20px rgba(255,200,80,0.6);
+  animation:pendantpulse 2s ease-in-out infinite;
+}
+@keyframes pendantpulse{0%,100%{opacity:1;}50%{opacity:0.7;};}
+.pendant-wire{position:absolute;top:-40px;left:50%;width:2px;background:#5a3a18;transform:translateX(-50%);}
+
+/* ========= VOID SPACE ========= */
+#void-space{
+  position:absolute;inset:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1s ease;
+  overflow:hidden;
+}
+.void-grid{
+  position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(100,60,200,0.15) 39px,rgba(100,60,200,0.15) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(100,60,200,0.15) 39px,rgba(100,60,200,0.15) 40px);
+  transform:perspective(400px) rotateX(40deg);
+  transform-origin:center 70%;
+  animation:gridscroll 8s linear infinite;
+}
+@keyframes gridscroll{0%{background-position:0 0;}100%{background-position:0 80px;};}
+.void-horizon{
+  position:absolute;
+  left:0;right:0;top:38%;
+  height:2px;
+  background:linear-gradient(90deg,transparent,rgba(150,80,255,0.6),transparent);
+  box-shadow:0 0 20px rgba(150,80,255,0.4);
+}
+.void-fragment{
+  position:absolute;
+  background:rgba(150,80,255,0.3);
+  animation:floatfrag var(--d,6s) ease-in-out infinite var(--delay,0s);
+}
+@keyframes floatfrag{
+  0%,100%{transform:translateY(0) rotate(0deg);opacity:0.3;}
+  50%{transform:translateY(-30px) rotate(180deg);opacity:0.7;}
+}
+
+/* ========= PARTICLES (leaves, dust) ========= */
+#particles{
+  position:absolute;inset:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+.particle{
+  position:absolute;
+  animation:fall var(--d,8s) linear infinite var(--delay,-4s);
+  opacity:0.7;
+}
+@keyframes fall{
+  0%{transform:translateY(-20px) translateX(0) rotate(0deg);opacity:0;}
+  10%{opacity:0.7;}
+  90%{opacity:0.5;}
+  100%{transform:translateY(110vh) translateX(var(--drift,40px)) rotate(360deg);opacity:0;}
+}
+.leaf{
+  width:8px;height:8px;
+  background:var(--color,rgba(255,180,80,0.8));
+  clip-path:ellipse(50% 35% at 50% 50%);
+}
+.snow{
+  width:4px;height:4px;
+  border-radius:50%;
+  background:rgba(200,180,255,0.6);
+  filter:blur(1px);
+}
+
+/* ========= CHARACTER SPRITES ========= */
+#chars{
+  position:absolute;inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:20;
+}
+.char-sprite{
+  position:absolute;
+  transform-origin:bottom center;
+  transition:opacity 0.7s ease, filter 0.7s ease;
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,0.8)) drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.char-sprite img{
+  width:auto;
+  display:block;
+}
+
+/* ========= DIALOGUE BOX ========= */
+#dialogue{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  z-index:60;
+  padding:0 4% clamp(8px,2vw,14px);
+  transition:opacity 0.45s ease,transform 0.45s cubic-bezier(0.2,0.8,0.4,1);
+  transform:translateY(0);
+}
+/* when cinema bars are active, push dialogue above the bottom bar */
+#game.cinema #dialogue{
+  bottom:12%;
+}
+#dialogue.hidden{opacity:0;transform:translateY(16px);pointer-events:none;}
+.dlg-speaker{
+  display:block;
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-style:italic;
+  font-size:clamp(14px,3.5vw,19px);
+  font-weight:600;
+  color:var(--amber);
+  letter-spacing:0.04em;
+  margin-left:clamp(14px,4vw,22px);
+  margin-bottom:2px;
+  position:relative;
+  width:fit-content;
+}
+/* calligraphic underline stroke */
+.dlg-speaker::after{
+  content:'';
+  position:absolute;bottom:-3px;left:0;right:-8px;
+  height:1px;
+  background:linear-gradient(90deg,var(--amber),rgba(232,160,48,0.2),transparent);
+}
+.dlg-box{
+  background:var(--dlg-bg);
+  border:1px solid var(--dlg-border);
+  border-radius:2px;
+  padding:clamp(14px,3.5vw,20px) clamp(16px,4.5vw,26px) clamp(16px,3.5vw,22px);
+  position:relative;
+  backdrop-filter:blur(12px) saturate(1.4);
+  -webkit-backdrop-filter:blur(12px) saturate(1.4);
+  box-shadow:0 -1px 0 rgba(232,160,48,0.12),0 -24px 60px rgba(8,3,15,0.6);
+}
+/* amber corner accent */
+.dlg-box::before{
+  content:'';
+  position:absolute;top:0;left:0;
+  width:40px;height:1px;
+  background:linear-gradient(90deg,var(--amber),transparent);
+}
+.dlg-box::after{
+  content:'';
+  position:absolute;top:0;left:0;
+  width:1px;height:40px;
+  background:linear-gradient(180deg,var(--amber),transparent);
+}
+.dlg-text{
+  color:var(--dlg-text);
+  font-family:'Lora',Georgia,serif;
+  font-size:clamp(14px,3.8vw,18px);
+  line-height:1.7;
+  min-height:2.8em;
+  max-width:62ch;
+}
+.dlg-cursor{
+  display:inline-block;
+  width:2px;height:1.1em;
+  background:var(--amber);
+  animation:blink 0.9s step-end infinite;
+  vertical-align:text-bottom;
+  margin-left:3px;
+  opacity:0.8;
+}
+@keyframes blink{0%,100%{opacity:0.8;}50%{opacity:0;};}
+.dlg-tap{
+  position:absolute;
+  bottom:clamp(10px,2.5vw,14px);right:clamp(14px,3.5vw,20px);
+  color:rgba(200,176,220,0.4);
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:clamp(10px,2.5vw,12px);
+  letter-spacing:0.12em;
+  animation:tapblink 2s ease-in-out infinite;
+}
+@keyframes tapblink{0%,100%{opacity:0.45;}50%{opacity:0.12;};}
+
+/* ========= CHOICES ========= */
+#choices{
+  position:absolute;
+  bottom:32%;left:0;right:0;
+  z-index:65;
+  display:flex;flex-direction:column;align-items:center;
+  gap:8px;
+  padding:0 6%;
+  transition:opacity 0.4s ease;
+}
+#choices.hidden{opacity:0;pointer-events:none;}
+.choice-btn{
+  width:100%;max-width:480px;
+  background:rgba(12,6,24,0.82);
+  border:none;
+  border-left:2px solid rgba(232,160,48,0.35);
+  color:var(--mist);
+  font-family:'Lora',Georgia,serif;
+  font-size:clamp(13px,3.5vw,16px);
+  font-style:italic;
+  padding:clamp(11px,3vw,14px) clamp(16px,4vw,22px);
+  text-align:left;
+  cursor:pointer;
+  transition:border-color 0.2s,color 0.2s,background 0.2s,transform 0.15s;
+  position:relative;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.choice-btn:hover,.choice-btn:focus-visible{
+  border-left-color:var(--amber);
+  color:#ede4f4;
+  background:rgba(24,12,40,0.92);
+  outline:none;
+}
+.choice-btn:active{
+  transform:translateX(2px);
+}
+
+/* ========= TITLE CARD ========= */
+#title-card{
+  position:absolute;inset:0;z-index:90;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 80% 70% at 50% 55%, rgba(28,14,53,0.85) 0%, rgba(8,3,15,0.96) 100%);
+  opacity:0;
+  transition:opacity 1s ease;
+  pointer-events:none;
+}
+#title-card.show{opacity:1;pointer-events:auto;}
+/* decorative horizontal rule */
+#title-card::before{
+  content:'';
+  position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  width:1px;height:0;
+  background:linear-gradient(180deg,transparent,rgba(232,160,48,0.3),transparent);
+  animation:none;
+}
+#tc-eyebrow{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(9px,2vw,11px);
+  letter-spacing:0.35em;
+  color:rgba(232,160,48,0.55);
+  text-transform:uppercase;
+  margin-bottom:clamp(16px,4vw,24px);
+}
+#tc-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(32px,10vw,72px);
+  font-weight:600;
+  color:#f0e4c8;
+  text-align:center;
+  letter-spacing:0.04em;
+  text-shadow:0 0 60px rgba(232,160,48,0.35),0 0 120px rgba(200,85,122,0.15);
+  line-height:1.1;
+  text-wrap:balance;
+}
+#tc-rule{
+  width:clamp(40px,12vw,80px);height:1px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+  margin:clamp(14px,3.5vw,22px) auto;
+}
+#tc-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:clamp(13px,3.5vw,18px);
+  color:rgba(200,192,216,0.6);
+  letter-spacing:0.06em;
+  text-align:center;
+}
+#tc-tap{
+  margin-top:clamp(36px,8vw,56px);
+  font-family:'Lora',serif;
+  font-style:italic;
+  font-size:clamp(11px,2.8vw,13px);
+  letter-spacing:0.15em;
+  color:rgba(200,160,80,0.35);
+  animation:tapblink 2.5s ease-in-out infinite;
+}
+
+/* ========= GLITCH EFFECT ========= */
+#glitch-overlay{
+  position:absolute;inset:0;z-index:50;
+  pointer-events:none;
+  opacity:0;
+  mix-blend-mode:screen;
+}
+#glitch-overlay.active{animation:glitchrun 0.6s steps(1) 1;}
+@keyframes glitchrun{
+  0%{opacity:0;}
+  10%{opacity:1;transform:translate(-3px,1px);filter:hue-rotate(180deg);}
+  20%{transform:translate(3px,-2px);filter:hue-rotate(0deg);}
+  30%{transform:translate(-5px,0);clip-path:polygon(0 20%,100% 20%,100% 45%,0 45%);}
+  40%{transform:translate(2px,2px);clip-path:none;}
+  50%{transform:translate(-2px,-1px);filter:hue-rotate(90deg) saturate(3);}
+  60%{transform:translate(4px,1px);}
+  70%{transform:translate(-1px,3px);clip-path:polygon(0 55%,100% 55%,100% 75%,0 75%);}
+  80%{transform:translate(3px,-3px);clip-path:none;}
+  90%{opacity:1;}
+  100%{opacity:0;transform:none;filter:none;}
+}
+
+/* ========= AMBIENT PARTICLES CANVAS ========= */
+#pcanvas{
+  position:absolute;inset:0;
+  pointer-events:none;
+  opacity:0.6;
+}
+
+/* ========= SCENE TRANSITION: CAMERA TILT ========= */
+#scene{
+  transition:transform 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ========= CHAPTER LABEL ========= */
+#chapter{
+  position:absolute;top:14%;left:5%;
+  z-index:75;
+  opacity:0;
+  transition:opacity 0.6s ease;
+  pointer-events:none;
+}
+#chapter.show{opacity:1;}
+#chapter-text{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:clamp(10px,2.8vw,14px);
+  color:rgba(232,160,48,0.5);
+  letter-spacing:0.2em;
+}
+
+/* ========= RELATIONSHIP TRACKER ========= */
+#rel-tracker{
+  position:absolute;top:14%;right:5%;
+  z-index:75;
+  opacity:0;
+  transition:opacity 0.5s ease;
+  pointer-events:none;
+  display:flex;align-items:center;gap:5px;
+}
+#rel-tracker.show{opacity:1;}
+.heart{
+  font-size:14px;
+  color:rgba(200,85,122,0.25);
+  transition:color 0.4s,text-shadow 0.4s,transform 0.3s;
+}
+.heart.lit{
+  color:var(--rose);
+  text-shadow:0 0 8px rgba(200,85,122,0.6);
+}
+
+/* Shake animation for dramatic moments */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-4px);}
+  40%{transform:translateX(4px);}
+  60%{transform:translateX(-3px);}
+  80%{transform:translateX(3px);}
+}
+.shaking{animation:shake 0.4s ease;}
+
+</style>
+</head>
+<body>
+<div id="game">
+
+  <!-- Environments -->
+  <div id="scene">
+    <div id="sky"></div>
+    <div id="stars"></div>
+    <div id="buildings"></div>
+    <div id="ground"></div>
+    <div id="streetlights"></div>
+    <div id="cafe-facade"></div>
+    <div id="interior"></div>
+    <div id="void-space"></div>
+    <div id="particles"></div>
+    <canvas id="pcanvas"></canvas>
+  </div>
+
+  <!-- Characters -->
+  <div id="chars"></div>
+
+  <!-- Glitch overlay -->
+  <div id="glitch-overlay"></div>
+
+  <!-- Cinematic bars -->
+  <div id="bar-top"></div>
+  <div id="bar-bot"></div>
+
+  <!-- Fade -->
+  <div id="fade"></div>
+
+  <!-- Chapter label -->
+  <div id="chapter"><div id="chapter-text"></div></div>
+
+  <!-- Relationship -->
+  <div id="rel-tracker">
+    <div id="heart1" class="heart">♡</div>
+    <div id="heart2" class="heart">♡</div>
+    <div id="heart3" class="heart">♡</div>
+  </div>
+
+  <!-- Dialogue -->
+  <div id="dialogue" class="hidden">
+    <div class="dlg-speaker" id="dlg-speaker"></div>
+    <div class="dlg-box">
+      <div class="dlg-text" id="dlg-text"></div>
+      <div class="dlg-tap">tap ▼</div>
+    </div>
+  </div>
+
+  <!-- Choices -->
+  <div id="choices" class="hidden"></div>
+
+  <!-- Title Card -->
+  <div id="title-card">
+    <div id="tc-eyebrow">an interactive story</div>
+    <div id="tc-title"></div>
+    <div id="tc-rule"></div>
+    <div id="tc-sub"></div>
+    <div id="tc-tap">touch to begin</div>
+  </div>
+
+</div>
+
+<script>
+// ===================== ASSETS =====================
+// Sprites injected by build script
+const YASMIN_SRC = '{{YASMIN_SRC}}';
+const SAM_SRC = '{{SAM_SRC}}';
+
+// ===================== STORY =====================
+const STORY = [
+  // ─── CHAPTER 1: THE STREET ───────────────────────────────
+  { type:'chapter', label:'Chapter I · The Lost Signal' },
+  { type:'scene', env:'street', cam:'establish', showChars:[], particles:'snow' },
+  { type:'title', title:"Sam's Glitched Cafe", sub:'An Interactive Story' },
+  { type:'dlg', speaker:null, text:"Tokyo, 2031. The neon bleeds into rain-slicked asphalt." },
+  { type:'dlg', speaker:null, text:"Every city block has a ghost inside it. You just have to know how to look." },
+  { type:'scene', env:'street', cam:'establish', showChars:['yasmin-distant'], particles:'snow' },
+  { type:'dlg', speaker:'YASMIN', text:"I've been walking for forty minutes. Maybe longer." },
+  { type:'dlg', speaker:'YASMIN', text:"My phone died somewhere between the last two train stations. I'm properly lost." },
+  { type:'dlg', speaker:'YASMIN', text:"And then—" },
+  { type:'scene', env:'cafe-ext', cam:'establish', showChars:['yasmin-near'], particles:'leaves' },
+  { type:'dlg', speaker:null, text:"A cafe. Warm light bleeding from its windows like a secret being whispered." },
+  { type:'dlg', speaker:null, text:"The sign flickers. Half the letters refuse to cooperate." },
+  { type:'dlg', speaker:'YASMIN', text:"...Sam's Glitched Cafe?" },
+  { type:'choice', prompt:'What do you do?', opts:[
+    { text:'Push open the door', val:'enter', rel:+0 },
+    { text:'Hesitate — something feels strange about this place', val:'hesitate', rel:+0 },
+  ]},
+
+  // Branch: hesitate path extra line
+  { type:'if', key:'last_choice', val:'hesitate' },
+  { type:'dlg', speaker:'YASMIN', text:"The windows shouldn't glow like that. That warm. Not in this neighborhood.", skip_if_not:'hesitate' },
+  { type:'endif' },
+
+  { type:'dlg', speaker:'YASMIN', text:"...I'm going in.", skip_if_not:'enter-or-hesitate' },
+
+  // ─── CHAPTER 2: INSIDE ───────────────────────────────────
+  { type:'chapter', label:'Chapter II · Warm Reception' },
+  { type:'scene', env:'cafe-int', cam:'establish', showChars:['sam-behind-counter'], particles:'dust' },
+  { type:'dlg', speaker:null, text:"The door has a little bell. It rings exactly once, then stops." },
+  { type:'dlg', speaker:null, text:"The cafe is small. Impossibly warm. It smells like cardamom and rain." },
+  { type:'scene', env:'cafe-int', cam:'ots-sam', showChars:['yasmin-door','sam-behind-counter'], particles:'dust' },
+  { type:'dlg', speaker:'SAM', text:"We're about to close." },
+  { type:'scene', env:'cafe-int', cam:'close-yasmin', showChars:['yasmin-door','sam-behind-counter'], particles:'dust' },
+  { type:'dlg', speaker:'YASMIN', text:"I—sorry. My phone died. I don't actually know where I am." },
+  { type:'scene', env:'cafe-int', cam:'ots-yasmin', showChars:['yasmin-door','sam-behind-counter'], particles:'dust' },
+  { type:'dlg', speaker:'SAM', text:"..." },
+  { type:'dlg', speaker:'SAM', text:"Sit down. I'll make you something." },
+  { type:'choice', prompt:'', opts:[
+    { text:'"Thank you. You didn\'t have to."', val:'grateful', rel:+1 },
+    { text:'"I can pay. If that\'s the issue."', val:'defensive', rel:+0 },
+    { text:'Just sit down without saying anything.', val:'quiet', rel:+1 },
+  ]},
+
+  { type:'scene', env:'cafe-int', cam:'establish', showChars:['yasmin-table','sam-behind-counter'], particles:'dust' },
+  { type:'dlg', speaker:'YASMIN', text:"The silence here is different from outside. It has texture.", skip_if_not:'quiet' },
+  { type:'dlg', speaker:'YASMIN', text:"Outside the world is noise — sirens and footsteps and the constant digital hum." },
+  { type:'dlg', speaker:'YASMIN', text:"In here, I can hear myself think for the first time all day." },
+
+  // ─── CHAPTER 3: THE GLITCH ────────────────────────────────
+  { type:'chapter', label:'Chapter III · Error Code' },
+  { type:'scene', env:'cafe-int', cam:'establish', showChars:['yasmin-table','sam-near'], particles:'dust' },
+  { type:'dlg', speaker:'SAM', text:"Here. Cardamom rose latte. With oat milk, because we're out of everything else." },
+  { type:'dlg', speaker:'YASMIN', text:"That's... oddly specific and perfect." },
+  { type:'dlg', speaker:'SAM', text:"I have a thing for knowing what people need." },
+  { type:'choice', prompt:'', opts:[
+    { text:'"Is that a skill or a curse?"', val:'curious', rel:+1 },
+    { text:'Sip quietly, looking out the window', val:'pensive', rel:+1 },
+    { text:'"That sounds exhausting."', val:'sharp', rel:+0 },
+  ]},
+
+  { type:'scene', env:'cafe-int', cam:'ots-sam', showChars:['yasmin-table','sam-near'], particles:'dust' },
+  { type:'dlg', speaker:'SAM', text:"You're not from around here.", skip_if_not:'sharp' },
+  { type:'dlg', speaker:'SAM', text:"I mean — the city. You have the look of someone arriving, not living." },
+  { type:'dlg', speaker:'YASMIN', text:"Is it that obvious?" },
+  { type:'dlg', speaker:'SAM', text:"You're still looking at everything. Locals stopped doing that years ago." },
+
+  // THE GLITCH MOMENT
+  { type:'glitch' },
+  { type:'dlg', speaker:null, text:"The lights flicker once. Then twice. Then the whole world stutters." },
+  { type:'scene', env:'void', cam:'establish', showChars:['yasmin-table-void','sam-near-void'], particles:'none' },
+  { type:'dlg', speaker:'YASMIN', text:"...What just happened?" },
+  { type:'dlg', speaker:'SAM', text:"Ah." },
+  { type:'dlg', speaker:'SAM', text:"So it started." },
+  { type:'scene', env:'void', cam:'close-yasmin', showChars:['yasmin-table-void','sam-near-void'], particles:'none' },
+  { type:'dlg', speaker:'YASMIN', text:"What does that mean? 'It started?'" },
+  { type:'choice', prompt:'', opts:[
+    { text:'"Tell me what\'s happening. Right now."', val:'demand', rel:+0 },
+    { text:'"Have you seen this before?"', val:'probe', rel:+1 },
+    { text:'Stand up, back toward the door.', val:'flee-attempt', rel:+0 },
+  ]},
+
+  // ─── CHAPTER 4: THE TRUTH ────────────────────────────────
+  { type:'chapter', label:'Chapter IV · The Underneath' },
+  { type:'scene', env:'void', cam:'ots-sam', showChars:['yasmin-table-void','sam-near-void'], particles:'none' },
+  { type:'dlg', speaker:'SAM', text:"I'll tell you everything. But you have to decide first—", skip_if_not:'demand' },
+  { type:'dlg', speaker:'SAM', text:"This cafe exists between moments. Between the actual city and... something else.", skip_if_not:'probe' },
+  { type:'dlg', speaker:'SAM', text:"You can't leave right now. The door only opens from inside when the cafe is... stable.", skip_if_not:'flee-attempt' },
+
+  { type:'scene', env:'void', cam:'establish', showChars:['yasmin-table-void','sam-near-void'], particles:'none' },
+  { type:'dlg', speaker:'SAM', text:"The cafe is a waystation. Most people who come here are lost — genuinely, deeply lost." },
+  { type:'dlg', speaker:'YASMIN', text:"And the glitch?" },
+  { type:'dlg', speaker:'SAM', text:"The glitch is the seam showing. Reality is patched software. Sometimes it catches." },
+  { type:'scene', env:'void', cam:'close-sam', showChars:['yasmin-table-void','sam-near-void'], particles:'none' },
+  { type:'dlg', speaker:'SAM', text:"You're not just lost by accident, Yasmin." },
+  { type:'dlg', speaker:'YASMIN', text:"I never told you my name." },
+  { type:'dlg', speaker:'SAM', text:"I know. I'm sorry." },
+
+  // CLIMACTIC CHOICE
+  { type:'choice', prompt:'This is the moment.', opts:[
+    { text:'"I trust you. What do we do?"', val:'trust', rel:+2 },
+    { text:'"I don\'t know what you are, but I\'m not afraid."', val:'brave', rel:+1 },
+    { text:'Take his hand without saying anything.', val:'touch', rel:+2 },
+  ]},
+
+  // ─── ENDINGS ────────────────────────────────────────────
+  // HIGH REL ENDING
+  { type:'if_rel', min:3 },
+    { type:'scene', env:'cafe-int', cam:'establish', showChars:['yasmin-table','sam-near'], particles:'leaves' },
+    { type:'glitch', soft:true },
+    { type:'dlg', speaker:null, text:"The void retreats. The cafe reassembles itself around them — warmer than before." },
+    { type:'dlg', speaker:'SAM', text:"It's stabilizing. You... helped it stabilize." },
+    { type:'dlg', speaker:'YASMIN', text:"How?" },
+    { type:'dlg', speaker:'SAM', text:"I don't know exactly. But I think the cafe needed someone to find it. Really find it." },
+    { type:'scene', env:'cafe-int', cam:'close-yasmin', showChars:['yasmin-table','sam-near'], particles:'leaves' },
+    { type:'dlg', speaker:'YASMIN', text:"Can I come back? Tomorrow. When I'm less terrified." },
+    { type:'dlg', speaker:'SAM', text:"..." },
+    { type:'dlg', speaker:'SAM', text:"The sign should work properly next time." },
+    { type:'end', title:"Ending: Found", sub:"Some places only exist for the right visitor." },
+  { type:'endif_rel' },
+
+  // LOW REL ENDING (default if rel < 3)
+  { type:'scene', env:'cafe-int', cam:'establish', showChars:['yasmin-door','sam-behind-counter'], particles:'leaves' },
+  { type:'dlg', speaker:null, text:"The lights return. The cafe settles back into its usual impossible warmth." },
+  { type:'dlg', speaker:'SAM', text:"The door will work now. You should probably go." },
+  { type:'dlg', speaker:'YASMIN', text:"I... yeah. Okay." },
+  { type:'dlg', speaker:'YASMIN', text:"What you said — about people finding this place — " },
+  { type:'dlg', speaker:'SAM', text:"Get some rest, Yasmin." },
+  { type:'scene', env:'street', cam:'establish', showChars:['yasmin-near'], particles:'snow' },
+  { type:'dlg', speaker:null, text:"Outside, the rain has stopped. The neon is bright again." },
+  { type:'dlg', speaker:'YASMIN', text:"I turn around to look at the cafe. Just once." },
+  { type:'dlg', speaker:null, text:"The sign is dark. The windows are cold. The door is a door in a building that's been empty for years." },
+  { type:'end', title:"Ending: Signal Lost", sub:"Some moments are only given once." },
+];
+
+// ===================== CHARACTER CONFIGS =====================
+// The 600×900 VRM render has the character occupying roughly y=60..820 of 900px.
+// We position sprites so feet land just above the ground strip (bottom ~28%).
+// scale = fraction of screen height the sprite should occupy (img height = scale * 100vh).
+// bottom values calibrated so sprite feet land on the ground line:
+// sidewalk ≈ 29% from viewport bottom; VRM feet at 91% of img height;
+// with img h=54vh: feet_y = bottom_of_div - img_h + 91%*img_h = bottom - 9%*img_h
+// target feet at y = 29% from bottom → bottom = 29% + 9%*54vh/vh = 29% + 4.86% ≈ 24%
+const CHAR_CONFIGS = {
+  'yasmin-distant':   { src:'yasmin', bottom:'24%', left:'38%', h:'30vh' },
+  'yasmin-near':      { src:'yasmin', bottom:'24%', left:'14%', h:'56vh' },
+  'yasmin-door':      { src:'yasmin', bottom:'24%', left:'12%', h:'54vh' },
+  'yasmin-table':     { src:'yasmin', bottom:'24%', left:'14%', h:'54vh' },
+  'yasmin-table-void':{ src:'yasmin', bottom:'24%', left:'14%', h:'54vh', filter:'brightness(0.65) saturate(0.3) hue-rotate(220deg)' },
+  'sam-behind-counter':{ src:'sam',   bottom:'24%', right:'8%', h:'54vh', flipX:true },
+  'sam-near':         { src:'sam',    bottom:'24%', right:'14%', h:'54vh', flipX:true },
+  'sam-near-void':    { src:'sam',    bottom:'24%', right:'14%', h:'54vh', flipX:true, filter:'brightness(0.65) saturate(0.3) hue-rotate(220deg)' },
+  'close-sam':        { src:'sam',    bottom:'14%', right:'0%',  h:'80vh', flipX:true },
+  'close-yasmin':     { src:'yasmin', bottom:'14%', left:'0%',   h:'80vh' },
+};
+
+// ===================== ENGINE =====================
+const G = document.getElementById('game');
+const $fade = document.getElementById('fade');
+const $dlg = document.getElementById('dialogue');
+const $speaker = document.getElementById('dlg-speaker');
+const $text = document.getElementById('dlg-text');
+const $choices = document.getElementById('choices');
+const $titleCard = document.getElementById('title-card');
+const $tcTitle = document.getElementById('tc-title');
+const $tcSub = document.getElementById('tc-sub');
+const $chapter = document.getElementById('chapter');
+const $chapterText = document.getElementById('chapter-text');
+const $chars = document.getElementById('chars');
+const $relTracker = document.getElementById('rel-tracker');
+
+let state = {
+  rel: 0,
+  choices: {},
+  idx: 0,
+  typing: false,
+  waiting: false,
+  locked: false,
+  inChoice: false,
+  inTitle: false,
+};
+
+// Wait helper
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+// Fade helpers
+async function fadeOut(dur=600){
+  $fade.classList.remove('clear');
+  $fade.classList.add('black');
+  await wait(dur);
+}
+async function fadeIn(dur=600){
+  $fade.classList.add('clear');
+  $fade.classList.remove('black');
+  await wait(dur);
+}
+
+// Apply scene environment
+function applyEnv(env) {
+  const sky = document.getElementById('sky');
+  const stars = document.getElementById('stars');
+  const buildings = document.getElementById('buildings');
+  const ground = document.getElementById('ground');
+  const streetlights = document.getElementById('streetlights');
+  const cafeFacade = document.getElementById('cafe-facade');
+  const interior = document.getElementById('interior');
+  const voidSpace = document.getElementById('void-space');
+
+  // Reset all
+  sky.className = '';
+  [stars, buildings, ground, streetlights, cafeFacade].forEach(el => el.style.opacity = '0');
+  interior.style.opacity = '0';
+  voidSpace.style.opacity = '0';
+
+  if (env === 'street' || env === 'cafe-ext') {
+    sky.className = env === 'street' ? 'sky-street' : 'sky-cafe-ext';
+    stars.style.opacity = '1';
+    buildings.style.opacity = '1';
+    ground.style.opacity = '1';
+    streetlights.style.opacity = '1';
+    if (env === 'cafe-ext') {
+      cafeFacade.style.opacity = '1';
+    }
+  } else if (env === 'cafe-int') {
+    sky.className = 'sky-cafe-int';
+    interior.style.opacity = '1';
+  } else if (env === 'void') {
+    sky.className = 'sky-void';
+    voidSpace.style.opacity = '1';
+    interior.style.opacity = '0.2'; // ghostly cafe behind
+  }
+}
+
+// Apply camera preset
+function setCam(cam) {
+  G.classList.remove('cam-establish','cam-ots-right','cam-ots-left','cam-close-yasmin','cam-close-sam','cam-close','cinema');
+  if (cam === 'establish') {
+    G.classList.add('cam-establish', 'cinema');
+  } else if (cam === 'ots-sam') {
+    G.classList.add('cam-ots-right', 'cinema');
+  } else if (cam === 'ots-yasmin') {
+    G.classList.add('cam-ots-left', 'cinema');
+  } else if (cam === 'close-yasmin' || cam === 'close-sam' || cam === 'close') {
+    G.classList.add('cam-close', 'cinema');
+  }
+}
+
+// Show characters
+function showChars(charIds) {
+  $chars.innerHTML = '';
+  charIds.forEach(id => {
+    const cfg = CHAR_CONFIGS[id];
+    if (!cfg) return;
+    const el = document.createElement('div');
+    el.className = `char-sprite char-${cfg.src}`;
+    el.style.bottom = cfg.bottom || '28%';
+    el.style.left = 'auto';
+    el.style.right = 'auto';
+    if (cfg.left !== undefined) el.style.left = cfg.left;
+    if (cfg.right !== undefined) el.style.right = cfg.right;
+    const img = document.createElement('img');
+    img.src = cfg.src === 'yasmin' ? YASMIN_SRC : SAM_SRC;
+    img.style.height = cfg.h || '54vh';
+    img.style.width = 'auto';
+    img.style.display = 'block';
+    if (cfg.flipX) img.style.transform = 'scaleX(-1)';
+    if (cfg.filter) el.style.filter = cfg.filter;
+    el.appendChild(img);
+    $chars.appendChild(el);
+  });
+}
+
+// Typewriter effect
+let typeTimer = null;
+function typeText(text, speed=28) {
+  return new Promise(resolve => {
+    $text.textContent = '';
+    state.typing = true;
+    let i = 0;
+    const cursor = document.createElement('span');
+    cursor.className = 'dlg-cursor';
+    function tick() {
+      if (i >= text.length) {
+        state.typing = false;
+        resolve();
+        return;
+      }
+      $text.textContent = text.slice(0, ++i);
+      $text.appendChild(cursor);
+      typeTimer = setTimeout(tick, speed + (text[i-1] === '.' || text[i-1] === ',' ? 120 : 0));
+    }
+    tick();
+  });
+}
+function skipType(text) {
+  if (typeTimer) { clearTimeout(typeTimer); typeTimer = null; }
+  $text.textContent = text;
+  state.typing = false;
+}
+
+// Update relationship display
+function updateRel() {
+  const hearts = document.querySelectorAll('.heart');
+  hearts.forEach((h, i) => {
+    h.textContent = i < state.rel ? '♥' : '♡';
+    h.classList.toggle('lit', i < state.rel);
+  });
+}
+
+// Build environments on page load
+function buildAllEnvs() {
+  buildStars();
+  buildBuildings();
+  buildGround();
+  buildStreetlights();
+  buildCafeFacade();
+  buildInterior();
+  buildVoid();
+}
+
+function buildStars() {
+  const $s = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const sz = Math.random() * 2 + 1;
+    star.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*60}%;
+      width:${sz}px;height:${sz}px;
+      --a:${0.3 + Math.random()*0.7};
+      --d:${2+Math.random()*4}s;
+      --delay:${-Math.random()*4}s;
+    `;
+    $s.appendChild(star);
+  }
+}
+
+function buildBuildings() {
+  const $b = document.getElementById('buildings');
+  const configs = [
+    { w:80, h:'55%', left:0, bc:'#0b0618', wl:'rgba(255,190,60,0.1)' },
+    { w:110, h:'70%', left:60, bc:'#0e0820', wl:'rgba(255,190,60,0.09)' },
+    { w:65, h:'45%', left:150, bc:'#0d071c', wl:'rgba(255,200,80,0.1)' },
+    { w:50, h:'40%', left:190, bc:'#0a0618' },
+    // right side
+    { w:90, h:'65%', right:0, bc:'#0b0618', wl:'rgba(255,190,60,0.1)' },
+    { w:70, h:'50%', right:70, bc:'#0e0820', wl:'rgba(255,190,60,0.09)' },
+    { w:50, h:'42%', right:120, bc:'#0d071c' },
+    { w:80, h:'58%', right:150, bc:'#0a0618', wl:'rgba(255,200,80,0.08)' },
+  ];
+  configs.forEach(cfg => {
+    const b = document.createElement('div');
+    b.className = 'building';
+    b.style.cssText = `
+      width:${cfg.w}px;
+      height:${cfg.h};
+      ${cfg.left !== undefined ? `margin-left:${cfg.left}px` : `margin-right:${cfg.right}px`};
+      position:absolute;
+      bottom:0;
+      ${cfg.left !== undefined ? `left:${cfg.left}px` : `right:${cfg.right}px`};
+      --bc:${cfg.bc||'#0e0820'};
+      --wl:${cfg.wl||'rgba(255,200,80,0.07)'};
+    `;
+    // Add lit windows
+    for (let w = 0; w < 5; w++) {
+      const win = document.createElement('div');
+      win.className = 'win-lit';
+      win.style.cssText = `
+        width:${8+Math.random()*6}px;
+        height:${10+Math.random()*6}px;
+        left:${10+Math.random()*60}%;
+        top:${10+Math.random()*70}%;
+        --d:${3+Math.random()*5}s;
+        --delay:${-Math.random()*5}s;
+      `;
+      b.appendChild(win);
+    }
+    $b.appendChild(b);
+  });
+}
+
+function buildGround() {
+  const $g = document.getElementById('ground');
+  $g.innerHTML = '<div class="ground-road"><div class="sidewalk"></div></div>';
+}
+
+function buildStreetlights() {
+  const $sl = document.getElementById('streetlights');
+  [[15,'40px'],[60,'55px'],[78,'35px']].forEach(([left, height]) => {
+    const lamp = document.createElement('div');
+    lamp.className = 'lamp';
+    lamp.style.cssText = `position:absolute;left:${left}%;bottom:0;`;
+    lamp.innerHTML = `
+      <div class="lamp-glow"></div>
+      <div class="lamp-arm"></div>
+      <div class="lamp-post" style="height:${height}"></div>
+      <div class="lamp-cone"></div>
+    `;
+    $sl.appendChild(lamp);
+  });
+  [[85,'50px'],[92,'38px']].forEach(([left, height]) => {
+    const lamp = document.createElement('div');
+    lamp.className = 'lamp';
+    lamp.style.cssText = `position:absolute;left:${left}%;bottom:0;`;
+    lamp.innerHTML = `
+      <div class="lamp-glow"></div>
+      <div class="lamp-arm"></div>
+      <div class="lamp-post" style="height:${height}"></div>
+      <div class="lamp-cone"></div>
+    `;
+    $sl.appendChild(lamp);
+  });
+}
+
+function buildCafeFacade() {
+  const $cf = document.getElementById('cafe-facade');
+  $cf.innerHTML = `
+    <div class="cafe-sign">
+      <div class="cafe-sign-text">S<span class="neon-flicker">A</span>M'S GLITCHED CAFE</div>
+    </div>
+    <div class="cafe-awning"></div>
+    <div class="cafe-building" style="height:160px">
+      <div class="cafe-window" style="left:10%;top:20%;width:28%;height:50%;border-radius:3px;"></div>
+      <div class="cafe-window" style="right:10%;top:20%;width:28%;height:50%;border-radius:3px;"></div>
+      <div class="cafe-door"></div>
+    </div>
+  `;
+}
+
+function buildInterior() {
+  const $int = document.getElementById('interior');
+  $int.innerHTML = `
+    <div class="room-wrap">
+      <div class="room-wall-back">
+        <div class="window-interior" style="left:10%;top:15%;width:25%;height:45%;"></div>
+        <div class="window-interior" style="right:10%;top:15%;width:25%;height:45%;"></div>
+        <div class="counter" style="position:absolute;bottom:0;left:0;right:0;height:22%;"></div>
+        <div class="pendant-wire" style="position:absolute;left:30%;top:0;width:2px;height:45px;background:#5a3a18;"></div>
+        <div class="pendant" style="position:absolute;left:28%;top:45px;"></div>
+        <div class="pendant-wire" style="position:absolute;right:30%;top:0;width:2px;height:45px;background:#5a3a18;"></div>
+        <div class="pendant" style="position:absolute;right:28%;top:45px;"></div>
+      </div>
+      <div class="room-floor"></div>
+      <div class="room-glow"></div>
+      <div class="table-top" style="left:20%;top:58%;width:70px;height:30px;"></div>
+      <div class="table-leg" style="left:23%;top:82%;width:6px;height:40px;"></div>
+    </div>
+  `;
+}
+
+function buildVoid() {
+  const $v = document.getElementById('void-space');
+  $v.innerHTML = `
+    <div class="void-grid"></div>
+    <div class="void-horizon"></div>
+  `;
+  for (let i = 0; i < 15; i++) {
+    const frag = document.createElement('div');
+    frag.className = 'void-fragment';
+    const w = 20 + Math.random() * 60;
+    const h = 4 + Math.random() * 20;
+    frag.style.cssText = `
+      left:${Math.random()*90}%;
+      top:${20+Math.random()*60}%;
+      width:${w}px;height:${h}px;
+      --d:${4+Math.random()*8}s;
+      --delay:${-Math.random()*8}s;
+      opacity:0.2;
+    `;
+    $v.appendChild(frag);
+  }
+}
+
+// Glitch effect
+function glitch(soft=false) {
+  const $g = document.getElementById('glitch-overlay');
+  $g.style.background = soft
+    ? 'linear-gradient(180deg, rgba(100,0,200,0.15) 0%, transparent 30%, rgba(0,100,200,0.15) 70%, transparent 100%)'
+    : 'linear-gradient(180deg, rgba(200,0,100,0.3) 0%, transparent 20%, rgba(0,100,255,0.3) 60%, transparent 100%)';
+  $g.classList.add('active');
+  if (!soft) G.classList.add('shaking');
+  $g.addEventListener('animationend', () => {
+    $g.classList.remove('active');
+    G.classList.remove('shaking');
+  }, { once: true });
+}
+
+// Particles
+function setParticles(type) {
+  const $p = document.getElementById('particles');
+  $p.innerHTML = '';
+  if (type === 'none') return;
+  const count = type === 'snow' ? 25 : type === 'leaves' ? 15 : 20;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = `particle ${type}`;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      --d:${6+Math.random()*10}s;
+      --delay:${-Math.random()*10}s;
+      --drift:${(Math.random()-0.5)*60}px;
+      ${type === 'leaves' ? `--color:rgba(${200+Math.floor(Math.random()*55)},${100+Math.floor(Math.random()*80)},${30+Math.floor(Math.random()*50)},0.7);` : ''}
+    `;
+    $p.appendChild(p);
+  }
+}
+
+// Show title card
+function showTitle(title, sub) {
+  return new Promise(resolve => {
+    $tcTitle.textContent = title;
+    $tcSub.textContent = sub || '';
+    $titleCard.classList.add('show');
+    state.inTitle = true;
+    state.waiting = true;
+    const onTap = () => {
+      $titleCard.classList.remove('show');
+      G.removeEventListener('click', onTap);
+      state.inTitle = false;
+      state.waiting = false;
+      setTimeout(resolve, 600);
+    };
+    G.addEventListener('click', onTap);
+  });
+}
+
+// Show chapter label
+function showChapter(label) {
+  $chapterText.textContent = label;
+  $chapter.classList.add('show');
+  $relTracker.classList.add('show');
+  setTimeout(() => $chapter.classList.remove('show'), 3000);
+}
+
+// Show dialogue line and wait for tap
+function showLine(speaker, text) {
+  return new Promise(async resolve => {
+    // Show speaker name
+    if (speaker) {
+      $speaker.style.display = 'inline-block';
+      $speaker.textContent = speaker;
+    } else {
+      $speaker.style.display = 'none';
+    }
+    $dlg.classList.remove('hidden');
+    await typeText(text);
+    // Wait for tap
+    state.waiting = true;
+    const onTap = () => {
+      if (state.typing) {
+        skipType(text);
+        return;
+      }
+      G.removeEventListener('click', onTap);
+      state.waiting = false;
+      resolve();
+    };
+    G.addEventListener('click', onTap);
+  });
+}
+
+// Show choices
+function showChoices(opts) {
+  return new Promise(resolve => {
+    $dlg.classList.add('hidden');
+    $choices.innerHTML = '';
+    $choices.classList.remove('hidden');
+    state.inChoice = true;
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = opt.text;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state.choices.last_choice = opt.val;
+        state.rel = Math.min(3, state.rel + (opt.rel || 0));
+        updateRel();
+        $choices.classList.add('hidden');
+        $choices.innerHTML = '';
+        state.inChoice = false;
+        resolve(opt.val);
+      });
+      $choices.appendChild(btn);
+    });
+  });
+}
+
+// Show ending card
+async function showEnd(title, sub) {
+  await wait(500);
+  $dlg.classList.add('hidden');
+  await fadeOut(1000);
+  $tcTitle.textContent = title;
+  $tcSub.textContent = sub;
+  document.getElementById('tc-eyebrow').textContent = 'end of story';
+  document.getElementById('tc-tap').textContent = '— fin —';
+  $titleCard.classList.add('show');
+  await fadeIn(1200);
+}
+
+// Transition to new scene config
+async function applyScene(beat) {
+  if (beat.env || beat.cam || beat.showChars !== undefined || beat.particles !== undefined) {
+    const needsFade = !!beat.env;
+    if (needsFade) await fadeOut(400);
+    if (beat.env) applyEnv(beat.env);
+    if (beat.cam) setCam(beat.cam);
+    if (beat.showChars !== undefined) showChars(beat.showChars);
+    if (beat.particles !== undefined) setParticles(beat.particles);
+    if (needsFade) await fadeIn(500);
+  }
+}
+
+// ===================== MAIN GAME LOOP =====================
+let relEndingTaken = false;
+
+async function run() {
+  buildAllEnvs();
+
+  // Initial fade in from black
+  await wait(300);
+  await fadeIn(1000);
+
+  let i = 0;
+  while (i < STORY.length) {
+    const beat = STORY[i];
+
+    if (beat.type === 'chapter') {
+      showChapter(beat.label);
+      i++; continue;
+    }
+
+    if (beat.type === 'scene') {
+      await applyScene(beat);
+      i++; continue;
+    }
+
+    if (beat.type === 'title') {
+      await showTitle(beat.title, beat.sub);
+      i++; continue;
+    }
+
+    if (beat.type === 'dlg') {
+      // skip_if_not checks
+      if (beat.skip_if_not && beat.skip_if_not !== state.choices.last_choice &&
+          !(beat.skip_if_not === 'enter-or-hesitate')) {
+        i++; continue;
+      }
+      $dlg.classList.remove('hidden');
+      await showLine(beat.speaker, beat.text);
+      i++; continue;
+    }
+
+    if (beat.type === 'choice') {
+      if (beat.prompt) await showLine(null, beat.prompt);
+      await showChoices(beat.opts);
+      i++; continue;
+    }
+
+    if (beat.type === 'glitch') {
+      glitch(beat.soft);
+      await wait(beat.soft ? 300 : 700);
+      i++; continue;
+    }
+
+    if (beat.type === 'end') {
+      await showEnd(beat.title, beat.sub);
+      return;
+    }
+
+    // Conditional blocks (simple)
+    if (beat.type === 'if') {
+      if (state.choices[beat.key] !== beat.val) {
+        // Skip until endif
+        let depth = 1;
+        i++;
+        while (i < STORY.length && depth > 0) {
+          if (STORY[i].type === 'if') depth++;
+          if (STORY[i].type === 'endif') depth--;
+          i++;
+        }
+        continue;
+      }
+      i++; continue;
+    }
+
+    if (beat.type === 'endif') { i++; continue; }
+
+    if (beat.type === 'if_rel') {
+      if (state.rel < beat.min) {
+        // Skip to endif_rel
+        let depth = 1;
+        i++;
+        while (i < STORY.length && depth > 0) {
+          if (STORY[i].type === 'if_rel') depth++;
+          if (STORY[i].type === 'endif_rel') depth--;
+          i++;
+        }
+        continue;
+      }
+      relEndingTaken = true;
+      i++; continue;
+    }
+
+    if (beat.type === 'endif_rel') { i++; continue; }
+
+    i++;
+  }
+}
+
+// Start
+run().catch(console.error);
+</script>
+</body>
+</html>
