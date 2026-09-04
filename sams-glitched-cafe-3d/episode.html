@@ -675,6 +675,36 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
   background:#000;opacity:1;transition:opacity .65s ease;pointer-events:none;
 }
 #fade.clear{opacity:0;}
+
+/* ─── PARTICLE CANVAS ───────────────────────────── */
+#particles-canvas{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+  width:100%;height:100%;
+}
+
+/* ─── VIGNETTE ──────────────────────────────────── */
+#vignette{
+  position:absolute;inset:0;z-index:16;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 44%,transparent 38%,rgba(0,0,0,.58) 100%);
+}
+
+/* ─── CRT SCANLINES ─────────────────────────────── */
+#stage::after{
+  content:'';position:absolute;inset:0;z-index:400;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 3px,
+    rgba(0,0,0,.026) 3px,rgba(0,0,0,.026) 4px
+  );
+}
+
+/* ─── SOUND BUTTON ──────────────────────────────── */
+#sound-btn{
+  position:absolute;top:12px;left:14px;z-index:310;
+  background:transparent;border:none;
+  color:rgba(255,255,255,.18);font-size:15px;cursor:pointer;
+  transition:color .2s;line-height:1;
+}
+#sound-btn:hover{color:rgba(232,146,58,.6);}
 </style>
 </head>
 <body>
@@ -692,6 +722,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
 <div id="stage" data-scene="street">
 
   <div id="scene-bg"></div>
+  <canvas id="particles-canvas"></canvas>
+  <div id="vignette"></div>
 
   <div id="cafe-ext-decor">
     <div class="cafe-window" id="cafe-win-l"></div>
@@ -790,7 +822,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
   <div id="fade"></div>
 </div>
 
-<!-- API key button on top of game -->
+<!-- Controls -->
+<button id="sound-btn" title="Toggle sound">🔊</button>
 <button id="api-key-btn" title="AI Oracle Settings">⚙</button>
 
 </div>
@@ -931,6 +964,7 @@ function openOracle() {
   document.getElementById('oracle-presets').style.display = '';
   oracleModal.classList.add('open');
   shakeScreen();
+  if(audio) audio.sfxOracle();
   blocked = true;
   waitInput = false;
   setTimeout(() => {
@@ -959,6 +993,171 @@ document.getElementById('api-save-btn').addEventListener('click', () => {
 });
 document.getElementById('api-skip-btn').addEventListener('click', () => apiModal.classList.remove('open'));
 
+/* ─── AUDIO ENGINE ──────────────────────────────────
+   Procedural ambient + SFX via Web Audio API.
+   No external dependencies.
+─────────────────────────────────────────────────── */
+class AudioEngine{
+  constructor(){
+    this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+    this.master=this.ctx.createGain();this.master.gain.value=.55;
+    this.master.connect(this.ctx.destination);
+    this.nodes=[];this.noteTimer=null;this.ni=0;
+    this.muted=false;this.scene=null;this.ambGain=null;
+  }
+  _pink(){
+    const r=this.ctx.sampleRate,buf=this.ctx.createBuffer(1,r*4,r),d=buf.getChannelData(0);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i=0;i<d.length;i++){
+      const w=Math.random()*2-1;
+      b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;
+      b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;
+      d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926;
+    }
+    const s=this.ctx.createBufferSource();s.buffer=buf;s.loop=true;return s;
+  }
+  _note(freq,vol,dur,dest){
+    const osc=this.ctx.createOscillator(),env=this.ctx.createGain(),t=this.ctx.currentTime;
+    osc.type='sine';osc.frequency.value=freq;
+    env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(vol,t+.08);
+    env.gain.setValueAtTime(vol,t+dur*.4);env.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    osc.connect(env);env.connect(dest);osc.start(t);osc.stop(t+dur+.05);
+  }
+  _noise(vol,type,freq,dest){
+    const n=this._pink(),f=this.ctx.createBiquadFilter(),g=this.ctx.createGain();
+    f.type=type;f.frequency.value=freq;g.gain.value=vol;
+    n.connect(f);f.connect(g);g.connect(dest);n.start();this.nodes.push(n);
+  }
+  stopAll(){
+    clearTimeout(this.noteTimer);
+    this.nodes.forEach(n=>{try{n.stop();}catch(e){}});this.nodes=[];
+    if(this.ambGain){try{this.ambGain.disconnect();}catch(e){}this.ambGain=null;}
+  }
+  setScene(s){
+    this.stopAll();this.scene=s;if(this.muted)return;
+    const g=this.ctx.createGain(),t=this.ctx.currentTime;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1,t+2.5);
+    g.connect(this.master);this.ambGain=g;
+    if(['cafe-int','cafe-ext','ending-warm'].includes(s)){
+      this._noise(.058,'lowpass',380,g);
+      const sc=[261.63,311.13,349.23,392,466.16,523.25,622.25,698.46];
+      const pt=[0,2,4,2,3,1,5,4,6,3,2,7,5,1,0,3];
+      const play=()=>{
+        if(!this.nodes.length)return;
+        this._note(sc[pt[this.ni%pt.length]]*.5,.065,1.6+Math.random()*.5,g);
+        this.ni++;this.noteTimer=setTimeout(play,1300+Math.random()*900);
+      };
+      this.noteTimer=setTimeout(play,1200);
+    } else if(s==='glitch'){
+      this._noise(.038,'highpass',900,g);
+      const stab=()=>{
+        if(!this.nodes.length)return;
+        const osc=this.ctx.createOscillator(),env=this.ctx.createGain(),t2=this.ctx.currentTime;
+        const f=80+Math.random()*280;osc.type='sawtooth';osc.frequency.value=f;
+        osc.frequency.linearRampToValueAtTime(f*(Math.random()+.3),t2+.15);
+        env.gain.setValueAtTime(.05,t2);env.gain.exponentialRampToValueAtTime(.0001,t2+.22+Math.random()*.3);
+        osc.connect(env);env.connect(g);osc.start(t2);osc.stop(t2+.55);
+        this.noteTimer=setTimeout(stab,350+Math.random()*950);
+      };
+      this.noteTimer=setTimeout(stab,250);
+    } else {
+      this._noise(.022,'lowpass',200,g);
+      const sc=[196,220,246.94,261.63,293.66];
+      const play=()=>{
+        if(!this.nodes.length)return;
+        this._note(sc[Math.floor(Math.random()*sc.length)],.038,2.2,g);
+        this.noteTimer=setTimeout(play,3200+Math.random()*2500);
+      };
+      this.noteTimer=setTimeout(play,2200);
+    }
+  }
+  sfxHearts(){
+    if(this.muted)return;
+    [[523.25,0],[659.25,100],[783.99,220]].forEach(([f,d])=>setTimeout(()=>this._note(f,.1,.55,this.master),d));
+  }
+  sfxGlitch(){
+    if(this.muted)return;
+    const osc=this.ctx.createOscillator(),env=this.ctx.createGain(),t=this.ctx.currentTime;
+    osc.type='sawtooth';osc.frequency.setValueAtTime(280,t);
+    osc.frequency.exponentialRampToValueAtTime(38,t+.38);
+    env.gain.setValueAtTime(.13,t);env.gain.exponentialRampToValueAtTime(.0001,t+.4);
+    osc.connect(env);env.connect(this.master);osc.start(t);osc.stop(t+.44);
+  }
+  sfxOracle(){
+    if(this.muted)return;
+    [[220,0],[277.18,180],[349.23,340],[440,480],[554.37,620]].forEach(([f,d])=>
+      setTimeout(()=>this._note(f,.05,1.3,this.master),d));
+  }
+  toggle(){
+    this.muted=!this.muted;
+    if(this.muted){this.stopAll();this.master.gain.linearRampToValueAtTime(0,this.ctx.currentTime+.5);}
+    else{this.master.gain.linearRampToValueAtTime(.55,this.ctx.currentTime+.5);if(this.scene)this.setScene(this.scene);}
+    return this.muted;
+  }
+}
+
+/* ─── PARTICLE SYSTEM ────────────────────────────────
+   Canvas 2D floating particles, scene-aware.
+─────────────────────────────────────────────────── */
+class ParticleSystem{
+  constructor(canvas){
+    this.canvas=canvas;this.ctx2=canvas.getContext('2d');
+    this.particles=[];this.scene='';
+    this._resize();
+    new ResizeObserver(()=>this._resize()).observe(canvas);
+    this._raf();
+  }
+  _resize(){this.canvas.width=this.canvas.offsetWidth;this.canvas.height=this.canvas.offsetHeight;this._spawn();}
+  setScene(s){this.scene=s;this._spawn();}
+  _spawn(){
+    const w=this.canvas.width,h=this.canvas.height;
+    this.particles=[];
+    const s=this.scene;
+    if(['cafe-int','cafe-ext','ending-warm'].includes(s)){
+      for(let i=0;i<22;i++) this.particles.push({
+        x:Math.random()*w,y:Math.random()*h,
+        vx:(Math.random()-.5)*.25,vy:-.15-Math.random()*.3,
+        r:1+Math.random()*2.2,a:.07+Math.random()*.2,
+        hue:30+Math.random()*22,phase:Math.random()*Math.PI*2
+      });
+    } else if(s==='glitch'){
+      for(let i=0;i<28;i++) this.particles.push({
+        x:Math.random()*w,y:Math.random()*h,
+        vx:(Math.random()-.5)*1.1,vy:(Math.random()-.5)*.7,
+        r:1.5+Math.random()*2.5,a:.1+Math.random()*.28,
+        hue:Math.random()>.5?278:182,phase:Math.random()*Math.PI*2
+      });
+    } else {
+      for(let i=0;i<7;i++) this.particles.push({
+        x:Math.random()*w,y:Math.random()*h*.65,
+        vx:(Math.random()-.5)*.08,vy:-.04-Math.random()*.08,
+        r:.7+Math.random()*1.1,a:.14+Math.random()*.28,
+        hue:210+Math.random()*50,phase:Math.random()*Math.PI*2
+      });
+    }
+  }
+  _raf(){
+    const tick=()=>{
+      const c=this.ctx2,w=this.canvas.width,h=this.canvas.height;
+      c.clearRect(0,0,w,h);
+      this.particles.forEach(p=>{
+        p.phase+=.016;p.x+=p.vx;p.y+=p.vy;
+        if(p.x<0)p.x=w;if(p.x>w)p.x=0;
+        if(p.y<0)p.y=h;if(p.y>h)p.y=0;
+        const pulse=.65+Math.sin(p.phase)*.35;
+        c.beginPath();
+        if(this.scene==='glitch'){c.rect(p.x-p.r,p.y-p.r,p.r*2,p.r*2);}
+        else{c.arc(p.x,p.y,p.r,0,Math.PI*2);}
+        c.fillStyle=`hsla(${p.hue},72%,72%,${p.a*pulse})`;c.fill();
+      });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+}
+
+let audio=null,particles=null;
+
 /* ─── PROGRESS DOTS ─────────────────────────────── */
 const progDots = document.querySelectorAll('.prog-dot');
 function updateProgress(step) {
@@ -969,6 +1168,7 @@ function updateProgress(step) {
 
 /* ─── SCREEN SHAKE ──────────────────────────────── */
 function shakeScreen() {
+  if(audio) audio.sfxGlitch();
   stage.classList.remove('shake');
   void stage.offsetWidth; /* reflow to restart animation */
   stage.classList.add('shake');
@@ -1210,7 +1410,11 @@ async function fadeIn(){
   await wait(700);
 }
 
-function setScene(name){ stage.dataset.scene = name; }
+function setScene(name){
+  stage.dataset.scene=name;
+  if(audio) audio.setScene(name);
+  if(particles) particles.setScene(name);
+}
 
 function showLabel(text){
   if(!text){sceneLbl.className='';return;}
@@ -1302,6 +1506,7 @@ function setSpeakerState(speakerName, chars){
 }
 
 function spawnHearts(){
+  if(audio) audio.sfxHearts();
   ['♡','♥','♡'].forEach((e,i)=>{
     const h=document.createElement('div');
     h.className='hrt';h.textContent=e;
@@ -1478,6 +1683,14 @@ choices.querySelectorAll('.c-btn').forEach(btn=>{
 });
 
 function startGame(){
+  /* Init audio & particles on first user gesture */
+  if(!audio){ try{audio=new AudioEngine();}catch(e){} }
+  const pc=document.getElementById('particles-canvas');
+  if(!particles&&pc){ particles=new ParticleSystem(pc); }
+  const initScene=stage.dataset.scene||'street';
+  if(audio) audio.setScene(initScene);
+  if(particles) particles.setScene(initScene);
+
   document.getElementById('title-screen').classList.add('gone');
   updateProgress(0);
   setTimeout(()=>{
@@ -1488,6 +1701,12 @@ function startGame(){
 }
 document.getElementById('start-btn').addEventListener('click',startGame);
 document.getElementById('start-btn').addEventListener('touchend',e=>{e.preventDefault();startGame();});
+
+document.getElementById('sound-btn').addEventListener('click',()=>{
+  if(!audio){ try{audio=new AudioEngine();}catch(e){return;} }
+  const muted=audio.toggle();
+  document.getElementById('sound-btn').textContent=muted?'🔇':'🔊';
+});
 </script>
 </body>
 </html>
