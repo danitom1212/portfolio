@@ -607,6 +607,68 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
   font-size:13px;cursor:pointer;text-decoration:underline;
 }
 
+/* ─── SCREEN SHAKE ─────────────────────────────── */
+@keyframes screenShake{
+  0%,100%{transform:translate(0,0) rotate(0);}
+  12%{transform:translate(-5px,2px) rotate(-.3deg);}
+  25%{transform:translate(5px,-3px) rotate(.25deg);}
+  37%{transform:translate(-4px,3px) rotate(-.2deg);}
+  50%{transform:translate(4px,-2px) rotate(.15deg);}
+  62%{transform:translate(-3px,1px) rotate(-.1deg);}
+  75%{transform:translate(2px,-1px) rotate(.05deg);}
+  87%{transform:translate(-1px,1px) rotate(0);}
+}
+#stage.shake{animation:screenShake .55s cubic-bezier(.36,.07,.19,.97) both;}
+
+/* ─── NAME PLATE ANIMATION ──────────────────────── */
+@keyframes nameIn{from{opacity:0;transform:translateX(-12px);}to{opacity:1;transform:translateX(0);}}
+#name-plate.fresh{animation:nameIn .3s ease forwards;}
+
+/* ─── TEXT GLITCH ───────────────────────────────── */
+@keyframes textGlitch{
+  0%,100%{text-shadow:none;transform:none;}
+  15%{text-shadow:-3px 0 rgba(255,50,120,.7),3px 0 rgba(80,220,255,.65);transform:translateX(-2px);}
+  30%{text-shadow:3px 0 rgba(255,50,120,.55),-3px 0 rgba(80,220,255,.55);transform:translateX(2px);}
+  50%{text-shadow:-2px 0 rgba(180,100,255,.6),2px 0 rgba(80,220,200,.55);transform:translateX(-1px);}
+  70%{text-shadow:2px 0 rgba(255,180,50,.45),-2px 0 rgba(100,100,255,.4);transform:translateX(0);}
+}
+#dlg-text.glitch-mode #dlg-inner{animation:textGlitch .2s steps(1,end) 4;animation-delay:.25s;}
+
+/* ─── CHOICE REVEAL ─────────────────────────────── */
+@keyframes choiceIn{from{opacity:0;transform:translateY(18px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+#choices:not(.hidden) .c-btn{animation:choiceIn .4s cubic-bezier(.22,.68,0,1.2) both;}
+#choices:not(.hidden) .c-btn:nth-child(2){animation-delay:.08s;}
+
+/* ─── ORACLE GLITCH ENTRANCE ────────────────────── */
+@keyframes oracleGlitchIn{
+  0%{opacity:0;filter:blur(14px) hue-rotate(200deg) brightness(2.2);}
+  20%{opacity:.6;filter:blur(5px) hue-rotate(80deg) brightness(1.6);}
+  45%{opacity:.8;filter:blur(7px) hue-rotate(20deg) brightness(1.3);}
+  65%{opacity:.92;filter:blur(2px) hue-rotate(5deg) brightness(1.1);}
+  100%{opacity:1;filter:none;}
+}
+#oracle-modal.open{animation:oracleGlitchIn .8s ease forwards;}
+
+/* ─── VOID CHAR FLICKER ─────────────────────────── */
+@keyframes voidFlicker{
+  0%,94%,100%{opacity:1;}
+  95%{opacity:.25;}
+  97%{opacity:.8;}
+  98.5%{opacity:.1;}
+}
+.char[data-expr="void"]{animation:voidFlicker 3.2s ease-in-out infinite;}
+
+/* ─── GLITCH SCENE CHROMATIC ────────────────────── */
+@keyframes chromaticIn{
+  0%{filter:none;}
+  8%{filter:saturate(2.2) hue-rotate(35deg) brightness(1.4);}
+  18%{filter:saturate(.6) hue-rotate(-25deg) brightness(.8);}
+  28%{filter:saturate(1.8) hue-rotate(18deg) brightness(1.2);}
+  45%{filter:saturate(1.1) hue-rotate(5deg) brightness(1);}
+  100%{filter:none;}
+}
+#stage[data-scene="glitch"]{animation:chromaticIn 2s ease forwards;}
+
 /* ─── FADE ─────────────────────────────────────── */
 #fade{
   position:absolute;inset:0;z-index:180;
@@ -760,6 +822,18 @@ const ORACLE_FALLBACK = [
   "The signal was always there. You simply learned to listen.",
   "Not all thresholds have a door. Some are just a feeling.",
 ];
+
+/* Question-matched fallbacks for preset buttons */
+const ORACLE_MATCHED = {
+  "What is this place?":
+    "A cafe. A wound in the world where the ordinary frays at the edges. You found it because something in you knew to look.",
+  "Who is Sam, really?":
+    "The keeper. He arrived before the cafe had a name and stayed after it forgot why. Ask him yourself. He answers differently every time.",
+  "Am I safe here?":
+    "Safe is the wrong question. The right question is: do you want to be?",
+  "Why can I see the glitches when others can't?":
+    "Because you stopped scrolling long enough to look up. That is rarer than you think.",
+};
 let oracleFbIdx = 0;
 let oracleApiKey = localStorage.getItem('oracle-key') || '';
 let oracleAsked  = 0;
@@ -788,6 +862,8 @@ async function callOracle(question) {
       }
     } catch(e) {}
   }
+  /* Question-matched response first, then rotating fallback */
+  if (ORACLE_MATCHED[question]) return ORACLE_MATCHED[question];
   const r = ORACLE_FALLBACK[oracleFbIdx % ORACLE_FALLBACK.length];
   oracleFbIdx++;
   return r;
@@ -854,12 +930,13 @@ function openOracle() {
   oracleSendBtn.disabled = false;
   document.getElementById('oracle-presets').style.display = '';
   oracleModal.classList.add('open');
+  shakeScreen();
   blocked = true;
   waitInput = false;
   setTimeout(() => {
     addOracleMsg('You\'ve found the threshold.', false);
-    setTimeout(() => addOracleMsg('Ask what you dare. Three questions only.', false), 900);
-  }, 500);
+    setTimeout(() => addOracleMsg('Ask what you dare. Three questions only.', false), 950);
+  }, 550);
 }
 
 document.getElementById('oracle-close-btn').addEventListener('click', closeOracle);
@@ -888,6 +965,14 @@ function updateProgress(step) {
   progDots.forEach((d, i) => {
     d.className = 'prog-dot' + (i < step ? ' done' : i === step ? ' current' : '');
   });
+}
+
+/* ─── SCREEN SHAKE ──────────────────────────────── */
+function shakeScreen() {
+  stage.classList.remove('shake');
+  void stage.offsetWidth; /* reflow to restart animation */
+  stage.classList.add('shake');
+  setTimeout(() => stage.classList.remove('shake'), 600);
 }
 
 /* ─── STORY ─────────────────────────────────────
@@ -971,19 +1056,43 @@ const STORY = {
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Sam',col:'#e8923a',text:'Most people look at their phones. They don\'t... see.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {scene:'glitch',label:'???',
+    {speaker:'Yasmin',col:'#e5758f',text:'I\'ve always been like that. Noticing things nobody else bothers with.',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'Or maybe you live in the world more than most.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {narration:'I look down at my phone. 100%. It was 3% when I walked in.',
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'My phone — it was dying when I came in. It\'s... fully charged.',
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'The cafe takes care of things it wants to keep.',
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {scene:'glitch',label:'???',shake:true,
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'Okay, THAT I definitely saw. What is happening to this place?',
+    {speaker:'Yasmin',col:'#e5758f',text:'Okay, THAT I definitely saw. What is happening to this place?',glitch:true,
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Sam',col:'#e8923a',text:'This cafe exists at the edge of things. Where the world gets thin.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Yasmin',col:'#e5758f',text:'The edge of things. Right. Completely normal information.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
-    {narration:'The walls hum. Something ancient and electric stirs in the walls — like the cafe itself is listening.',
+    {speaker:'Sam',col:'#e8923a',text:'You\'re the first person who didn\'t run.',glitch:true,
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
+    {narration:'The walls hum. Something ancient and electric stirs — like the cafe itself is listening.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
     {oracle:true},
     {scene:'cafe-int',label:'Inside the Cafe',
-     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'You talked to it.',
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'What WAS that?',
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'The cafe. It\'s been here a long time. Alone, mostly.',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'And you? How long have YOU been here?',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'Long enough to forget what outside smells like.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {narration:'Something about the way he says it makes my chest ache.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
     {narration:'He steps closer. The glitch fades. The room is warm again.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Sam',col:'#e8923a',
@@ -996,36 +1105,73 @@ const STORY = {
   ],
 
   'path-a':[
-    {speaker:'Sam',col:'#e8923a',text:'For someone who notices. Who sees the world the way it actually is.'},
-    {speaker:'Yasmin',col:'#e5758f',text:'That\'s either the most romantic or the most terrifying thing I\'ve ever heard.',sfx:'hearts'},
-    {speaker:'Sam',col:'#e8923a',text:'Why not both?',sfx:'hearts'},
-    {narration:'He sets two fresh coffees on the counter between us. From nowhere.'},
-    {speaker:'Sam',col:'#e8923a',text:'Stay a while. The glitches are better with company.'},
-    {narration:'I should have left hours ago.'},
-    {narration:'I pull up a chair. The chair stays.'},
+    {speaker:'Sam',col:'#e8923a',text:'For someone who notices. Who sees the world the way it actually is.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'That\'s either the most romantic or the most terrifying thing I\'ve ever heard.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}],sfx:'hearts'},
+    {speaker:'Sam',col:'#e8923a',text:'Why not both?',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}],sfx:'hearts'},
+    {speaker:'Sam',col:'#e8923a',text:'I used to think I was just good at making coffee. Then the first chair disappeared.',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'How long ago was that?',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'I stopped counting. But the coffee\'s still warm.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {narration:'He smiles. The kind of smile that takes practice to hide behind.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {narration:'He sets two fresh coffees on the counter between us. From nowhere.',
+     chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'Stay a while. The glitches are better with company.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {narration:'I should have left hours ago.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {narration:'I pull up a chair. The chair stays.',
+     chars:[{id:'yasmin',expr:'happy',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
     {scene:'ending-warm',label:'Dawn',chapter:{num:'Ending A',title:'The Right Kind of Lost'},
      chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
-    {narration:'Some places only exist for the right moment.'},
-    {narration:'And some moments are worth getting lost for.'},
+    {narration:'The sun comes up. Neither of us mentions it.',
+     chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
+    {narration:'Some places only exist for the right moment.',
+     chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
+    {narration:'And some moments are worth getting lost for.',
+     chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
     {end:true,good:true}
   ],
 
   'path-b':[
-    {speaker:'Yasmin',col:'#e5758f',text:'I— the time— it\'s really late, and this is all a little...'},
-    {speaker:'Sam',col:'#e8923a',text:'I know.'},
-    {narration:'Something shifts in his expression. Something old.'},
-    {speaker:'Sam',col:'#e8923a',text:'But you\'ll come back.'},
-    {speaker:'Yasmin',col:'#e5758f',text:'How can you be so sure?'},
-    {speaker:'Sam',col:'#e8923a',text:'Because you noticed the glitches.'},
-    {narration:'I walk out into the night.',scene:'cafe-ext',label:'Street · 2:00 AM',
+    {speaker:'Yasmin',col:'#e5758f',text:'I— the time— it\'s really late, and this is all a little...',
+     chars:[{id:'yasmin',expr:'sad',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'I know.',
+     chars:[{id:'yasmin',expr:'sad',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {narration:'Something shifts in his expression. Something old.',
+     chars:[{id:'yasmin',expr:'sad',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'But you\'ll come back.',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'How can you be so sure?',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'Because you noticed the glitches.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {narration:'I take three steps toward the door. Then stop.',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'...Do you get lonely?',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'Sometimes. But not tonight.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {narration:'I write my number on a napkin. He doesn\'t pick it up.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'In case you ever want company. For the glitches.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {scene:'cafe-ext',label:'Street · 2:00 AM',
      chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
+    {narration:'I walk out into the night.',chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
     {narration:'I turn back to look.',chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
     {scene:'ending-dark',label:'Street · 2:01 AM',chapter:{num:'Ending B',title:'The Cafe That Wasn\'t'},
      chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
     {narration:'The cafe is gone. No door. No sign. No warm amber light.',chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
     {narration:'There was no Sam\'s Glitched Cafe on any map.',chars:[{id:'yasmin',expr:'sad',h:'72vh',pos:'center'}]},
-    {narration:'But for years after, on some late nights, she swore she could smell coffee.',chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
-    {narration:'And smile.',chars:[{id:'yasmin',expr:'blush',h:'72vh',pos:'center'}]},
+    {narration:'But the napkin was still in her hand. And it smelled like coffee.',chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
+    {narration:'For years after, on some late nights, she swore she could smell it again.',chars:[{id:'yasmin',expr:'blush',h:'72vh',pos:'center'}]},
+    {narration:'And she\'d smile.',chars:[{id:'yasmin',expr:'blush',h:'72vh',pos:'center'}]},
     {end:true,good:false}
   ]
 };
@@ -1186,7 +1332,8 @@ function showChoices(opts){
   const btns=choices.querySelectorAll('.c-btn');
   opts.forEach((o,i)=>{btns[i].textContent=o.text;btns[i].dataset.path=o.path;btns[i].style.display='';});
   for(let i=opts.length;i<btns.length;i++) btns[i].style.display='none';
-  choices.className='';
+  choices.className='hidden'; /* reset to re-trigger CSS animation */
+  requestAnimationFrame(()=>{ choices.className=''; });
 }
 
 async function showEnd(good){
@@ -1243,6 +1390,7 @@ async function playBeat(beat){
   }
 
   if(beat.sfx==='hearts') spawnHearts();
+  if(beat.shake) shakeScreen();
 
   /* ORACLE — AI interactive moment */
   if(beat.oracle){
@@ -1279,10 +1427,16 @@ async function playBeat(beat){
   /* CHARACTER DIALOGUE */
   if(beat.text){
     dlgPanel.className='dlg-panel';
+    /* animate name plate only when speaker changes */
+    if(namePlate.textContent !== beat.speaker){
+      namePlate.classList.remove('fresh');
+      void namePlate.offsetWidth;
+      namePlate.classList.add('fresh');
+    }
     namePlate.textContent=beat.speaker;
-    namePlate.className='';
+    namePlate.className='fresh';
     namePlate.style.background=beat.col||'var(--caramel)';
-    dlgText.className='';
+    dlgText.className=beat.glitch?'glitch-mode':'';
     setSpeakerState(beat.speaker, beat.chars);
     await typeText(beat.text);
     blocked=false;waitInput=true;return;
