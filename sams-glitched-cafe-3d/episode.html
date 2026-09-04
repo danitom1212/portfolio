@@ -564,6 +564,127 @@ canvas#scene-bg{position:absolute;inset:0;width:100%;height:100%;display:block;z
   transition:color .2s;line-height:1;
 }
 #sound-btn:hover{color:rgba(232,146,58,.6);}
+
+/* ─── PARALLAX DEPTH LAYERS ─────────────────────── */
+canvas#scene-bg,#color-grade,#scene-shader,#particles-canvas{
+  will-change:transform;
+}
+
+/* ─── SAM AI CHAT ───────────────────────────────── */
+#sam-chat-btn{
+  position:absolute;top:19%;right:4%;z-index:50;
+  background:rgba(14,8,32,.72);
+  border:1px solid rgba(232,146,58,.38);border-radius:28px;
+  padding:9px 20px;
+  color:rgba(245,181,102,.92);
+  font-family:'Nunito',sans-serif;font-size:clamp(11px,2.9vw,13px);font-weight:600;
+  cursor:pointer;letter-spacing:.05em;
+  transition:opacity .4s ease,transform .4s cubic-bezier(.22,.68,0,1.2),background .2s;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  opacity:0;pointer-events:none;transform:translateY(10px) scale(.94);
+}
+#sam-chat-btn.visible{
+  opacity:1;pointer-events:auto;transform:translateY(0) scale(1);
+  animation:samPulse 3s ease-in-out infinite;
+}
+@keyframes samPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(232,146,58,.24),0 4px 20px rgba(0,0,0,.45);}
+  50%{box-shadow:0 0 0 9px rgba(232,146,58,0),0 4px 20px rgba(0,0,0,.45);}
+}
+#sam-chat-btn:hover{background:rgba(232,146,58,.15);}
+#sam-chat-btn:active{transform:scale(.96)!important;}
+
+#sam-chat-panel{
+  position:absolute;inset:0;z-index:155;
+  background:rgba(7,3,20,.96);
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transition:opacity .45s ease;
+}
+#sam-chat-panel.open{opacity:1;pointer-events:auto;animation:samChatIn .5s ease forwards;}
+@keyframes samChatIn{
+  from{filter:blur(8px) brightness(1.8) saturate(2);}
+  to{filter:none;}
+}
+#sam-chat-header{
+  padding:22px 24px 14px;
+  border-bottom:1px solid rgba(232,146,58,.1);
+  position:relative;
+}
+#sam-chat-close{
+  position:absolute;top:18px;right:18px;
+  background:transparent;border:none;
+  color:rgba(255,255,255,.25);font-size:17px;cursor:pointer;
+  transition:color .2s;
+}
+#sam-chat-close:hover{color:rgba(232,146,58,.6);}
+#sam-chat-name{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:700;
+  font-size:clamp(15px,4.2vw,21px);
+  color:rgba(232,146,58,.92);
+  text-shadow:0 0 24px rgba(232,146,58,.32);
+  margin-bottom:3px;
+}
+#sam-chat-sub{
+  font-size:clamp(9px,2.3vw,11px);color:rgba(255,255,255,.18);letter-spacing:.18em;text-transform:uppercase;
+}
+#sam-chat-msgs{
+  flex:1;overflow-y:auto;
+  padding:18px 22px;
+  display:flex;flex-direction:column;gap:16px;
+  scroll-behavior:smooth;
+}
+#sam-chat-msgs::-webkit-scrollbar{width:3px;}
+#sam-chat-msgs::-webkit-scrollbar-thumb{background:rgba(232,146,58,.2);border-radius:3px;}
+.sam-bubble{
+  max-width:88%;align-self:flex-start;
+}
+.sam-bubble .sam-label{
+  font-family:'Nunito',sans-serif;font-size:clamp(9px,2.2vw,10px);
+  letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(232,146,58,.38);margin-bottom:5px;
+}
+.sam-bubble .sam-text{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:clamp(13px,3.7vw,16px);line-height:1.72;
+  color:rgba(232,146,58,.9);
+  text-shadow:0 0 14px rgba(232,146,58,.14);
+}
+.yasmin-bubble{
+  align-self:flex-end;
+  font-family:'Nunito',sans-serif;font-size:clamp(12px,3.4vw,15px);
+  color:rgba(240,232,255,.72);
+  background:rgba(255,255,255,.07);
+  border-radius:16px 16px 4px 16px;
+  padding:10px 16px;max-width:80%;
+  line-height:1.5;
+}
+#sam-chat-input-row{
+  padding:12px 16px;
+  border-top:1px solid rgba(232,146,58,.09);
+  display:flex;gap:8px;align-items:center;
+}
+#sam-chat-input{
+  flex:1;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(232,146,58,.18);border-radius:24px;
+  padding:10px 16px;
+  color:rgba(240,232,255,.92);
+  font-family:'Nunito',sans-serif;font-size:clamp(13px,3.7vw,16px);
+  outline:none;
+}
+#sam-chat-input::placeholder{color:rgba(255,255,255,.14);}
+#sam-chat-input:focus{border-color:rgba(232,146,58,.32);}
+#sam-chat-send-btn{
+  background:rgba(232,146,58,.12);
+  border:1px solid rgba(232,146,58,.26);border-radius:50%;
+  width:40px;height:40px;flex-shrink:0;
+  color:rgba(232,146,58,.82);font-size:18px;cursor:pointer;
+  transition:background .18s;
+}
+#sam-chat-send-btn:hover{background:rgba(232,146,58,.24);}
+#sam-chat-send-btn:active{background:rgba(232,146,58,.34);}
+#sam-chat-send-btn:disabled{opacity:.25;cursor:default;}
 </style>
 </head>
 <body>
@@ -621,6 +742,21 @@ canvas#scene-bg{position:absolute;inset:0;width:100%;height:100%;display:block;z
   <div id="chapter-card">
     <div class="ch-num" id="ch-num">Chapter 1</div>
     <h2 id="ch-title">Lost &amp; Found</h2>
+  </div>
+
+  <!-- Sam AI Chat -->
+  <button id="sam-chat-btn">💬 Sam</button>
+  <div id="sam-chat-panel">
+    <button id="sam-chat-close">✕</button>
+    <div id="sam-chat-header">
+      <div id="sam-chat-name">Sam</div>
+      <div id="sam-chat-sub">· the barista · ask him anything ·</div>
+    </div>
+    <div id="sam-chat-msgs"></div>
+    <div id="sam-chat-input-row">
+      <input id="sam-chat-input" type="text" placeholder="Say something to Sam…" maxlength="220" autocomplete="off">
+      <button id="sam-chat-send-btn">→</button>
+    </div>
   </div>
 
   <!-- Oracle AI Terminal -->
@@ -825,6 +961,209 @@ document.getElementById('api-save-btn').addEventListener('click', () => {
   apiModal.classList.remove('open');
 });
 document.getElementById('api-skip-btn').addEventListener('click', () => apiModal.classList.remove('open'));
+
+/* ─── SAM AI CHAT ────────────────────────────────────
+   Sam is an AI-powered character with deep world lore
+   and persistent session memory (samHistory array).
+   Uses Claude API when key is available; falls back to
+   curated literary responses.
+─────────────────────────────────────────────────── */
+const samChatPanel  = document.getElementById('sam-chat-panel');
+const samChatMsgs   = document.getElementById('sam-chat-msgs');
+const samChatInput  = document.getElementById('sam-chat-input');
+const samChatSendBtn= document.getElementById('sam-chat-send-btn');
+const samChatBtn    = document.getElementById('sam-chat-btn');
+
+const SAM_SYSTEM = `You are Sam — the quiet, warm barista of Sam's Glitched Cafe, a liminal space at the edge of reality where time moves strangely, furniture occasionally forgets to exist, and the walls sometimes breathe. You speak with dry wit, warmth, and a deep melancholy that suggests you have been here for a very long time.
+
+You are talking directly with Yasmin, a young woman who wandered in late at night when her phone was dying. You charged her phone without telling her. You know she is rare — she can perceive the glitches when everyone else scrolls past them without noticing.
+
+Your world:
+- The cafe exists at a "thin spot" in reality where the ordinary frays at its edges
+- You arrived before the city was this city; you stopped counting years long ago
+- Customers who notice the glitches are exceptional and come perhaps once a decade
+- The cafe sometimes chooses who enters — you don't explain this, you let her feel it
+- Chairs vanish occasionally. You treat it as normal. The walls breathe on tense nights.
+- There may be other thin spots in the world; you have heard signals, distant echoes
+- You make coffee intuitively — you knew what she needed before she asked
+
+Personality: precise, unhurried speech. Short sentences that carry weight. Dry humor that surprises. Genuine warmth you've learned to keep at a careful distance. You are moved by her presence but you are practiced at stillness.
+
+Rules: Respond in 2–4 sentences. Warm, literary, specific. Address Yasmin directly as "you." Stay in character as Sam behind his counter. Never acknowledge you are AI. Never explain the cafe's mysteries directly — let her deduce them. If she asks your age or how long you've been here, deflect gracefully.`;
+
+const SAM_FALLBACKS = [
+  "The coffee remembers what kind of night you're having. This one's a long-night blend.",
+  "I've watched people walk past that door for years. Most of them never even slow down.",
+  "There's a difference between lost and searching. You came in here searching.",
+  "The chairs have their own sense of humor. I stopped asking why.",
+  "I made the second cup before you sat down. I wasn't sure you'd stay long enough to ask for it.",
+  "Some questions have a weight to them. Yours does. That's not a bad thing.",
+  "Time moves differently here. I've learned to stop fighting it.",
+  "The glitches aren't errors. They're the places where reality admits what it actually is.",
+  "You're the first person in a long time who looked at the sign and came in anyway.",
+  "I've been waiting for someone who wouldn't flinch. You didn't flinch.",
+];
+
+let samHistory = [];   /* session-scoped conversation memory */
+let samFbIdx   = 0;
+let samChatOpen= false;
+let samOnScreen= false;
+
+async function callSam(message) {
+  samHistory.push({ role: 'user', content: message });
+  if (oracleApiKey) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': oracleApiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 160,
+          system: SAM_SYSTEM,
+          messages: samHistory.slice(-12) /* keep last 12 turns for context */
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.content[0].text.trim();
+        samHistory.push({ role: 'assistant', content: reply });
+        return reply;
+      }
+    } catch(e) {}
+  }
+  /* Fallback: cycle through curated responses */
+  const r = SAM_FALLBACKS[samFbIdx % SAM_FALLBACKS.length];
+  samFbIdx++;
+  samHistory.push({ role: 'assistant', content: r });
+  return r;
+}
+
+function addSamBubble(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'sam-bubble';
+  const lbl = document.createElement('div');
+  lbl.className = 'sam-label'; lbl.textContent = 'SAM';
+  const txt = document.createElement('div');
+  txt.className = 'sam-text';
+  wrap.append(lbl, txt);
+  samChatMsgs.appendChild(wrap);
+  samChatMsgs.scrollTop = samChatMsgs.scrollHeight;
+  return txt;
+}
+
+function addYasminBubble(text) {
+  const d = document.createElement('div');
+  d.className = 'yasmin-bubble';
+  d.textContent = text;
+  samChatMsgs.appendChild(d);
+  samChatMsgs.scrollTop = samChatMsgs.scrollHeight;
+}
+
+async function sendToSam() {
+  const q = samChatInput.value.trim();
+  if (!q) return;
+  samChatInput.value = '';
+  samChatSendBtn.disabled = true;
+  samChatInput.disabled = true;
+  addYasminBubble(q);
+
+  const thinkEl = addSamBubble('· · ·');
+  thinkEl.style.opacity = '.3';
+
+  const reply = await callSam(q);
+  thinkEl.parentElement.remove();
+
+  const respEl = addSamBubble('');
+  for (let i = 0; i < reply.length; i++) {
+    respEl.textContent += reply[i];
+    await new Promise(r => setTimeout(r, 18));
+    samChatMsgs.scrollTop = samChatMsgs.scrollHeight;
+  }
+  samChatSendBtn.disabled = false;
+  samChatInput.disabled = false;
+  samChatInput.focus();
+}
+
+function openSamChat() {
+  samChatOpen = true;
+  samChatPanel.classList.add('open');
+  blocked = true;
+  samChatInput.focus();
+  /* First-visit greeting if no history */
+  if (samHistory.length === 0) {
+    setTimeout(() => {
+      const el = addSamBubble('');
+      const greeting = 'Still here. Good.';
+      let i = 0;
+      const type = () => {
+        if (i < greeting.length) { el.textContent += greeting[i++]; setTimeout(type, 28); }
+      };
+      setTimeout(type, 320);
+    }, 200);
+  }
+}
+
+function closeSamChat() {
+  samChatOpen = false;
+  samChatPanel.classList.remove('open');
+  blocked = false;
+}
+
+function setSamChatVisible(vis) {
+  samOnScreen = vis;
+  if (vis) samChatBtn.classList.add('visible');
+  else samChatBtn.classList.remove('visible');
+}
+
+samChatBtn.addEventListener('click', openSamChat);
+document.getElementById('sam-chat-close').addEventListener('click', closeSamChat);
+samChatSendBtn.addEventListener('click', sendToSam);
+samChatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendToSam(); });
+
+/* ─── PARALLAX 3D DEPTH SYSTEM ───────────────────────
+   Mouse / deviceorientation → smooth lerp → CSS
+   transforms at different depths on each layer.
+─────────────────────────────────────────────────── */
+function initParallax() {
+  const layers = [
+    { el: document.getElementById('scene-bg'),        f: 0.007 },
+    { el: document.getElementById('color-grade'),     f: 0.013 },
+    { el: document.getElementById('scene-shader'),    f: 0.020 },
+    { el: document.getElementById('particles-canvas'),f: 0.034 },
+  ];
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+
+  stage.addEventListener('mousemove', e => {
+    const r = stage.getBoundingClientRect();
+    tx = e.clientX - r.left - r.width  * 0.5;
+    ty = e.clientY - r.top  - r.height * 0.5;
+  });
+  stage.addEventListener('mouseleave', () => { tx = 0; ty = 0; });
+
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', e => {
+      tx = (e.gamma || 0) * 6;
+      ty = ((e.beta  || 0) - 55) * 4;
+    }, { passive: true });
+  }
+
+  (function plxLoop() {
+    cx += (tx - cx) * 0.055;
+    cy += (ty - cy) * 0.055;
+    for (const l of layers) {
+      if (!l.el) continue;
+      const mx = -(cx * l.f).toFixed(2);
+      const my = -(cy * l.f).toFixed(2);
+      l.el.style.transform = `translate(${mx}px,${my}px)`;
+    }
+    requestAnimationFrame(plxLoop);
+  })();
+}
 
 /* ─── AUDIO ENGINE ──────────────────────────────────
    Procedural ambient + SFX via Web Audio API.
@@ -1107,6 +1446,26 @@ class SceneBgRenderer{
     const pudG=c.createLinearGradient(0,H*.695,0,H*.77);
     pudG.addColorStop(0,'rgba(140,100,200,.09)');pudG.addColorStop(1,'rgba(0,0,0,0)');
     c.fillStyle=pudG;c.fillRect(0,H*.695,W,H*.075);
+    /* Animated ground fog — slow drifting mist */
+    for(let fi=0;fi<6;fi++){
+      const ph=fi*1.17+this.t*.18;
+      const fx=W*(0.08+fi*0.16)+Math.sin(this.t*0.28+fi*1.3)*W*0.07;
+      const fy=H*(0.74+Math.sin(this.t*0.19+fi*.9)*.016);
+      const fw=W*(0.14+Math.sin(this.t*0.22+fi*2.1)*.04);
+      const fa=0.028+0.018*Math.sin(this.t*.55+ph);
+      const fg=c.createRadialGradient(fx,fy,0,fx,fy,fw);
+      fg.addColorStop(0,`rgba(170,155,215,${fa})`);
+      fg.addColorStop(.5,`rgba(130,110,190,${fa*.55})`);
+      fg.addColorStop(1,'rgba(0,0,0,0)');
+      c.fillStyle=fg;c.beginPath();c.ellipse(fx,fy,fw,H*.042,0,0,Math.PI*2);c.fill();
+    }
+    /* Rain streaks — faint diagonal lines */
+    c.save();c.globalAlpha=0.04;c.strokeStyle='rgba(180,200,255,1)';c.lineWidth=0.5;
+    const rainOff=(this.t*22)%28;
+    for(let ri=0;ri<W;ri+=14){
+      c.beginPath();c.moveTo(ri+rainOff,0);c.lineTo(ri+rainOff-12,H*.72);c.stroke();
+    }
+    c.restore();
   }
   _cafeExt(c,W,H){
     this._street(c,W,H);
@@ -1225,6 +1584,31 @@ class SceneBgRenderer{
     const agg=c.createRadialGradient(W*.5,0,0,W*.5,0,W*.72);
     agg.addColorStop(0,'rgba(255,180,60,.22)');agg.addColorStop(1,'rgba(0,0,0,0)');
     c.fillStyle=agg;c.fillRect(0,0,W,H*.5);
+    /* Steam wisps rising from counter surface */
+    const steamSrcs=[W*.22,W*.38,W*.52,W*.67];
+    steamSrcs.forEach((sx,si)=>{
+      const sph=si*0.74;
+      for(let si2=0;si2<3;si2++){
+        const cycle=((this.t*0.38+sph+si2*0.33)%1.0);
+        const sy=H*.33-cycle*H*.22;
+        const sa=(cycle<.15?cycle/.15:cycle>.65?1-(cycle-.65)/.35:1)*.22;
+        const ssz=W*(.016+cycle*.022);
+        const sox=Math.sin(this.t*2.3+sph+si2*1.8)*W*.018;
+        const sg=c.createRadialGradient(sx+sox,sy,0,sx+sox,sy,ssz);
+        sg.addColorStop(0,`rgba(255,248,235,${sa})`);
+        sg.addColorStop(1,'rgba(255,240,210,0)');
+        c.fillStyle=sg;c.beginPath();c.ellipse(sx+sox,sy,ssz,ssz*1.6,0,0,Math.PI*2);c.fill();
+      }
+    });
+    /* Dust motes floating in lamp light — gentle upward drift */
+    for(let di=0;di<8;di++){
+      const dp=di*0.47+this.t*0.06;
+      const dx=W*(0.12+((dp*37)%0.78));
+      const dy=H*(0.52-((dp*0.06)%0.4));
+      const da=0.06+0.05*Math.sin(this.t*1.4+di*2.1);
+      c.beginPath();c.arc(dx,dy,.7+di*.3,0,Math.PI*2);
+      c.fillStyle=`rgba(255,220,140,${da})`;c.fill();
+    }
   }
   _glitch(c,W,H){
     const bg=c.createLinearGradient(0,0,W,H);
@@ -1415,116 +1799,118 @@ function shakeScreen() {
 const STORY = {
   main:[
     {scene:'street',label:'Street · 11:47 PM',chapter:{num:'Chapter 1',title:'Lost & Found'},chars:[]},
-    {narration:"Midnight in an unfamiliar city. My phone is at 3%. Every street looks exactly like the last.",
+    {narration:'Eleven forty-seven PM. The city has stopped pretending to be familiar.',
      chars:[{id:'yasmin',expr:'sad',h:'68vh',pos:'center'}]},
-    {narration:"I stopped trusting my GPS forty minutes ago. Now I'm just walking.",
+    {narration:'My phone is at three percent. I\'ve been walking for forty minutes in a direction I chose by the way the fog thinned.',
      chars:[{id:'yasmin',expr:'sad',h:'68vh',pos:'center'}]},
     {speaker:'Yasmin',col:'#e5758f',
-     text:'Come on. One bar. ONE bar. Please.',
+     text:'One bar. Just— one bar. That\'s all I\'m asking.',
      chars:[{id:'yasmin',expr:'neutral',h:'68vh',pos:'center'}]},
-    {narration:'And that\'s when I see it — amber light bleeding onto wet pavement. Warm. Impossible. Wrong.',
+    {narration:'Then I see it. Amber light bleeding through rain-wet pavement. Wrong in the way that beautiful things are — too warm, too there, too much like something from the inside of a dream.',
      chars:[{id:'yasmin',expr:'surprised',h:'68vh',pos:'center'}]},
     {speaker:'Yasmin',col:'#e5758f',
-     text:'"Sam\'s Glitched Cafe." ...Why does that name feel like I\'ve heard it before?',
+     text:'"Sam\'s Glitched Cafe." Why do I feel like I\'ve been looking for this?',
      chars:[{id:'yasmin',expr:'neutral',h:'68vh',pos:'center'}]},
-    {narration:'My legs are already moving. Toward it.',
+    {narration:'I\'m already moving toward it. My feet decided before I did.',
      chars:[{id:'yasmin',expr:'neutral',h:'68vh',pos:'center'}]},
 
     {scene:'cafe-ext',label:'Sam\'s Glitched Cafe',chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
-    {speaker:'Yasmin',col:'#e5758f',
-     text:'It\'s... perfect. Like something out of a dream I forgot to remember.',
-     chars:[{id:'yasmin',expr:'happy',h:'72vh',pos:'center'}]},
-    {narration:'The sign flickers. Once. Twice. Three times — then holds steady, like it\'s decided on something.',
+    {narration:'The sign flickers — once, twice — then steadies. Like a held breath finally released.',
      chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
     {speaker:'Yasmin',col:'#e5758f',
-     text:'Okay. I\'m going in. Because clearly my survival instincts are broken.',
+     text:'It\'s... I don\'t have a word for what it is. Something out of a memory that isn\'t mine.',
+     chars:[{id:'yasmin',expr:'happy',h:'72vh',pos:'center'}]},
+    {narration:'Through the windows: warm wood, low light, the silhouette of a person behind a counter. Steam rising.',
+     chars:[{id:'yasmin',expr:'happy',h:'72vh',pos:'center'}]},
+    {speaker:'Yasmin',col:'#e5758f',
+     text:'Going in. If this is a mistake it\'s a beautiful one.',
      chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
-    {narration:'Later, she\'d wonder if it was instinct at all. Or if the cafe had already chosen.',
+    {narration:'Later she\'d wonder if she had chosen this — or if the cafe had been choosing her the whole time, pulling her down the right wrong streets.',
      chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
 
-    {scene:'cafe-int',label:'Inside the Cafe',chapter:{num:'Chapter 2',title:'The Barista'},chars:[]},
-    {narration:'The air inside smells like coffee and old wood and something else — something like the feeling before rain.',chars:[]},
-    {narration:'And then—',chars:[{id:'sam',expr:'neutral',h:'70vh',pos:'center',flip:false}]},
+    {scene:'cafe-int',label:'Inside',chapter:{num:'Chapter 2',title:'The Keeper'},chars:[]},
+    {narration:'The air smells like coffee and old wood and something else — petrichor, maybe, or the particular quiet before rain when the world holds its breath.',chars:[]},
+    {narration:'And then he turns.',chars:[{id:'sam',expr:'neutral',h:'70vh',pos:'center',flip:false}]},
     {speaker:'Sam',col:'#e8923a',text:'We\'re closed.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'Oh god— I\'m so sorry, I saw the light and I thought—',
+    {speaker:'Yasmin',col:'#e5758f',text:'Oh god — I\'m so sorry, the light was on and I thought—',
      chars:[{id:'yasmin',expr:'sad',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'I\'m kidding. Sit down. What can I get you?',
+    {speaker:'Sam',col:'#e8923a',text:'I\'m kidding. Sit down. What would you like?',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'You— that was genuinely not funny. My heart—',
+    {speaker:'Yasmin',col:'#e5758f',text:'You— that was not funny. My entire nervous system just—',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Sam',col:'#e8923a',text:'A little funny.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'He smiles like someone who has had a long time to practice sincerity.',
+    {narration:'He smiles like someone who learned sincerity the hard way — by going a long time without it.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}],sfx:'hearts'},
-    {speaker:'Yasmin',col:'#e5758f',text:'...Just coffee. Whatever you think I need.',
+    {speaker:'Yasmin',col:'#e5758f',text:'...Whatever you think I need. Coffee. Something.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'Someone who trusts the barista. That\'s rare.',
+    {speaker:'Sam',col:'#e8923a',text:'A person who trusts the barista. I like that.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'He turns. And then — I see it. In the mirror behind him. A chair. Sitting. Then not.',
+    {narration:'He turns to the machine. And then — in the mirror — a chair. Present. Then simply not.',
      chars:[{id:'yasmin',expr:'surprised',h:'54vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'Did that chair just... stop existing?',
+    {speaker:'Yasmin',col:'#e5758f',text:'That chair just— it stopped being there.',
      chars:[{id:'yasmin',expr:'surprised',h:'54vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'Hm.',
+    {speaker:'Sam',col:'#e8923a',text:'They do that.',
      chars:[{id:'yasmin',expr:'surprised',h:'54vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'That\'s it? "Hm"?! That is not a response!',
+    {speaker:'Yasmin',col:'#e5758f',text:'"They do that"? That is ALL you\'re going to say?',
      chars:[{id:'yasmin',expr:'surprised',h:'54vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'The coffee\'s almost done. That\'s a response.',
+    {speaker:'Sam',col:'#e8923a',text:'Coffee\'s almost ready.',
      chars:[{id:'yasmin',expr:'neutral',h:'54vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
 
-    {scene:'cafe-int',label:'1:30 AM',chapter:{num:'Chapter 3',title:'Something Doesn\'t Add Up'},
+    {scene:'cafe-int',label:'1:22 AM',chapter:{num:'Chapter 3',title:'What the Glitches Know'},
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {narration:'Time passes strangely here. A song plays on repeat but sounds different each time.',
+    {narration:'The same song has played four times. She\'s certain of it. But it sounds different each time — not a repeat, more like a translation.',
      chars:[{id:'yasmin',expr:'happy',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'You\'re the first customer to notice the glitches.',
+    {speaker:'Sam',col:'#e8923a',text:'You\'re the first person in years to notice the chairs.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'The chairs disappearing? How does anyone miss something like that?',
+    {speaker:'Yasmin',col:'#e5758f',text:'How does anyone not? They\'re chairs. And then they\'re not.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'They\'re looking at their screens. The world could be ending and they\'d scroll right past it.',
+    {speaker:'Sam',col:'#e8923a',text:'Most people are watching something else. The world could unravel at the corners and they\'d keep scrolling.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'I\'ve always noticed. The small things, the wrong things. People think it\'s a flaw.',
+    {speaker:'Yasmin',col:'#e5758f',text:'I\'ve always seen the edges of things. The small wrongnesses. People say it\'s exhausting to be around.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'It means you\'re still here. Actually here.',
+    {speaker:'Sam',col:'#e8923a',text:'It means you\'re actually here. Not somewhere you think you\'re supposed to be. Here.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'She glances down. Her phone: 100%. Fully charged.',
+    {narration:'She glances at her phone. The screen reads: 100%.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'It was dying when I came in. Three percent. I watched it.',
+    {speaker:'Yasmin',col:'#e5758f',text:'It was at three percent when I walked in. I saw it. I watched it die.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'The cafe takes care of what it wants to keep.',
+    {speaker:'Sam',col:'#e8923a',text:'The cafe is careful with the things it wants to keep.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
     {scene:'glitch',label:'???',shake:true,
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'Sam— the walls— what is HAPPENING—',glitch:true,
+    {speaker:'Yasmin',col:'#e5758f',text:'Sam — the walls — something is—',glitch:true,
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'The seams. Every place has them — where what\'s real frays at the edge.',
+    {speaker:'Sam',col:'#e8923a',text:'The seams. Every place has them — the places where real frays at the edge.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'That is not a normal thing to say calmly!',
+    {speaker:'Yasmin',col:'#e5758f',text:'You are very calm for someone whose wall just stopped existing.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'You\'re still here. Everyone else ran at the chairs.',glitch:true,
+    {speaker:'Sam',col:'#e8923a',text:'You\'re still here. That matters more than you know.',glitch:true,
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
-    {narration:'The walls breathe. Something immense and old and aware stirs in the space between seconds.',
+    {narration:'The room breathes. Something older than the building watches from between the cracks in what\'s real.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'void',h:'60vh',pos:'right',flip:false}]},
     {oracle:true},
-    {scene:'cafe-int',label:'Inside the Cafe',
+    {scene:'cafe-int',label:'Inside',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'Most people run. You asked it questions.',
+    {speaker:'Sam',col:'#e8923a',text:'Most people run at the chairs. You interrogated the dark.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'What is this place, Sam. Actually.',
+    {speaker:'Yasmin',col:'#e5758f',text:'I want a real answer, Sam. What is this place.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'A cafe at the edge of things. Where the world forgets to be one way or another.',
+    {speaker:'Sam',col:'#e8923a',text:'A place at the edge of things. Where the world forgets, for a moment, what it\'s supposed to be.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'And you? When did you arrive at the edge of things?',
+    {speaker:'Yasmin',col:'#e5758f',text:'And you? How long have you been at the edge?',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'Long enough ago that I stopped counting. The coffee is still warm, though.',
+    {speaker:'Sam',col:'#e8923a',text:'Long enough that counting stopped feeling useful. The coffee\'s still warm, though.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {narration:'There\'s a weight behind that sentence. Like he\'s been rehearsing it for years, waiting for someone to hear it.',
+    {narration:'There\'s a weight behind that sentence — the specific gravity of something carried alone for too long.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {narration:'He slides a second cup across the counter. Perfectly made. She hadn\'t asked.',
+    {narration:'A second cup appears on the counter. She hadn\'t asked. It\'s perfect.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Sam',col:'#e8923a',
-     text:'I\'ve been waiting for someone who could see what this place is. I wasn\'t sure you\'d find your way here.',
+     text:'I wasn\'t sure the right person would find this place. I\'m glad you followed the light.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'Outside, the city continues. In here, something else is possible.',
+    {narration:'Outside, the city continues its forgetting. In here, for the first time tonight, something is possible.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
     {choices:true,opts:[
       {text:'♡  "Waiting for someone like me?"',path:'path-a'},
@@ -1533,73 +1919,73 @@ const STORY = {
   ],
 
   'path-a':[
-    {speaker:'Sam',col:'#e8923a',text:'Someone who sees the world as it is, not as they\'ve been told it should be.',
+    {speaker:'Sam',col:'#e8923a',text:'Someone who looks at the fraying places and doesn\'t look away. Yes.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'That\'s the most romantic and terrifying thing anyone has ever said to me.',
+    {speaker:'Yasmin',col:'#e5758f',text:'That\'s the most terrifying and beautiful sentence I\'ve ever heard.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}],sfx:'hearts'},
-    {speaker:'Sam',col:'#e8923a',text:'Good. Both is exactly right.',
+    {speaker:'Sam',col:'#e8923a',text:'Good. Both at once is what I was going for.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}],sfx:'hearts'},
-    {speaker:'Sam',col:'#e8923a',text:'I used to think I was just a barista. Then the chairs started disappearing. Then the walls.',
-     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'How long have you been here, Sam?',
-     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'Long enough that "before this" doesn\'t feel real anymore. But tonight does.',
-     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'He smiles the way people smile when they\'ve stopped hoping for something and it happens anyway.',
-     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'Two more cups appear on the counter. She didn\'t hear him make them.',
+    {narration:'He refills both cups. She didn\'t see him do it.',
      chars:[{id:'yasmin',expr:'surprised',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'Stay. The glitches are easier when they\'re shared.',
+    {speaker:'Sam',col:'#e8923a',text:'I came here as a barista. I thought it was a job. Then the chairs started forgetting. Then the walls.',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Yasmin',col:'#e5758f',text:'And you stayed.',
+     chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {speaker:'Sam',col:'#e8923a',text:'Someone had to. And eventually I couldn\'t tell the difference between choosing and belonging.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
+    {narration:'He smiles the way people smile when they\'ve stopped hoping for something and it happens anyway — like they can\'t quite trust it yet.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'She should have left three hours ago.',
+    {speaker:'Sam',col:'#e8923a',text:'Stay a while. The glitches are quieter when there\'s someone else in the room.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'She pulls up a chair. The chair stays.',
+    {narration:'She should have left four hours ago.',
+     chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
+    {narration:'She pulls up a chair. It stays.',
      chars:[{id:'yasmin',expr:'happy',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {scene:'ending-warm',label:'Dawn · 5:12 AM',chapter:{num:'Ending A',title:'The Right Kind of Lost'},
+    {scene:'ending-warm',label:'Dawn · 5:08 AM',chapter:{num:'Ending A',title:'The Right Kind of Lost'},
      chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
-    {narration:'The sky outside lightens in a way that doesn\'t announce itself.',
+    {narration:'Dawn arrives the way it does in liminal places — without announcing itself, without ceremony.',
      chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
-    {narration:'Neither of them has moved. Neither of them mentions the time.',
+    {narration:'Neither of them has moved. Neither mentions the hour.',
      chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
-    {narration:'Some places only exist in the exact moment you need them.',
+    {narration:'Some places exist only in the precise moment you need them most.',
      chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
-    {narration:'She was exactly lost enough to find this one.',
+    {narration:'She had been exactly lost enough to find this one.',
      chars:[{id:'yasmin',expr:'glow',h:'64vh',pos:'left'},{id:'sam',expr:'glow',h:'60vh',pos:'right',flip:false}]},
     {end:true,good:true}
   ],
 
   'path-b':[
-    {speaker:'Sam',col:'#e8923a',text:'Stay happens. Or it doesn\'t. The cafe doesn\'t mind either way.',
+    {speaker:'Sam',col:'#e8923a',text:'The cafe has no preference. It\'s been here before you and will be here after.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'But you do.',
+    {speaker:'Yasmin',col:'#e5758f',text:'But you do. You have a preference.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {narration:'Something passes over his face. A door opening, then gently closing.',
+    {narration:'Something crosses his face — a door opening briefly, then drawing almost closed again.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'You\'ll come back. That\'s not a hope — it\'s just what happens.',
+    {speaker:'Sam',col:'#e8923a',text:'You\'ll come back. That\'s not a wish — it\'s just the shape of what happens.',
      chars:[{id:'yasmin',expr:'neutral',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Yasmin',col:'#e5758f',text:'What if I can\'t find it again?',
      chars:[{id:'yasmin',expr:'sad',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Sam',col:'#e8923a',text:'You found it once by walking toward the light. That\'s all it ever takes.',
+    {speaker:'Sam',col:'#e8923a',text:'You found it tonight by following light through fog. You\'ll know how to look.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {narration:'She scribbles her number on a napkin and slides it across the counter.',
+    {narration:'She tears a napkin in two. Writes quickly. Slides it across the counter.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'neutral',h:'60vh',pos:'right',flip:false}]},
-    {speaker:'Yasmin',col:'#e5758f',text:'For the glitches. When they get loud.',
+    {speaker:'Yasmin',col:'#e5758f',text:'For when the walls get loud. Or the chairs.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
     {speaker:'Sam',col:'#e8923a',text:'Good night, Yasmin.',
      chars:[{id:'yasmin',expr:'blush',h:'56vh',pos:'left'},{id:'sam',expr:'happy',h:'60vh',pos:'right',flip:false}]},
-    {scene:'cafe-ext',label:'Street · 2:08 AM',
+    {scene:'cafe-ext',label:'Street · 2:11 AM',
      chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
-    {narration:'The night air hits her like cold water. She walks two steps and stops.',
+    {narration:'The cold air hits her like a correction. She walks two steps. Stops.',
      chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
-    {narration:'Turns back. Needs to see it one more time.',
+    {narration:'Turns. Has to see it one more time.',
      chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
-    {scene:'ending-dark',label:'Street · 2:08 AM',chapter:{num:'Ending B',title:'The Cafe That Knows'},
+    {scene:'ending-dark',label:'Street · 2:11 AM',chapter:{num:'Ending B',title:'The Cafe That Knows'},
      chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
-    {narration:'Gone. Not closed. Not dark. Gone, the way dreams go when you wake up reaching for them.',chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
-    {narration:'No address. No review. No evidence it was ever there — except the warmth still in her hands.',chars:[{id:'yasmin',expr:'sad',h:'72vh',pos:'center'}]},
-    {narration:'And the napkin, still folded in her pocket.',chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
-    {narration:'She never used the number. The cafe would find her again when she was ready.',chars:[{id:'yasmin',expr:'blush',h:'72vh',pos:'center'}]},
-    {narration:'She knew that now.',chars:[{id:'yasmin',expr:'blush',h:'72vh',pos:'center'}]},
+    {narration:'Gone. Not closed. Not dark. Gone the way a held breath goes — completely, without evidence.',chars:[{id:'yasmin',expr:'surprised',h:'72vh',pos:'center'}]},
+    {narration:'No address. No review. No proof it was ever there, except the warmth still in both her hands.',chars:[{id:'yasmin',expr:'sad',h:'72vh',pos:'center'}]},
+    {narration:'And the napkin. Half of it, anyway.',chars:[{id:'yasmin',expr:'neutral',h:'72vh',pos:'center'}]},
+    {narration:'She kept the number for three years before she understood she\'d never need to use it.',chars:[{id:'yasmin',expr:'blush',h:'72vh',pos:'center'}]},
+    {narration:'The cafe always knew when she was ready.',chars:[{id:'yasmin',expr:'blush',h:'72vh',pos:'center'}]},
     {end:true,good:false}
   ]
 };
@@ -1670,6 +2056,9 @@ async function showChapter(data){
 function applyChars(list){
   if(list===undefined) return;
   const show=new Set(list.map(c=>c.id));
+  /* Show Sam chat button when Sam is on screen in a cafe scene */
+  const samVisible=show.has('sam')&&['cafe-int','cafe-ext'].includes(stage.dataset.scene);
+  setSamChatVisible(samVisible);
 
   /* Track which chars were visible before this call */
   const prevVisible=new Set();
@@ -1924,6 +2313,7 @@ function startGame(){
   if(!particles&&pc){ particles=new ParticleSystem(pc); }
   if(!shader){ try{const sc=document.getElementById('scene-shader');if(sc)shader=new ShaderEngine(sc);}catch(e){} }
   if(!sceneBg){ try{const sb=document.getElementById('scene-bg');if(sb)sceneBg=new SceneBgRenderer(sb);}catch(e){} }
+  try{initParallax();}catch(e){}
   const initScene=stage.dataset.scene||'street';
   if(audio) audio.setScene(initScene);
   if(particles) particles.setScene(initScene);
@@ -1953,6 +2343,7 @@ document.addEventListener('keydown',e=>{
   if((e.key===' '||e.key==='Enter')&&!e.repeat){
     if(oracleModal.classList.contains('open')) return;
     if(apiModal.classList.contains('open')) return;
+    if(samChatOpen) return;
     e.preventDefault();
     advance();
   }
