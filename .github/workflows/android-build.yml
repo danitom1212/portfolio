@@ -1,0 +1,66 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "claude/sams-glitched-cafe-vn-5236am", "main" ]
+    paths:
+      - 'sams-glitched-cafe-android/**'
+      - 'sams-glitched-cafe-3d/episode.html'
+      - '.github/workflows/android-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Copy game assets into Android project
+        run: |
+          mkdir -p sams-glitched-cafe-android/app/src/main/assets/game
+          cp sams-glitched-cafe-3d/episode.html \
+             sams-glitched-cafe-android/app/src/main/assets/game/episode.html
+          echo "Asset copied: $(wc -c < sams-glitched-cafe-android/app/src/main/assets/game/episode.html) bytes"
+
+      - name: Bootstrap Gradle Wrapper
+        working-directory: sams-glitched-cafe-android
+        run: gradle wrapper --gradle-version=8.7 --distribution-type=bin
+
+      - name: Make gradlew executable
+        run: chmod +x sams-glitched-cafe-android/gradlew
+
+      - name: Build Debug APK
+        working-directory: sams-glitched-cafe-android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          mv sams-glitched-cafe-android/app/build/outputs/apk/debug/app-debug.apk \
+             SamsGlitchedCafe-v$(grep versionName sams-glitched-cafe-android/app/build.gradle | grep -oP '"\K[^"]+').apk
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SamsGlitchedCafe-debug-apk
+          path: SamsGlitchedCafe-*.apk
+          retention-days: 30
+
+      - name: Print download info
+        run: |
+          echo "✅ APK built successfully"
+          echo "📦 Download from: Actions → This run → Artifacts → SamsGlitchedCafe-debug-apk"
+          ls -lh SamsGlitchedCafe-*.apk

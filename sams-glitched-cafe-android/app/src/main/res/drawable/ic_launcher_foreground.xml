@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Coffee cup body -->
+    <path
+        android:fillColor="#FEF7ED"
+        android:pathData="M26,46 L82,46 L75,82 Q73,88 54,88 Q35,88 33,82 Z"/>
+
+    <!-- Cup rim -->
+    <path
+        android:fillColor="#FEF7ED"
+        android:pathData="M23,42 L85,42 L85,48 L23,48 Z"
+        android:strokeWidth="0"/>
+    <path
+        android:fillColor="#FEF7ED"
+        android:pathData="M23,43 Q23,40 27,40 L81,40 Q85,40 85,43 L85,48 L23,48 Z"/>
+
+    <!-- Handle -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FEF7ED"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:pathData="M76,52 Q96,52 96,65 Q96,78 76,78"/>
+
+    <!-- Steam wisps -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FEF7ED"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M38,38 Q34,30 38,22 Q42,14 38,6"/>
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FEF7ED"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,38 Q50,30 54,22 Q58,14 54,6"/>
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FEF7ED"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M70,38 Q66,30 70,22 Q74,14 70,6"/>
+
+    <!-- Glitch accent line -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFB84D"
+        android:strokeWidth="2"
+        android:strokeAlpha="0.55"
+        android:pathData="M12,63 L96,63"/>
+
+</vector>

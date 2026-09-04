@@ -1,0 +1,9 @@
+.gradle/
+.idea/
+*.iml
+local.properties
+app/build/
+build/
+app/src/main/assets/game/episode.html
+*.keystore
+*.jks
