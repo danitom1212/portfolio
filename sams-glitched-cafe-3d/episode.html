@@ -676,6 +676,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
 }
 #fade.clear{opacity:0;}
 
+/* ─── SCENE SHADER ──────────────────────────────── */
+#scene-shader{
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+  width:100%;height:100%;
+  mix-blend-mode:screen;opacity:.9;
+}
+
 /* ─── PARTICLE CANVAS ───────────────────────────── */
 #particles-canvas{
   position:absolute;inset:0;z-index:8;pointer-events:none;
@@ -722,6 +729,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e0920;touch-action
 <div id="stage" data-scene="street">
 
   <div id="scene-bg"></div>
+  <canvas id="scene-shader"></canvas>
   <canvas id="particles-canvas"></canvas>
   <div id="vignette"></div>
 
@@ -1156,6 +1164,92 @@ class ParticleSystem{
   }
 }
 
+/* ─── SHADER ENGINE ──────────────────────────────────
+   WebGL fragment shader: atmospheric bokeh lights,
+   glitch energy bands, street glow — screen-blended
+   on top of CSS backgrounds. Degrades gracefully.
+─────────────────────────────────────────────────── */
+class ShaderEngine{
+  constructor(canvas){
+    this.canvas=canvas;
+    const gl=canvas.getContext('webgl')||canvas.getContext('experimental-webgl');
+    if(!gl){this.gl=null;return;}
+    this.gl=gl;
+    /* Vertex shader: fullscreen quad */
+    const VS=`attribute vec2 pos;void main(){gl_Position=vec4(pos,0.,1.);}`;
+    /* Fragment shader: atmospheric lighting per scene */
+    const FS=`precision mediump float;
+uniform vec2 u_res;uniform float u_time;uniform int u_scene;
+float hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float nn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  return mix(mix(hh(i),hh(i+vec2(1.,0.)),f.x),mix(hh(i+vec2(0.,1.)),hh(i+vec2(1.)),f.x),f.y);}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_res;uv.y=1.-uv.y;
+  vec4 c=vec4(0.);
+  if(u_scene==0){
+    /* Cafe: three pulsing bokeh ceiling lights + heat shimmer */
+    vec2 l0=vec2(.18,.08),l1=vec2(.50,.055),l2=vec2(.80,.085);
+    float p0=.9+.1*sin(u_time*1.7),p1=.9+.1*sin(u_time*2.1),p2=.9+.1*sin(u_time*1.38);
+    c.rgb+=vec3(1.,.72,.28)*pow(max(0.,.72-length(uv-l0)*7.),2.2)*.36*p0;
+    c.rgb+=vec3(1.,.72,.28)*pow(max(0.,.72-length(uv-l1)*7.),2.2)*.36*p1;
+    c.rgb+=vec3(1.,.72,.28)*pow(max(0.,.72-length(uv-l2)*7.),2.2)*.36*p2;
+    float nm=nn(uv*4.+u_time*.1);c.rgb+=vec3(nm*.05,nm*.025,0.);
+  }else if(u_scene==1){
+    /* Glitch: purple energy bands + noise corruption */
+    float band=step(.968,fract(uv.y*45.+u_time*3.));
+    c.rgb+=vec3(.08,.03,.22)*band;
+    float nm=nn(uv*8.-u_time*.18);c.rgb+=vec3(nm*.015,0.,nm*.04);
+    float h=step(.994,fract(uv.y*8.+u_time*.7));
+    c.rgb+=vec3(0.,.04,.16)*h;
+  }else if(u_scene==2){
+    /* Street/dark: distant warm café glow + subtle cold shimmer */
+    float cd=length(uv-vec2(.82,.62));c.rgb+=vec3(.04,.025,.005)/(cd*8.+1.);
+    float nm=nn(uv*3.+u_time*.05);c.rgb+=vec3(nm*.01,nm*.008,nm*.02);
+  }
+  gl_FragColor=c;
+}`;
+    const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh;};
+    const p=gl.createProgram();
+    gl.attachShader(p,mk(gl.VERTEX_SHADER,VS));
+    gl.attachShader(p,mk(gl.FRAGMENT_SHADER,FS));
+    gl.linkProgram(p);this.prog=p;
+    this.ul={res:gl.getUniformLocation(p,'u_res'),time:gl.getUniformLocation(p,'u_time'),scene:gl.getUniformLocation(p,'u_scene')};
+    const buf=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+    this.buf=buf;this.si=2;this.t0=Date.now();
+    this._resize();new ResizeObserver(()=>this._resize()).observe(canvas);
+    this._raf();
+  }
+  _resize(){
+    const c=this.canvas;c.width=c.offsetWidth;c.height=c.offsetHeight;
+    if(this.gl)this.gl.viewport(0,0,c.width,c.height);
+  }
+  setScene(s){
+    const m={'cafe-int':0,'cafe-ext':0,'ending-warm':0,'glitch':1,'street':2,'ending-dark':2};
+    this.si=m[s]??3;
+  }
+  _raf(){
+    if(!this.gl)return;
+    const gl=this.gl;
+    const tick=()=>{
+      const t=(Date.now()-this.t0)/1000;
+      gl.useProgram(this.prog);
+      gl.uniform2f(this.ul.res,this.canvas.width,this.canvas.height);
+      gl.uniform1f(this.ul.time,t);
+      gl.uniform1i(this.ul.scene,this.si);
+      const pos=gl.getAttribLocation(this.prog,'pos');
+      gl.enableVertexAttribArray(pos);
+      gl.bindBuffer(gl.ARRAY_BUFFER,this.buf);
+      gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+      gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+}
+let shader=null;
+
 let audio=null,particles=null;
 
 /* ─── PROGRESS DOTS ─────────────────────────────── */
@@ -1414,6 +1508,7 @@ function setScene(name){
   stage.dataset.scene=name;
   if(audio) audio.setScene(name);
   if(particles) particles.setScene(name);
+  if(shader) shader.setScene(name);
 }
 
 function showLabel(text){
@@ -1683,13 +1778,15 @@ choices.querySelectorAll('.c-btn').forEach(btn=>{
 });
 
 function startGame(){
-  /* Init audio & particles on first user gesture */
+  /* Init audio, particles, shader on first user gesture */
   if(!audio){ try{audio=new AudioEngine();}catch(e){} }
   const pc=document.getElementById('particles-canvas');
   if(!particles&&pc){ particles=new ParticleSystem(pc); }
+  if(!shader){ try{const sc=document.getElementById('scene-shader');if(sc)shader=new ShaderEngine(sc);}catch(e){} }
   const initScene=stage.dataset.scene||'street';
   if(audio) audio.setScene(initScene);
   if(particles) particles.setScene(initScene);
+  if(shader) shader.setScene(initScene);
 
   document.getElementById('title-screen').classList.add('gone');
   updateProgress(0);
@@ -1706,6 +1803,23 @@ document.getElementById('sound-btn').addEventListener('click',()=>{
   if(!audio){ try{audio=new AudioEngine();}catch(e){return;} }
   const muted=audio.toggle();
   document.getElementById('sound-btn').textContent=muted?'🔇':'🔊';
+});
+
+/* ─── KEYBOARD CONTROLS ─────────────────────────── */
+document.addEventListener('keydown',e=>{
+  /* Space / Enter → advance */
+  if((e.key===' '||e.key==='Enter')&&!e.repeat){
+    if(oracleModal.classList.contains('open')) return;
+    if(apiModal.classList.contains('open')) return;
+    e.preventDefault();
+    advance();
+  }
+  /* 1 / 2 → choose path when choice panel visible */
+  if(!choices.classList.contains('hidden')){
+    const btns=[...choices.querySelectorAll('.c-btn')].filter(b=>b.style.display!=='none');
+    if(e.key==='1'&&btns[0]) choose(btns[0].dataset.path);
+    if(e.key==='2'&&btns[1]) choose(btns[1].dataset.path);
+  }
 });
 </script>
 </body>
