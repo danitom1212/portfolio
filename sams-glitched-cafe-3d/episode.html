@@ -196,10 +196,12 @@ canvas#scene-bg{position:absolute;inset:0;width:100%;height:100%;display:block;z
   border-left:3px solid currentColor;
   font-family:'Playfair Display',serif;
   font-size:clamp(13px,3.8vw,17px);font-weight:700;font-style:italic;
+  background:rgba(8,4,20,.9);
   color:#fff;letter-spacing:.02em;
-  box-shadow:0 4px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.16);
+  box-shadow:0 4px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.1);
   min-width:90px;text-align:center;
-  transition:background .4s ease,border-color .4s ease;
+  transition:color .35s ease,border-color .35s ease;
+  text-shadow:0 0 18px currentColor;
 }
 /* Narrator variant — no plate, just italic text */
 #name-plate.narrator-mode{
@@ -1755,30 +1757,40 @@ void main(){
     /* Cafe: vivid warm bokeh ceiling lights + heat shimmer + gold corona */
     vec2 l0=vec2(.18,.08),l1=vec2(.50,.055),l2=vec2(.80,.085);
     float p0=.88+.12*sin(u_time*1.7),p1=.88+.12*sin(u_time*2.1),p2=.88+.12*sin(u_time*1.38);
-    c.rgb+=vec3(1.,.78,.32)*pow(max(0.,.78-length(uv-l0)*6.5),2.0)*.52*p0;
-    c.rgb+=vec3(1.,.78,.32)*pow(max(0.,.78-length(uv-l1)*6.5),2.0)*.52*p1;
-    c.rgb+=vec3(1.,.78,.32)*pow(max(0.,.78-length(uv-l2)*6.5),2.0)*.52*p2;
-    /* wide corona glow */
-    c.rgb+=vec3(.8,.45,.08)*pow(max(0.,.92-length(uv-l0)*14.),2.8)*.22*p0;
-    c.rgb+=vec3(.8,.45,.08)*pow(max(0.,.92-length(uv-l1)*14.),2.8)*.22*p1;
-    c.rgb+=vec3(.8,.45,.08)*pow(max(0.,.92-length(uv-l2)*14.),2.8)*.22*p2;
-    float nm=nn(uv*4.+u_time*.1);c.rgb+=vec3(nm*.06,nm*.03,0.);
+    /* tight bright bokeh core */
+    c.rgb+=vec3(1.,.84,.42)*pow(max(0.,.72-length(uv-l0)*7.),2.2)*.72*p0;
+    c.rgb+=vec3(1.,.84,.42)*pow(max(0.,.72-length(uv-l1)*7.),2.2)*.72*p1;
+    c.rgb+=vec3(1.,.84,.42)*pow(max(0.,.72-length(uv-l2)*7.),2.2)*.72*p2;
+    /* wide amber corona */
+    c.rgb+=vec3(.9,.52,.08)*pow(max(0.,.95-length(uv-l0)*11.),2.5)*.36*p0;
+    c.rgb+=vec3(.9,.52,.08)*pow(max(0.,.95-length(uv-l1)*11.),2.5)*.36*p1;
+    c.rgb+=vec3(.9,.52,.08)*pow(max(0.,.95-length(uv-l2)*11.),2.5)*.36*p2;
+    /* very wide warm floor bounce */
+    c.rgb+=vec3(.4,.22,.04)*pow(max(0.,.98-length(uv-l1)*5.5),3.)*.14;
+    float nm=nn(uv*4.+u_time*.1);c.rgb+=vec3(nm*.07,nm*.035,0.);
   }else if(u_scene==1){
-    /* Glitch: vivid magenta + cyan energy bands + corruption flicker */
-    float band=step(.962,fract(uv.y*42.+u_time*3.2));
-    c.rgb+=vec3(.18,.02,.42)*band;
-    float band2=step(.978,fract(uv.y*18.-u_time*1.1));
-    c.rgb+=vec3(.02,.18,.38)*band2;
-    float nm=nn(uv*9.-u_time*.22);c.rgb+=vec3(nm*.02,nm*.005,nm*.06);
-    float h=step(.991,fract(uv.y*7.+u_time*.8));c.rgb+=vec3(.04,.0,.22)*h;
-    /* scan glare */
-    float gl=pow(max(0.,1.-abs(uv.y-.5)*3.),3.)*.04;c.rgb+=vec3(gl*.3,0.,gl);
+    /* Glitch: intense magenta + cyan energy + corruption */
+    float band=step(.958,fract(uv.y*44.+u_time*3.8));
+    c.rgb+=vec3(.32,.04,.72)*band;
+    float band2=step(.974,fract(uv.y*20.-u_time*1.4));
+    c.rgb+=vec3(.04,.28,.58)*band2;
+    float band3=step(.988,fract(uv.x*28.+u_time*2.1));
+    c.rgb+=vec3(.18,.0,.44)*band3;
+    float nm=nn(uv*9.-u_time*.22);c.rgb+=vec3(nm*.03,nm*.007,nm*.09);
+    float h=step(.989,fract(uv.y*7.+u_time*.8));c.rgb+=vec3(.06,.0,.34)*h;
+    /* chromatic center pulse */
+    float gl=pow(max(0.,1.-abs(uv.y-.5)*2.8),3.)*.07;c.rgb+=vec3(gl*.2,0.,gl*1.2);
+    /* corner darkening */
+    float corn=pow(length((uv-.5)*1.8),2.)*.08;c.rgb-=vec3(corn);
   }else if(u_scene==2){
-    /* Street/dark: warm distant lamp + cool moonlight from above */
-    float cd=length(uv-vec2(.82,.62));c.rgb+=vec3(.06,.035,.006)/(cd*7.+1.);
-    float moon=pow(max(0.,.85-length(uv-vec2(.28,.12))*9.),2.2)*.12;
-    c.rgb+=vec3(moon*.6,moon*.7,moon);
-    float nm=nn(uv*3.+u_time*.05);c.rgb+=vec3(nm*.008,nm*.01,nm*.025);
+    /* Street/dark: warm lamp pool + silvery moon + subtle rain shimmer */
+    float cd=length(uv-vec2(.82,.62));c.rgb+=vec3(.09,.052,.009)/(cd*6.+1.);
+    float moon=pow(max(0.,.88-length(uv-vec2(.28,.12))*8.),2.5)*.18;
+    c.rgb+=vec3(moon*.55,moon*.65,moon);
+    float nm=nn(uv*3.+u_time*.05);c.rgb+=vec3(nm*.008,nm*.01,nm*.026);
+    /* faint rain shimmer on ground plane */
+    float rn=nn(vec2(uv.x*12.,fract(uv.y*3.+u_time*.6)));
+    if(uv.y>.68)c.rgb+=vec3(.005,.006,.014)*rn;
   }
   gl_FragColor=c;
 }`;
@@ -2305,6 +2317,7 @@ async function playBeat(beat){
     namePlate.textContent='◆';
     namePlate.className='narrator-mode';
     namePlate.style.background='';
+    namePlate.style.color='';
     dlgText.className='italic-mode';
     setSpeakerState(null, beat.chars);
     await typeText(beat.narration, 24);
@@ -2322,7 +2335,8 @@ async function playBeat(beat){
     }
     namePlate.textContent=beat.speaker;
     namePlate.className='fresh';
-    namePlate.style.background=beat.col||'var(--caramel)';
+    namePlate.style.color=beat.col||'var(--caramel)';
+    namePlate.style.background='';
     dlgText.className=beat.glitch?'glitch-mode':'';
     setSpeakerState(beat.speaker, beat.chars);
     await typeText(beat.text);
