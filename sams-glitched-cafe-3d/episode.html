@@ -9,16 +9,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&family=Nunito:wght@400;500;600;700&display=swap">
 <style>
 :root{
-  --cream:#fef7ed;
+  --cream:#fff8ee;
   --caramel:#e8923a;
   --caramel-l:#f5b566;
+  --caramel-xl:#ffd090;
   --rose:#e5758f;
   --rose-l:#f29ab0;
-  --twilight:#2a1847;
-  --midnight:#0a0818;
-  --void:#050310;
-  --text:rgba(240,232,255,.96);
-  --text-dim:rgba(200,190,230,.7);
+  --cyan:#40d8ff;
+  --twilight:#1e0848;
+  --midnight:#0d0528;
+  --void:#080218;
+  --text:rgba(255,248,240,.97);
+  --text-dim:rgba(220,205,240,.75);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;overflow:hidden;background:#050310;touch-action:none;}
@@ -70,40 +72,37 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050310;touch-action
 #char-yasmin,#char-sam{
   position:absolute;
   bottom:9%;
-  height:88%;width:auto;
+  height:91%;width:auto;
   object-fit:contain;object-position:bottom center;
   transition:filter .5s ease,opacity .5s ease,transform .5s ease;
   will-change:transform,filter;
+  image-rendering:auto;
 }
-#char-yasmin{left:0%;transform-origin:50% 100%;}
-#char-sam{right:0%;transform-origin:50% 100%;}
+#char-yasmin{left:-4%;transform-origin:50% 100%;}
+#char-sam{right:-4%;transform-origin:50% 100%;}
 
-.char-active{
-  filter:
-    drop-shadow(0 0 18px rgba(229,117,143,.0))
-    drop-shadow(0 0 55px rgba(229,117,143,.0))
-    drop-shadow(0 0 110px rgba(229,117,143,.0));
-  opacity:1;
-}
+.char-active{opacity:1;}
 #char-sam.char-active{
   filter:
-    drop-shadow(0 0 18px rgba(232,146,58,.95))
-    drop-shadow(0 0 55px rgba(232,146,58,.5))
-    drop-shadow(0 0 110px rgba(232,146,58,.22));
+    drop-shadow(0 0 22px rgba(232,146,58,1))
+    drop-shadow(0 0 60px rgba(232,146,58,.65))
+    drop-shadow(0 0 120px rgba(232,146,58,.3))
+    drop-shadow(0 0 200px rgba(255,180,80,.15));
 }
 #char-yasmin.char-active{
   filter:
-    drop-shadow(0 0 18px rgba(229,117,143,.95))
-    drop-shadow(0 0 55px rgba(229,117,143,.5))
-    drop-shadow(0 0 110px rgba(229,117,143,.22));
+    drop-shadow(0 0 22px rgba(229,117,143,1))
+    drop-shadow(0 0 60px rgba(229,117,143,.65))
+    drop-shadow(0 0 120px rgba(229,117,143,.3))
+    drop-shadow(0 0 200px rgba(255,140,180,.15));
 }
 .char-inactive{
-  filter:brightness(.46) saturate(.24) blur(.5px);
-  opacity:1;
+  filter:brightness(.38) saturate(.18) blur(.7px);
+  opacity:.9;
 }
 .char-hidden{
   opacity:0;
-  transform:translateY(6%) !important;
+  transform:translateY(8%) !important;
   pointer-events:none;
 }
 
@@ -921,284 +920,439 @@ class SceneBgRenderer {
   /* ── STREET ─────────────────────────────────────── */
   _street(W,H,ctx){
     const t=this.t;
-    // Sky
+    // Rich indigo-purple sky
     const sky=ctx.createLinearGradient(0,0,0,H*.62);
-    sky.addColorStop(0,'#040212');
-    sky.addColorStop(1,'#0e0a28');
+    sky.addColorStop(0,'#0d0530');
+    sky.addColorStop(.4,'#1c0a50');
+    sky.addColorStop(1,'#2a0e5a');
     ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*.62);
-    // Ground (wet road)
+    // Wet road — deep teal-purple
     const gnd=ctx.createLinearGradient(0,H*.62,0,H);
-    gnd.addColorStop(0,'#0c0922');
-    gnd.addColorStop(1,'#070519');
+    gnd.addColorStop(0,'#180838');
+    gnd.addColorStop(.5,'#0f0528');
+    gnd.addColorStop(1,'#080318');
     ctx.fillStyle=gnd;ctx.fillRect(0,H*.62,W,H*.38);
-    // Far buildings
-    const fbcol=['#0b0824','#0d0a28','#0a0720'];
-    const fbdefs=[
-      [0,.42,.12,.28],[.08,.36,.09,.36],[.15,.44,.1,.26],
-      [.24,.38,.08,.32],[.32,.46,.14,.24],[.44,.4,.1,.30],
-      [.52,.35,.09,.35],[.6,.42,.12,.28],[.7,.38,.08,.32],
-      [.77,.44,.1,.26],[.84,.36,.12,.34],[.92,.40,.1,.30]
+
+    // Far buildings — indigo silhouettes with variety
+    const farBuildings=[
+      [0,.40,.10,.30,'#1a0848'],[.08,.33,.07,.38,'#160640'],
+      [.14,.41,.09,.28,'#1e0a50'],[.22,.36,.08,.34,'#12053a'],
+      [.29,.44,.12,.25,'#1c0848'],[.40,.38,.09,.32,'#170745'],
+      [.48,.33,.08,.37,'#1e0a52'],[.55,.40,.10,.30,'#14063e'],
+      [.64,.37,.08,.33,'#1a0848'],[.71,.43,.11,.27,'#1c0a4e'],
+      [.81,.35,.09,.35,'#160640'],[.89,.41,.11,.28,'#1e0850']
     ];
-    fbdefs.forEach(([x,y,w,h],i)=>{
-      ctx.fillStyle=fbcol[i%3];
-      ctx.fillRect(x*W,y*H,w*W,h*H);
+    farBuildings.forEach(([x,y,w,h,col])=>{
+      ctx.fillStyle=col;ctx.fillRect(x*W,y*H,w*W,h*H);
     });
-    // Lit windows on far buildings (tiny, warm)
-    for(let bx=0;bx<W;bx+=W*.06){
-      for(let by=H*.37;by<H*.62;by+=H*.05){
-        if(Math.sin(bx*7+by*11)>.45){
-          ctx.fillStyle=`rgba(255,200,100,${.08+Math.sin(t+bx)*.03})`;
-          ctx.fillRect(bx+W*.01,by+H*.005,W*.012,H*.025);
+
+    // Mid buildings — slightly warmer purple
+    const midB=[
+      [0,.52,.14,.20,'#260e58'],[.12,.47,.11,.25,'#220c52'],
+      [.22,.53,.09,.18,'#2a1060'],[.30,.48,.13,.22,'#1e0a4e'],
+      [.42,.55,.10,.16,'#240e5a'],[.51,.50,.12,.21,'#280f5e'],
+      [.62,.54,.08,.18,'#1e0c50'],[.69,.49,.14,.22,'#260e58'],
+      [.82,.53,.10,.18,'#220b54'],[.91,.47,.09,.24,'#2a1060']
+    ];
+    midB.forEach(([x,y,w,h,col])=>{
+      ctx.fillStyle=col;ctx.fillRect(x*W,y*H,w*W,h*H);
+    });
+
+    // Lit windows — warm amber + teal
+    for(let bx=W*.02;bx<W*.95;bx+=W*.055){
+      for(let by=H*.34;by<H*.59;by+=H*.04){
+        const v=Math.sin(bx*11+by*7+t*.3);
+        if(v>.3){
+          const warm=v>.6;
+          ctx.fillStyle=warm
+            ?`rgba(255,190,80,${.35+v*.25})`
+            :`rgba(60,220,255,${.25+v*.2})`;
+          ctx.fillRect(bx,by,W*.018,H*.022);
+          // glow
+          const wg=ctx.createRadialGradient(bx+W*.009,by+H*.011,0,bx+W*.009,by+H*.011,W*.04);
+          wg.addColorStop(0,warm?`rgba(255,190,80,.1)`:`rgba(60,220,255,.08)`);
+          wg.addColorStop(1,'transparent');
+          ctx.fillStyle=wg;ctx.fillRect(bx-W*.03,by-H*.02,W*.07,H*.06);
         }
       }
     }
-    // Neon sign glow
-    ctx.fillStyle=`rgba(255,60,80,${.18+Math.sin(t*1.3)*.05})`;
-    ctx.fillRect(W*.18,H*.46,W*.06,H*.02);
-    ctx.fillStyle=`rgba(60,140,255,${.15+Math.sin(t*.9)*.04})`;
-    ctx.fillRect(W*.72,H*.42,W*.05,H*.016);
-    // Rain
+
+    // Neon signs — vivid and prominent
+    // Sign 1: cyan
+    ctx.save();
+    ctx.shadowColor='rgba(0,220,255,.9)';ctx.shadowBlur=18;
+    ctx.fillStyle=`rgba(0,220,255,${.7+Math.sin(t*1.2)*.2})`;
+    ctx.fillRect(W*.16,H*.44,W*.09,H*.018);
+    ctx.fillRect(W*.16,H*.465,W*.09,H*.004);
+    ctx.restore();
+    // Sign 2: hot rose
+    ctx.save();
+    ctx.shadowColor='rgba(255,50,120,.9)';ctx.shadowBlur=16;
+    ctx.fillStyle=`rgba(255,50,120,${.65+Math.sin(t*.9+1)*.2})`;
+    ctx.fillRect(W*.70,H*.41,W*.08,H*.016);
+    ctx.fillRect(W*.70,H*.43,W*.08,H*.003);
+    ctx.restore();
+    // Sign 3: amber
+    ctx.save();
+    ctx.shadowColor='rgba(255,160,40,.8)';ctx.shadowBlur=14;
+    ctx.fillStyle=`rgba(255,160,40,${.6+Math.sin(t*1.5+2)*.2})`;
+    ctx.fillRect(W*.44,H*.47,W*.07,H*.014);
+    ctx.restore();
+
+    // Street lamp post + cone of light
+    const lpx=W*.35,lpy=H*.52;
+    ctx.save();
+    ctx.strokeStyle='rgba(180,160,120,.6)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(lpx,H*.55);ctx.lineTo(lpx,lpy);
+    ctx.lineTo(lpx+W*.04,lpy);ctx.stroke();
+    const cone=ctx.createRadialGradient(lpx+W*.04,lpy,0,lpx+W*.04,lpy,W*.28);
+    cone.addColorStop(0,`rgba(255,220,140,${.22+Math.sin(t*.6)*.05})`);
+    cone.addColorStop(.3,`rgba(255,200,100,${.08})`);
+    cone.addColorStop(1,'transparent');
+    ctx.fillStyle=cone;ctx.fillRect(0,0,W,H);
+    ctx.restore();
+
+    // Rain — tinted by neon reflections
     ctx.save();
     this.rain.forEach(r=>{
-      r.y+=r.speed;r.x+=r.speed*.04;
+      r.y+=r.speed*.9;r.x-=r.speed*.05;
       if(r.y>H*1.05){r.y=-r.len;r.x=Math.random()*W;}
-      ctx.strokeStyle=`rgba(180,210,255,${r.op})`;
-      ctx.lineWidth=.6;
+      ctx.strokeStyle=`rgba(180,200,255,${r.op*.7})`;
+      ctx.lineWidth=.7;
       ctx.beginPath();ctx.moveTo(r.x,r.y);
-      ctx.lineTo(r.x-r.speed*.06,r.y+r.len);
+      ctx.lineTo(r.x+r.speed*.07,r.y+r.len);
       ctx.stroke();
     });
     ctx.restore();
-    // Puddle reflections
+
+    // Puddle reflections — colorful neons
+    const reflColors=[
+      `rgba(0,220,255,`,`rgba(255,50,120,`,`rgba(255,160,40,`
+    ];
     ctx.save();
-    for(let px=W*.05;px<W*.9;px+=W*.14){
-      const py=H*.72+Math.sin(px)*H*.04;
-      const pr=ctx.createRadialGradient(px,py,0,px,py,W*.06);
-      pr.addColorStop(0,`rgba(232,146,58,${.06+Math.sin(t+px)*.02})`);
-      pr.addColorStop(1,'transparent');
-      ctx.fillStyle=pr;
-      ctx.beginPath();ctx.ellipse(px,py,W*.06,H*.015,0,0,Math.PI*2);
-      ctx.fill();
+    for(let i=0;i<8;i++){
+      const px=W*(.08+i*.12+Math.sin(t*.3+i)*.03);
+      const py=H*(.75+Math.sin(i*2.3)*.04);
+      const rg=ctx.createRadialGradient(px,py,0,px,py,W*.08);
+      const rc=reflColors[i%3];
+      rg.addColorStop(0,rc+`${.12+Math.sin(t+i)*.05})`);
+      rg.addColorStop(1,'transparent');
+      ctx.fillStyle=rg;
+      ctx.beginPath();ctx.ellipse(px,py,W*.08,H*.012,0,0,Math.PI*2);ctx.fill();
     }
-    ctx.restore();
-    // Street lamp glow
-    ctx.save();
-    const lampX=W*.38,lampY=H*.56;
-    const lampG=ctx.createRadialGradient(lampX,lampY,0,lampX,lampY,W*.22);
-    lampG.addColorStop(0,`rgba(255,220,140,${.14+Math.sin(t*.7)*.03})`);
-    lampG.addColorStop(1,'transparent');
-    ctx.fillStyle=lampG;ctx.fillRect(0,0,W,H);
     ctx.restore();
   }
 
   /* ── CAFE ENTER ─────────────────────────────────── */
   _cafeEnter(W,H,ctx){
-    // Dark doorway, warm light spilling in
-    ctx.fillStyle='#050310';ctx.fillRect(0,0,W,H);
-    const door=ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.7);
-    door.addColorStop(0,'rgba(232,146,58,.22)');
-    door.addColorStop(.5,'rgba(100,50,15,.08)');
-    door.addColorStop(1,'transparent');
-    ctx.fillStyle=door;ctx.fillRect(0,0,W,H);
-    // Doorway frame
-    ctx.strokeStyle='rgba(180,120,60,.4)';
-    ctx.lineWidth=3;
-    ctx.strokeRect(W*.25,H*.12,W*.5,H*.65);
-    ctx.fillStyle='rgba(40,20,8,.6)';
-    ctx.fillRect(W*.26,H*.13,W*.48,H*.63);
-    // Warm light through door crack
-    const crack=ctx.createLinearGradient(W*.25,0,W*.28,0);
-    crack.addColorStop(0,'transparent');
-    crack.addColorStop(.5,'rgba(255,200,100,.15)');
-    crack.addColorStop(1,'transparent');
-    ctx.fillStyle=crack;ctx.fillRect(W*.24,H*.12,W*.06,H*.65);
+    const t=this.t;
+    // Warm entrance — amber glow spilling from inside
+    const bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#1a0805');
+    bg.addColorStop(1,'#2e1008');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    // Door frame (warm wood)
+    ctx.fillStyle='#3d1a06';
+    ctx.fillRect(W*.22,H*.08,W*.56,H*.68);
+    ctx.fillStyle='#4d2208';
+    ctx.fillRect(W*.25,H*.11,W*.5,H*.62);
+    // Warm interior glow through door
+    const glow=ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.6);
+    glow.addColorStop(0,'rgba(255,180,80,.55)');
+    glow.addColorStop(.4,'rgba(220,130,50,.2)');
+    glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+    // Door handle
+    ctx.fillStyle='rgba(200,160,60,.8)';
+    ctx.beginPath();ctx.arc(W*.53,H*.42,W*.01,0,Math.PI*2);ctx.fill();
+    // Rain silhouette at base
+    this.rain.forEach(r=>{
+      r.y+=r.speed;if(r.y>H){r.y=0;r.x=Math.random()*W;}
+      ctx.strokeStyle='rgba(150,180,220,.15)';ctx.lineWidth=.5;
+      ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x-3,r.y+r.len);ctx.stroke();
+    });
   }
 
   /* ── CAFE INTERIOR (base) ────────────────────────── */
   _cafeBase(W,H,ctx,opts={}){
     const t=this.t;
     const rain=opts.rain||0;
-    // Wall
-    const wall=ctx.createLinearGradient(0,0,0,H*.68);
-    wall.addColorStop(0,'#0a0503');
-    wall.addColorStop(.5,'#1e0d06');
-    wall.addColorStop(1,'#2c1609');
-    ctx.fillStyle=wall;ctx.fillRect(0,0,W,H*.68);
-    // Floor
-    const floor=ctx.createLinearGradient(0,H*.68,0,H);
-    floor.addColorStop(0,'#2e1608');
-    floor.addColorStop(1,'#1a0b04');
-    ctx.fillStyle=floor;ctx.fillRect(0,H*.68,W,H*.32);
-    // Floor planks
+
+    // Walls — rich warm amber-brown
+    const wall=ctx.createLinearGradient(0,0,0,H*.7);
+    wall.addColorStop(0,'#1a0804');
+    wall.addColorStop(.35,'#2e1206');
+    wall.addColorStop(.7,'#3d1808');
+    wall.addColorStop(1,'#4a1e0a');
+    ctx.fillStyle=wall;ctx.fillRect(0,0,W,H*.7);
+
+    // Floor — warm chestnut wood
+    const floor=ctx.createLinearGradient(0,H*.7,0,H);
+    floor.addColorStop(0,'#4a1e06');
+    floor.addColorStop(.4,'#3a1504');
+    floor.addColorStop(1,'#200b02');
+    ctx.fillStyle=floor;ctx.fillRect(0,H*.7,W,H*.3);
+
+    // Floor planks with perspective
     ctx.save();
-    for(let fx=0;fx<W;fx+=W*.06){
-      ctx.strokeStyle='rgba(0,0,0,.22)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(fx,H*.68);ctx.lineTo(fx+W*.03,H);ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1.5;
+    for(let fx=0;fx<=W;fx+=W*.065){
+      ctx.beginPath();
+      ctx.moveTo(fx,H*.7);
+      ctx.lineTo(fx*1.4-W*.2,H);
+      ctx.stroke();
+    }
+    for(let fy=0;fy<4;fy++){
+      const fry=H*.72+fy*H*.08;
+      ctx.beginPath();ctx.moveTo(0,fry);ctx.lineTo(W,fry+H*.02);ctx.stroke();
     }
     ctx.restore();
-    // Bookshelves on left wall
-    ctx.fillStyle='rgba(15,8,3,.7)';
-    ctx.fillRect(0,H*.06,W*.08,H*.58);
-    ctx.fillStyle='rgba(25,12,4,.9)';
-    for(let sy=H*.08;sy<H*.6;sy+=H*.06){
-      ctx.fillRect(W*.005,sy,W*.07,H*.004);
+
+    // Wainscoting / wall panel
+    ctx.fillStyle='rgba(60,25,8,.6)';
+    ctx.fillRect(0,H*.55,W,H*.03);
+    ctx.fillStyle='rgba(80,35,10,.4)';
+    ctx.fillRect(0,H*.57,W,H*.01);
+
+    // Bookshelves — left side, vivid books
+    ctx.fillStyle='#2a1005';
+    ctx.fillRect(0,H*.06,W*.1,H*.5);
+    ctx.fillStyle='#3a1808';
+    for(let sy=H*.08;sy<H*.55;sy+=H*.065){
+      ctx.fillRect(W*.004,sy,W*.092,H*.005);
     }
-    // Book spines
-    const bookColors=['#8b2a2a','#2a5c8b','#3a8b2a','#8b6b2a','#5a2a8b'];
-    for(let sy=H*.09;sy<H*.62;sy+=H*.06){
-      let bx=W*.008;
-      while(bx<W*.07){
-        const bw=W*.007+Math.random()*W*.008;
-        ctx.fillStyle=bookColors[Math.floor(Math.random()*5)]+'88';
-        ctx.fillRect(bx,sy-H*.045,bw,H*.044);
+    // Vivid book spines
+    const books=['#c0392b','#2980b9','#27ae60','#d35400','#8e44ad','#16a085','#f39c12','#2c3e50'];
+    for(let sy=H*.09;sy<H*.56;sy+=H*.065){
+      let bx=W*.007,row=Math.floor(sy/H*.065);
+      while(bx<W*.095){
+        const bw=W*.008+Math.random()*W*.010;
+        const bi=(Math.floor(bx*100)+row*3)%books.length;
+        ctx.fillStyle=books[bi]+'cc';
+        ctx.fillRect(bx,sy-H*.048,bw,H*.047);
+        // book highlight
+        ctx.fillStyle='rgba(255,255,255,.08)';
+        ctx.fillRect(bx,sy-H*.048,bw*.3,H*.047);
         bx+=bw+W*.001;
       }
     }
-    // Counter/bar at bottom-right
-    ctx.fillStyle='#1c0c04';
-    ctx.fillRect(W*.55,H*.6,W*.45,H*.12);
-    ctx.fillStyle='rgba(60,30,10,.8)';
-    ctx.fillRect(W*.53,H*.58,W*.47,H*.025);
-    // Hanging lanterns with god rays
-    const lamps=[{x:.28,y:.04},{x:.62,y:.06},{x:.48,y:.02}];
+
+    // Bar/counter — right side
+    ctx.fillStyle='#3a1605';
+    ctx.fillRect(W*.58,H*.54,W*.42,H*.18);
+    ctx.fillStyle='rgba(90,40,12,.9)';
+    ctx.fillRect(W*.56,H*.52,W*.44,H*.025);
+    // Counter highlight
+    ctx.fillStyle='rgba(255,180,80,.12)';
+    ctx.fillRect(W*.56,H*.52,W*.44,H*.008);
+    // Espresso machine shape
+    ctx.fillStyle='rgba(50,50,60,.8)';
+    ctx.fillRect(W*.65,H*.44,W*.1,H*.09);
+    ctx.fillStyle='rgba(200,200,220,.2)';
+    ctx.fillRect(W*.66,H*.45,W*.08,H*.02);
+
+    // Hanging lanterns — vivid warm light
+    const lamps=[{x:.22,y:.035},{x:.55,y:.05},{x:.40,y:.02},{x:.78,y:.04}];
     lamps.forEach((l,i)=>{
       const lx=l.x*W,ly=l.y*H;
-      const flicker=.85+Math.sin(t*1.7+i*2.1)*.15+Math.sin(t*3.1+i)*.05;
-      // God ray
+      const flicker=.88+Math.sin(t*1.8+i*2.3)*.12+Math.sin(t*4.1+i*1.5)*.04;
+      // Cord
+      ctx.strokeStyle='rgba(60,30,10,.8)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(lx,0);ctx.lineTo(lx,ly-H*.01);ctx.stroke();
+      // God ray — wide, visible
       ctx.save();
-      const ray=ctx.createLinearGradient(lx,ly,lx,H*.75);
-      ray.addColorStop(0,`rgba(255,190,80,${.14*flicker})`);
-      ray.addColorStop(.4,`rgba(255,160,60,${.06*flicker})`);
+      const ray=ctx.createLinearGradient(lx,ly,lx,H*.78);
+      ray.addColorStop(0,`rgba(255,185,60,${.28*flicker})`);
+      ray.addColorStop(.25,`rgba(255,160,40,${.14*flicker})`);
+      ray.addColorStop(.6,`rgba(255,140,30,${.05*flicker})`);
       ray.addColorStop(1,'transparent');
       ctx.fillStyle=ray;
       ctx.beginPath();
-      ctx.moveTo(lx-W*.04,ly);
-      ctx.lineTo(lx+W*.04,ly);
-      ctx.lineTo(lx+W*.14,H*.75);
-      ctx.lineTo(lx-W*.14,H*.75);
+      ctx.moveTo(lx-W*.02,ly);ctx.lineTo(lx+W*.02,ly);
+      ctx.lineTo(lx+W*.18,H*.78);ctx.lineTo(lx-W*.18,H*.78);
       ctx.closePath();ctx.fill();
       ctx.restore();
-      // Lamp body
-      const lampG=ctx.createRadialGradient(lx,ly,0,lx,ly,W*.1);
-      lampG.addColorStop(0,`rgba(255,210,120,${.55*flicker})`);
-      lampG.addColorStop(.3,`rgba(255,170,80,${.18*flicker})`);
+      // Lamp glow halo
+      const lampG=ctx.createRadialGradient(lx,ly,0,lx,ly,W*.14);
+      lampG.addColorStop(0,`rgba(255,210,100,${.7*flicker})`);
+      lampG.addColorStop(.2,`rgba(255,175,60,${.3*flicker})`);
+      lampG.addColorStop(.5,`rgba(255,140,40,${.1*flicker})`);
       lampG.addColorStop(1,'transparent');
       ctx.fillStyle=lampG;ctx.fillRect(0,0,W,H);
-      ctx.fillStyle=`rgba(60,35,10,${.7})`;
-      ctx.beginPath();ctx.arc(lx,ly,W*.012,0,Math.PI*2);ctx.fill();
+      // Lamp body
+      ctx.fillStyle=`rgba(40,20,5,.9)`;
+      ctx.beginPath();ctx.arc(lx,ly,W*.015,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=`rgba(255,220,120,${.9*flicker})`;
+      ctx.beginPath();ctx.arc(lx,ly,W*.008,0,Math.PI*2);ctx.fill();
     });
-    // Window right side (looking out)
-    if(rain>0){
-      ctx.save();
-      ctx.fillStyle=`rgba(15,18,35,${.55+rain*.3})`;
-      ctx.fillRect(W*.65,H*.08,W*.3,H*.44);
-      ctx.strokeStyle='rgba(60,45,20,.6)';ctx.lineWidth=2;
-      ctx.strokeRect(W*.65,H*.08,W*.3,H*.44);
-      // Rain on window
-      for(let ri=0;ri<40*rain;ri++){
-        const rx=W*.66+Math.random()*W*.27;
-        const ry=H*.09+(this.t*H*.06+ri*H*.018)%(H*.42);
-        ctx.strokeStyle=`rgba(180,210,255,${.15*rain})`;
-        ctx.lineWidth=.5;
-        ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx+W*.003,ry+H*.018);ctx.stroke();
+
+    // Window right — looking out at night/rain
+    if(rain>0||true){
+      const wx=W*.62,wy=H*.07,ww=W*.33,wh=H*.44;
+      // Window glass — deep night sky
+      const winBg=ctx.createLinearGradient(wx,wy,wx,wy+wh);
+      winBg.addColorStop(0,'#0d0530');
+      winBg.addColorStop(1,'#180840');
+      ctx.fillStyle=winBg;ctx.fillRect(wx,wy,ww,wh);
+      // Window frame
+      ctx.strokeStyle='rgba(100,55,18,.9)';ctx.lineWidth=3;
+      ctx.strokeRect(wx,wy,ww,wh);
+      // Cross divider
+      ctx.beginPath();ctx.moveTo(wx+ww*.5,wy);ctx.lineTo(wx+ww*.5,wy+wh);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(wx,wy+wh*.5);ctx.lineTo(wx+ww,wy+wh*.5);ctx.stroke();
+      // Rain drops on glass
+      for(let ri=0;ri<Math.ceil(50*Math.max(rain,.3));ri++){
+        const rx=wx+W*.01+Math.random()*ww*0.9;
+        const ry=wy+H*.01+(this.t*H*.05+ri*H*.022+rain*H*.03)%(wh-H*.02);
+        ctx.strokeStyle=`rgba(180,210,255,${.2+rain*.15})`;
+        ctx.lineWidth=.7;
+        ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx+W*.002,ry+H*.022);ctx.stroke();
       }
-      ctx.restore();
+      // Outside neon reflections through glass
+      ctx.fillStyle=`rgba(0,200,255,${.04+Math.sin(t*.8)*.02})`;
+      ctx.fillRect(wx,wy,ww*.5,wh);
+      ctx.fillStyle=`rgba(255,50,100,${.03+Math.sin(t*1.1)*.015})`;
+      ctx.fillRect(wx+ww*.5,wy,ww*.5,wh);
+      // Warm reflective glow on window sill
+      ctx.fillStyle='rgba(255,180,60,.18)';
+      ctx.fillRect(wx,wy+wh,ww,H*.02);
     }
   }
 
   _cafeInt(W,H,ctx){this._cafeBase(W,H,ctx,{rain:.2});}
   _cafeStorm(W,H,ctx){this._cafeBase(W,H,ctx,{rain:.95});}
-  _cafeEnter(W,H,ctx){this._cafeBase(W,H,ctx,{rain:.5});}
 
   /* ── CAFE GLITCH ─────────────────────────────────── */
   _cafeGlitch(W,H,ctx){
     const t=this.t;
-    this._cafeBase(W,H,ctx,{rain:.6});
-    // Horizontal tears
-    for(let i=0;i<6;i++){
-      if(Math.sin(t*7+i*3)>.5){
-        const ty=Math.random()*H;
-        const tw=Math.random()*W*.4+W*.1;
-        const tx=Math.random()*(W-tw);
-        const shift=(Math.random()-.5)*W*.05;
-        const imgData=ctx.getImageData(tx,ty,tw,12);
-        ctx.putImageData(imgData,tx+shift,ty);
-      }
-    }
-    // RGB channel shift overlay
+    this._cafeBase(W,H,ctx,{rain:.65});
+    // Vivid chromatic overlay — cyan + magenta
     ctx.save();
     ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=.08+Math.sin(t*5)*.04;
-    ctx.fillStyle='rgba(255,0,0,.5)';
-    ctx.fillRect(W*.01,0,W,H);
-    ctx.fillStyle='rgba(0,0,255,.5)';
-    ctx.fillRect(-W*.01,0,W,H);
+    const glitchPulse=Math.sin(t*6)>.3?1:0;
+    ctx.globalAlpha=.12+glitchPulse*.1;
+    ctx.fillStyle='rgba(0,220,255,.6)';
+    ctx.fillRect(W*.012,0,W*.988,H);
+    ctx.globalAlpha=.08+glitchPulse*.08;
+    ctx.fillStyle='rgba(255,0,180,.6)';
+    ctx.fillRect(-W*.012,0,W*.988,H);
     ctx.restore();
     // Scanlines
+    ctx.save();ctx.globalAlpha=.08;
+    for(let sl=0;sl<H;sl+=3){ctx.fillStyle='#000';ctx.fillRect(0,sl,W,1);}
+    ctx.restore();
+    // Horizontal tears — with colorful fills
     ctx.save();
-    ctx.globalAlpha=.06;
-    for(let sl=0;sl<H;sl+=4){
-      ctx.fillStyle='#000';
-      ctx.fillRect(0,sl,W,1);
+    for(let i=0;i<5;i++){
+      if(Math.sin(t*8+i*2.5)>.6){
+        const ty=(((t*38+i*H*.23)%H)|0);
+        const tw=W*.2+Math.random()*W*.35;
+        const tx=Math.random()*(W-tw);
+        const shift=(Math.random()-.5)*W*.04;
+        try{
+          const id=ctx.getImageData(tx,ty,tw,8);
+          ctx.putImageData(id,tx+shift,ty);
+        }catch(e){}
+      }
     }
     ctx.restore();
+    // Electric glitch bolts
+    if(Math.sin(t*12)>.7){
+      ctx.save();
+      ctx.strokeStyle=`rgba(0,255,200,.6)`;ctx.lineWidth=1.5;
+      let bx=W*Math.random(),by=0;
+      ctx.beginPath();ctx.moveTo(bx,by);
+      while(by<H){
+        bx+=(Math.random()-.5)*W*.08;by+=H*.06;
+        ctx.lineTo(bx,by);
+      }
+      ctx.stroke();ctx.restore();
+    }
   }
 
   /* ── CAFE WARM (healing) ─────────────────────────── */
   _cafeWarm(W,H,ctx){
     const t=this.t;
-    this._cafeBase(W,H,ctx,{rain:.1});
-    // Golden healing overlay
-    const heal=ctx.createRadialGradient(W*.5,H*.3,0,W*.5,H*.3,W*.8);
-    heal.addColorStop(0,`rgba(255,200,100,${.08+Math.sin(t*.5)*.04})`);
+    this._cafeBase(W,H,ctx,{rain:.05});
+    // Warm healing glow — golden and rose
+    const heal=ctx.createRadialGradient(W*.5,H*.25,0,W*.5,H*.25,W*.9);
+    heal.addColorStop(0,`rgba(255,215,100,${.18+Math.sin(t*.4)*.06})`);
+    heal.addColorStop(.4,`rgba(255,160,60,${.08})`);
     heal.addColorStop(1,'transparent');
     ctx.fillStyle=heal;ctx.fillRect(0,0,W,H);
+    // Subtle pink/rose accent
+    const rg=ctx.createRadialGradient(W*.8,H*.1,0,W*.8,H*.1,W*.5);
+    rg.addColorStop(0,`rgba(255,120,180,${.06+Math.sin(t*.6+1)*.03})`);
+    rg.addColorStop(1,'transparent');
+    ctx.fillStyle=rg;ctx.fillRect(0,0,W,H);
   }
 
   /* ── CAFE DAWN ───────────────────────────────────── */
   _cafeDawn(W,H,ctx){
     const t=this.t;
     this._cafeBase(W,H,ctx,{rain:0});
-    // Dawn light from window
-    const dawn=ctx.createLinearGradient(W*.65,H*.08,W*.95,H*.52);
-    dawn.addColorStop(0,`rgba(255,185,80,${.22+Math.sin(t*.3)*.04})`);
-    dawn.addColorStop(1,'transparent');
-    ctx.fillStyle=dawn;ctx.fillRect(0,0,W,H);
-    // Window now shows dawn sky
-    ctx.fillStyle='rgba(80,50,20,.4)';
-    ctx.fillRect(W*.65,H*.08,W*.3,H*.44);
-    const dawng=ctx.createLinearGradient(W*.65,H*.08,W*.65,H*.52);
-    dawng.addColorStop(0,'rgba(220,140,60,.35)');
-    dawng.addColorStop(1,'rgba(40,20,10,.6)');
-    ctx.fillStyle=dawng;
-    ctx.fillRect(W*.66,H*.09,W*.28,H*.42);
+    // Dawn flooding through window — rich golden-orange
+    const dawnR=ctx.createRadialGradient(W*.78,H*.07,0,W*.78,H*.07,W*.75);
+    dawnR.addColorStop(0,`rgba(255,210,80,${.4+Math.sin(t*.2)*.06})`);
+    dawnR.addColorStop(.25,`rgba(255,160,50,${.18})`);
+    dawnR.addColorStop(.5,`rgba(255,120,30,${.08})`);
+    dawnR.addColorStop(1,'transparent');
+    ctx.fillStyle=dawnR;ctx.fillRect(0,0,W,H);
+    // Overwrite window with dawn sky
+    const dwx=W*.62,dwy=H*.07,dww=W*.33,dwh=H*.44;
+    const dawng=ctx.createLinearGradient(dwx,dwy,dwx,dwy+dwh);
+    dawng.addColorStop(0,'#ff9040');
+    dawng.addColorStop(.3,'#ffb858');
+    dawng.addColorStop(.65,'#ffd080');
+    dawng.addColorStop(1,'#2a0e50');
+    ctx.fillStyle=dawng;ctx.fillRect(dwx,dwy,dww,dwh);
+    ctx.strokeStyle='rgba(100,55,18,.9)';ctx.lineWidth=3;
+    ctx.strokeRect(dwx,dwy,dww,dwh);
+    ctx.beginPath();ctx.moveTo(dwx+dww*.5,dwy);ctx.lineTo(dwx+dww*.5,dwy+dwh);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(dwx,dwy+dwh*.5);ctx.lineTo(dwx+dww,dwy+dwh*.5);ctx.stroke();
+    // Sun disc
+    const sx=dwx+dww*.65,sy=dwy+dwh*.2;
+    const sunG=ctx.createRadialGradient(sx,sy,0,sx,sy,W*.07);
+    sunG.addColorStop(0,'rgba(255,255,180,.9)');
+    sunG.addColorStop(.4,'rgba(255,210,80,.5)');
+    sunG.addColorStop(1,'transparent');
+    ctx.fillStyle=sunG;ctx.fillRect(dwx,dwy,dww,dwh);
+    // Floor gets bathed in dawn light
+    ctx.fillStyle=`rgba(255,190,80,${.1+Math.sin(t*.15)*.03})`;
+    ctx.fillRect(0,H*.7,W,H*.3);
   }
 
   /* ── CAFE DISSOLVE (code/architecture) ──────────── */
   _cafeDiss(W,H,ctx){
     const t=this.t;
     this._cafeGlitch(W,H,ctx);
-    // Code rain
+    // Code rain — vivid matrix green
     ctx.save();
-    ctx.globalAlpha=.25;
-    ctx.fillStyle='rgba(0,255,100,.7)';
-    ctx.font=`${W*.02}px monospace`;
-    const chars='01ABCDEF[]{}()=>+-/*&#';
-    for(let cx=0;cx<W;cx+=W*.025){
-      const offset=((t*(W*.04)+cx*3)%(H*1.2));
-      for(let cy=offset;cy<offset+H*.3;cy+=W*.025){
-        if(Math.random()>.7){
-          ctx.fillText(chars[Math.floor(Math.random()*chars.length)],cx,cy%H);
-        }
+    ctx.font=`bold ${W*.022}px 'Courier New',monospace`;
+    const chars='01ABCDEF#[]{}()=></*&%@';
+    for(let cx=0;cx<W;cx+=W*.028){
+      const speed=0.12+((cx*7)%5)*.04;
+      const offset=((t*H*speed+cx*41)%(H*1.3));
+      for(let ci=0;ci<8;ci++){
+        const cy=(offset+ci*H*.06)%H;
+        const fade=1-ci/8;
+        ctx.fillStyle=`rgba(0,255,140,${fade*.55})`;
+        ctx.fillText(chars[Math.floor((t*10+cx+ci*7)%chars.length)],cx,cy);
       }
     }
     ctx.restore();
-    // Wireframe grid
+    // Architectural wireframe
     ctx.save();
-    ctx.strokeStyle='rgba(0,200,100,.08)';
-    ctx.lineWidth=.5;
-    for(let gx=0;gx<W;gx+=W*.1){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
-    for(let gy=0;gy<H;gy+=H*.08){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    ctx.strokeStyle='rgba(0,200,100,.14)';ctx.lineWidth=.8;
+    for(let gx=0;gx<=W;gx+=W*.08){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(let gy=0;gy<=H;gy+=H*.06){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    // Perspective lines to vanishing point
+    const vpx=W*.5,vpy=H*.4;
+    ctx.strokeStyle='rgba(0,255,180,.08)';
+    for(let ang=0;ang<Math.PI*2;ang+=Math.PI/12){
+      ctx.beginPath();ctx.moveTo(vpx,vpy);
+      ctx.lineTo(vpx+Math.cos(ang)*W,vpy+Math.sin(ang)*H);ctx.stroke();
+    }
     ctx.restore();
   }
 }
@@ -1215,11 +1369,11 @@ class BokehSystem {
   }
   _initOrbs(){
     const palettes={
-      street: ['rgba(60,80,200,','rgba(80,120,220,','rgba(140,80,200,','rgba(40,60,180,'],
-      cafe:   ['rgba(255,160,60,','rgba(232,120,40,','rgba(200,100,30,','rgba(255,200,100,'],
-      glitch: ['rgba(255,60,80,', 'rgba(60,200,255,','rgba(180,60,255,','rgba(60,255,140,'],
-      warm:   ['rgba(255,180,80,','rgba(230,150,60,','rgba(255,220,120,','rgba(200,130,50,'],
-      dawn:   ['rgba(255,190,90,','rgba(240,160,70,','rgba(255,230,140,','rgba(220,140,60,'],
+      street: ['rgba(40,100,255,','rgba(100,60,220,','rgba(0,200,255,','rgba(180,40,255,','rgba(255,60,140,'],
+      cafe:   ['rgba(255,175,50,','rgba(240,130,40,','rgba(255,210,90,','rgba(200,100,30,','rgba(255,150,60,'],
+      glitch: ['rgba(0,240,255,', 'rgba(255,0,200,','rgba(0,255,140,','rgba(255,60,80,','rgba(180,0,255,'],
+      warm:   ['rgba(255,200,80,','rgba(240,160,60,','rgba(255,240,120,','rgba(255,150,100,','rgba(200,120,40,'],
+      dawn:   ['rgba(255,200,80,','rgba(255,170,60,','rgba(255,240,130,','rgba(255,120,60,','rgba(240,100,40,'],
     };
     this.palettes=palettes;
     this.orbs=[];
@@ -1239,7 +1393,7 @@ class BokehSystem {
     if(s.includes('glitch')||s.includes('dissolve')) return this.palettes.glitch;
     if(s.includes('dawn')) return this.palettes.dawn;
     if(s.includes('warm')) return this.palettes.warm;
-    if(s.includes('street')) return this.palettes.street;
+    if(s.includes('street')||s.includes('enter')) return this.palettes.street;
     return this.palettes.cafe;
   }
   _draw(){
@@ -1690,8 +1844,10 @@ function _renderBeat(beat){
 }
 
 function advance(){
-  if(waiting&&typewriter&&!typewriter.done){
-    typewriter.finish(curBeat.text);waiting=true;return;
+  // If typewriter is mid-animation, skip to end immediately
+  if(typewriter && !typewriter.done){
+    typewriter.finish(curBeat&&curBeat.text||'');
+    waiting=true;return;
   }
   if(!waiting) return;
   waiting=false;
